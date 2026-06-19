@@ -59,7 +59,7 @@ SOURCE_URL="${SOURCE_URLS[0]:-}"   # active URL; rotated by the main loop on fai
 STANDBY="$PROJECT_DIR/$STANDBY_REL"
 HLS_DIR="$PROJECT_DIR/hls/$CHANNEL"
 GOP=$((FPS * 2))
-STALE_KILL_SECS=30   # kill ffmpeg if no new segment for this many seconds
+STALE_KILL_SECS=45   # kill ffmpeg only after this many seconds of ZERO write progress
 
 log "=== START $CHANNEL ==="
 log "  source=$SOURCE_URL fps=$FPS gop=$GOP (${NUM_URLS} source URL(s))"
@@ -77,23 +77,38 @@ ensure_hls_dir
 
 # ── Stale-segment watchdog ────────────────────────────────────
 # Started fresh inside push_live for each FFmpeg attempt so it has
-# no memory of old segments from prior runs. Kills ffmpeg only if
-# the newest .ts file has NOT CHANGED for STALE_KILL_SECS seconds.
+# no memory of old segments from prior runs.
+#
+# IMPORTANT: it must distinguish a genuinely FROZEN ffmpeg from one that is
+# healthily writing a LONG segment. In stream-copy mode ffmpeg can only cut on
+# the source's keyframes, so a sparse-keyframe / briefly-stalling IPTV source
+# can legitimately produce a single segment that takes 30-60s to finish. The
+# old check ("did a NEW .ts filename appear?") false-killed those healthy runs,
+# forcing a restart → #EXT-X-DISCONTINUITY → orphaned segment 404 → the player
+# jumping to the live edge. So we treat "progress" as EITHER a new segment OR
+# the current newest segment still GROWING in bytes; only true zero-progress
+# (no new file AND no byte growth) counts toward the kill.
 stale_watchdog() {
     local ffpid="$1"
-    local last_seg="" current_seg stale_count=0
-    local threshold=$(( STALE_KILL_SECS / 5 ))  # 5-second check interval
+    local last_seg="" last_size=0 current_seg current_size stale_count=0
+    local interval=5
+    local threshold=$(( STALE_KILL_SECS / interval ))
     while kill -0 "$ffpid" 2>/dev/null; do
-        sleep 5
+        sleep "$interval"
         current_seg=$(ls -t "$HLS_DIR"/*.ts 2>/dev/null | head -1)
-        if [ -z "$current_seg" ] || [ "$current_seg" = "$last_seg" ]; then
-            stale_count=$((stale_count + 1))
-        else
+        current_size=0
+        [ -n "$current_seg" ] && current_size=$(stat -c %s "$current_seg" 2>/dev/null || echo 0)
+        if [ -n "$current_seg" ] && { [ "$current_seg" != "$last_seg" ] || [ "$current_size" -gt "$last_size" ]; }; then
+            # New segment rolled over, or the in-progress one is still being
+            # written — ffmpeg is alive and making progress.
             stale_count=0
             last_seg="$current_seg"
+            last_size="$current_size"
+        else
+            stale_count=$((stale_count + 1))
         fi
         if [ $stale_count -ge $threshold ]; then
-            log "  [WATCHDOG] No new segment for ${STALE_KILL_SECS}s – killing ffmpeg PID $ffpid"
+            log "  [WATCHDOG] No write progress for ${STALE_KILL_SECS}s – killing ffmpeg PID $ffpid"
             kill -9 "$ffpid" 2>/dev/null
             break
         fi
@@ -154,6 +169,7 @@ push_live() {
             -i "$SOURCE_URL" \
             -c:v copy \
             -c:a copy \
+            -flush_packets 1 \
             -f hls -hls_time 4 -hls_list_size 40 \
             -hls_flags delete_segments+append_list+independent_segments \
             -hls_segment_type mpegts \
@@ -178,6 +194,7 @@ push_live() {
             -force_key_frames "expr:gte(t,n_forced*4)" \
             -c:a aac -b:a "${AUDIO_BR}k" -ar 44100 \
             -af aresample=async=1 \
+            -flush_packets 1 \
             -f hls -hls_time 4 -hls_list_size 40 \
             -hls_flags delete_segments+append_list+independent_segments \
             -hls_segment_type mpegts \
