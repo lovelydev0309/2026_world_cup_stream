@@ -225,8 +225,11 @@
 
     hls = new Hls({
       lowLatencyMode: false,
-      liveSyncDurationCount: 6,        // 6×4s=24s behind live – cushion for IPTV micro-dropouts
-      liveMaxLatencyDurationCount: 10, // 10×4s=40s before force-sync
+      // Time-based sync (seconds) instead of segment-count-based.
+      // Segment-count is unreliable when stream-copy produces variable-length
+      // segments (0.3s–7s). Fixed 20s always keeps the player 20s behind live.
+      liveSyncDuration: 20,
+      liveMaxLatencyDuration: 40,
       liveDurationInfinity: true,
       manifestLoadingMaxRetry: MAX_RETRIES,
       levelLoadingMaxRetry: MAX_RETRIES,
@@ -237,7 +240,7 @@
       manifestLoadingTimeOut: 20000,
       levelLoadingTimeOut: 20000,
       fragLoadingTimeOut: 20000,
-      maxBufferLength: 60,             // build 60s buffer during stable periods
+      maxBufferLength: 60,
       maxMaxBufferLength: 120,
       debug: false,
     });
@@ -267,11 +270,8 @@
 
     hls.on(Hls.Events.FRAG_BUFFERED, () => {
       _recoverCount = 0;
-      // After any recovery, ensure play position hasn't overrun the buffer
-      const buf = video.buffered;
-      if (buf.length > 0 && video.currentTime > buf.end(buf.length - 1)) {
-        video.currentTime = Math.max(buf.end(buf.length - 1) - 0.5, buf.start(0));
-      }
+      // Resume if the video stalled waiting for this segment to arrive
+      if (video.paused) video.play().catch(() => {});
     });
 
     let _recoverTimer = null;
@@ -279,9 +279,13 @@
     let _recoverCount = 0;
     const REINIT_AFTER = 6;
 
-    // ── Buffer stall: snap play position into buffered range ──────────────
-    // Does NOT call stopLoad/startLoad(-1) – that seeks video to an unbuffered
-    // position, causing "buffer goes negative / screen crash".
+    // ── Buffer stall handler ──────────────────────────────────────────────
+    // NEVER seek backward – that causes the "jumps back a few seconds" bug.
+    // Strategy:
+    //   • Gap before buffer start → seek forward to buf.start (fixes discontinuities)
+    //   • At/past live edge      → wait; hls.js will append next segment and
+    //                              FRAG_BUFFERED will resume play automatically
+    //   • Empty buffer           → fall through to live-edge recovery
     function handleBufferStall(label) {
       log(label, "warn");
       setBadge("standby", "BUFFERING…");
@@ -290,18 +294,19 @@
         _stallTimer = null;
         if (!hls) return;
         const buf = video.buffered;
-        if (buf.length > 0) {
-          const buffEnd   = buf.end(buf.length - 1);
-          const buffStart = buf.start(0);
-          if (video.currentTime >= buffEnd - 0.05 || video.currentTime < buffStart) {
-            video.currentTime = Math.max(buffEnd - 0.5, buffStart);
-          }
-          video.play().catch(() => {});
-          setBadge("live", "LIVE");
-        } else {
+        if (buf.length === 0) {
           recoverToLiveEdge(500, "Buffer empty – recovering to live edge");
+          return;
         }
-      }, 200);
+        const buffStart = buf.start(0);
+        if (video.currentTime < buffStart - 0.1) {
+          // Play head fell before buffer start (gap): skip forward to buffer start
+          video.currentTime = buffStart + 0.1;
+        }
+        // Otherwise we're at the live edge waiting for the next segment.
+        // hls.js is already fetching it; FRAG_BUFFERED will call play() when ready.
+        video.play().catch(() => {});
+      }, 500);
     }
 
     // ── Fragment / manifest errors: reload from live edge ─────────────────
@@ -345,9 +350,13 @@
       } else {
         switch (data.details) {
           case Hls.ErrorDetails.BUFFER_STALLED_ERROR:
-          case Hls.ErrorDetails.BUFFER_SEEK_OVER_HOLE:
           case Hls.ErrorDetails.BUFFER_NUDGE_ON_STALL:
-            handleBufferStall(`Stall (${data.details}) – syncing live edge`);
+            handleBufferStall(`Stall (${data.details}) – waiting for next segment`);
+            break;
+          case Hls.ErrorDetails.BUFFER_SEEK_OVER_HOLE:
+            // hls.js already seeked past the gap; just resume
+            log(`Seek over hole – resuming`, "warn");
+            video.play().catch(() => {});
             break;
           case Hls.ErrorDetails.FRAG_LOAD_ERROR:
           case Hls.ErrorDetails.FRAG_LOAD_TIMEOUT:
