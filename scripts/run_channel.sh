@@ -156,6 +156,14 @@ detect_codec() {
 # Only confirmed h264 uses stream copy (~2% CPU).
 # Everything else (hevc, unknown, or any probe failure) re-encodes to H.264
 # 540p – safe for all browsers and avoids broken stream copy on HEVC.
+#
+# `-re` paces input reading to the content's native rate. The IPTV source
+# delivers a buffered backlog ~18x faster than realtime; without -re, ffmpeg
+# writes segments far faster than realtime, the HLS live edge races ahead, and
+# every player keeps falling behind and force-resyncing (the "seizing"). -re
+# pins production to 1x. NOTE: -re is incompatible with
+# -use_wallclock_as_timestamps (together they emit ZERO segments), so that flag
+# was removed; -fflags +genpts regenerates sane timestamps instead.
 push_live() {
     ensure_hls_dir
     local codec
@@ -165,9 +173,9 @@ push_live() {
     if [ "$codec" = "h264" ]; then
         log "  H.264 source – stream copy (~2% CPU)"
         ffmpeg -hide_banner -loglevel warning \
+            -re \
             -fflags +igndts+discardcorrupt+genpts \
             -err_detect ignore_err \
-            -use_wallclock_as_timestamps 1 \
             -user_agent "IPTV Smarters/1.0 Dalvik/2.1.0" \
             -headers "Referer: http://prosclan.fans/" \
             -reconnect 1 -reconnect_at_eof 1 \
@@ -186,9 +194,9 @@ push_live() {
     else
         log "  non-H.264 source (${codec:-unknown}) – re-encoding to H.264 540p"
         ffmpeg -hide_banner -loglevel warning \
+            -re \
             -fflags +igndts+discardcorrupt+genpts \
             -err_detect ignore_err \
-            -use_wallclock_as_timestamps 1 \
             -user_agent "IPTV Smarters/1.0 Dalvik/2.1.0" \
             -headers "Referer: http://prosclan.fans/" \
             -reconnect 1 -reconnect_at_eof 1 \
