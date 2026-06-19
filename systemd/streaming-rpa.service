@@ -1,0 +1,16 @@
+[Unit]
+Description=Streaming RPA Watchdog – auto-restart all channels
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+ExecStart=/opt/streaming-stack/scripts/rpa_watchdog.sh
+Restart=always
+RestartSec=5
+User=root
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

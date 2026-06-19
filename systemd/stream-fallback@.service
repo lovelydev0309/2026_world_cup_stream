@@ -1,0 +1,50 @@
+# /etc/systemd/system/stream-fallback@.service
+# Template unit – one instance per channel
+#
+# Enable:  sudo systemctl enable stream-fallback@channel1
+# Start:   sudo systemctl start  stream-fallback@channel1
+# Logs:    journalctl -u stream-fallback@channel1 -f
+# Status:  systemctl status stream-fallback@channel1
+
+[Unit]
+Description=Stream Fallback Loop – %i
+Documentation=file:///opt/streaming-stack/README.md
+After=network-online.target docker.service
+Wants=network-online.target
+# Start after the media server container is up
+After=docker-compose@streaming-stack.service
+
+[Service]
+Type=simple
+User=stream
+Group=stream
+
+# Adjust this path if the stack lives elsewhere
+WorkingDirectory=/opt/streaming-stack
+
+# Pass the channel name as the systemd instance name (%i)
+ExecStart=/opt/streaming-stack/scripts/start_fallback.sh %i
+
+# The script uses exec ffmpeg – kill the whole process group on stop
+KillMode=process
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+# Restart policy
+Restart=on-failure
+RestartSec=5s
+StartLimitIntervalSec=120s
+StartLimitBurst=5
+
+# Resource limits
+LimitNOFILE=65536
+CPUWeight=50
+MemoryMax=1G
+
+# Logging (also goes to /var/log/stream-watchdog/ via the script)
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=stream-fallback-%i
+
+[Install]
+WantedBy=multi-user.target

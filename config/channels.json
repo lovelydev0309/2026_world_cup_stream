@@ -1,0 +1,60 @@
+{
+  "_comment": "Channel configuration. source_url = direct IPTV stream URL. Set enabled=false to skip.",
+  "server": {
+    "rtmp_host": "127.0.0.1",
+    "rtmp_port": 1935,
+    "http_port": 8080,
+    "hls_base_url": "http://127.0.0.1:8080/hls",
+    "stat_url": "http://127.0.0.1:8080/stat"
+  },
+  "watchdog": {
+    "check_interval_seconds": 10,
+    "stale_segment_threshold_seconds": 20,
+    "log_dir": "/home/momo/stream/streaming-stack/logs",
+    "max_restart_attempts": 5,
+    "restart_cooldown_seconds": 30
+  },
+  "iptv": {
+    "base_url": "http://prosclan.fans:2052",
+    "username": "JF747456",
+    "password": "QG712995"
+  },
+  "channels": [
+    {
+      "channel_name": "channel1",
+      "display_name": "FIFA World Cup 2026 – Match Feed",
+      "enabled": true,
+      "source_url": "http://prosclan.fans:2052/JF747456/QG712995/1459243",
+      "hls_url": "https://live3.mzolotv.com/hls/channel1/index.m3u8",
+      "standby_file": "standby/standby.mp4",
+      "bitrate": 2500,
+      "resolution": "1280x720",
+      "fps": 30,
+      "audio_bitrate": 128
+    },
+    {
+      "channel_name": "channel2",
+      "display_name": "MX – Canal 5 HD",
+      "enabled": true,
+      "source_url": "http://prosclan.fans:2052/JF747456/QG712995/313828",
+      "hls_url": "https://live3.mzolotv.com/hls/channel2/index.m3u8",
+      "standby_file": "standby/standby.mp4",
+      "bitrate": 2500,
+      "resolution": "1280x720",
+      "fps": 30,
+      "audio_bitrate": 128
+    },
+    {
+      "channel_name": "channel3",
+      "display_name": "ESPN HD",
+      "enabled": true,
+      "source_url": "http://prosclan.fans:2052/JF747456/QG712995/3648",
+      "hls_url": "https://live3.mzolotv.com/hls/channel3/index.m3u8",
+      "standby_file": "standby/standby.mp4",
+      "bitrate": 2500,
+      "resolution": "1280x720",
+      "fps": 30,
+      "audio_bitrate": 128
+    }
+  ]
+}

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live – {{CHANNEL_NAME}}</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0d0d0d;
+    color: #e0e0e0;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 24px 12px;
+  }
+  header {
+    width: 100%;
+    max-width: 960px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  h1 { font-size: 1.2rem; letter-spacing: 0.05em; }
+  #badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 99px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: #222;
+  }
+  #badge.live   { background: #d00; }
+  #badge.standby{ background: #555; }
+  #badge.error  { background: #8b0; color: #000; }
+  #dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #fff;
+    animation: pulse 1.5s ease infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .player-wrap {
+    width: 100%;
+    max-width: 960px;
+    aspect-ratio: 16/9;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+  video {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  #overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,.7);
+    color: #fff;
+    font-size: 1.1rem;
+    gap: 12px;
+    transition: opacity .3s;
+  }
+  #overlay.hidden { opacity: 0; pointer-events: none; }
+  #spinner {
+    width: 40px; height: 40px;
+    border: 4px solid rgba(255,255,255,.2);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #info {
+    width: 100%;
+    max-width: 960px;
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+    font-size: 0.78rem;
+    color: #999;
+  }
+  .stat { background: #1a1a1a; border-radius: 6px; padding: 8px 12px; }
+  .stat b { display: block; color: #ccc; font-size: 0.85rem; margin-bottom: 2px; }
+  #log {
+    width: 100%;
+    max-width: 960px;
+    margin-top: 16px;
+    background: #111;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 0.72rem;
+    font-family: monospace;
+    color: #888;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .log-line { margin-bottom: 2px; }
+  .log-line.warn  { color: #c90; }
+  .log-line.error { color: #e44; }
+  .log-line.info  { color: #4af; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>{{CHANNEL_NAME}}</h1>
+  <span id="badge"><span id="dot"></span><span id="badge-text">Connecting…</span></span>
+</header>
+
+<div class="player-wrap">
+  <video id="video" autoplay muted playsinline controls></video>
+  <div id="overlay">
+    <div id="spinner"></div>
+    <span id="overlay-text">Loading stream…</span>
+  </div>
+</div>
+
+<div id="info">
+  <div class="stat"><b>Resolution</b><span id="res">–</span></div>
+  <div class="stat"><b>Bitrate</b><span id="brate">–</span></div>
+  <div class="stat"><b>Buffer</b><span id="buf">–</span></div>
+  <div class="stat"><b>Dropped</b><span id="dropped">–</span></div>
+  <div class="stat"><b>Latency</b><span id="latency">–</span></div>
+  <div class="stat"><b>Bandwidth</b><span id="bw">–</span></div>
+</div>
+
+<div id="log"></div>
+
+<!-- hls.js from CDN (pin version for production) -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
+<script>
+(function () {
+  // ── Config ──────────────────────────────────────────────
+  const STREAM_URL  = "{{HLS_URL}}";       // e.g. http://HOST:8080/hls/channel1/index.m3u8
+  const CHANNEL     = "{{CHANNEL_NAME}}";
+  const RETRY_DELAY = 5000;   // ms between reconnect attempts
+  const MAX_RETRIES = 999;    // effectively infinite
+
+  // ── DOM refs ─────────────────────────────────────────────
+  const video    = document.getElementById("video");
+  const overlay  = document.getElementById("overlay");
+  const ovText   = document.getElementById("overlay-text");
+  const badge    = document.getElementById("badge");
+  const badgeTxt = document.getElementById("badge-text");
+  const logBox   = document.getElementById("log");
+
+  let hls, retries = 0, statsTimer, levelTimer;
+
+  // ── Log ──────────────────────────────────────────────────
+  function log(msg, type = "") {
+    const d = new Date().toISOString().slice(11, 19);
+    const el = document.createElement("div");
+    el.className = "log-line " + type;
+    el.textContent = `[${d}] ${msg}`;
+    logBox.prepend(el);
+    if (logBox.children.length > 50) logBox.lastChild.remove();
+  }
+
+  // ── Badge helper ─────────────────────────────────────────
+  function setBadge(state, text) {
+    badge.className = state;
+    badgeTxt.textContent = text;
+  }
+
+  // ── Stats overlay ─────────────────────────────────────────
+  function updateStats() {
+    if (!hls) return;
+    const level = hls.levels[hls.currentLevel];
+    if (level) {
+      document.getElementById("res").textContent =
+        `${level.width}×${level.height}`;
+      document.getElementById("brate").textContent =
+        `${Math.round(level.bitrate / 1000)} kbps`;
+    }
+    const buf = video.buffered;
+    if (buf.length) {
+      const ahead = buf.end(buf.length - 1) - video.currentTime;
+      document.getElementById("buf").textContent = `${Math.max(ahead, 0).toFixed(1)} s`;
+    }
+    document.getElementById("dropped").textContent =
+      video.getVideoPlaybackQuality
+        ? video.getVideoPlaybackQuality().droppedVideoFrames
+        : "–";
+    if (hls.latency !== undefined) {
+      document.getElementById("latency").textContent = `${hls.latency.toFixed(1)} s`;
+    }
+    document.getElementById("bw").textContent =
+      hls.bandwidthEstimate
+        ? `${Math.round(hls.bandwidthEstimate / 1000)} kbps`
+        : "–";
+  }
+
+  // ── Init player ──────────────────────────────────────────
+  function init() {
+    if (hls) { hls.destroy(); hls = null; }
+
+    if (!Hls.isSupported()) {
+      // Fallback for Safari native HLS
+      if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = STREAM_URL;
+        video.addEventListener("loadedmetadata", () => {
+          video.play().catch(() => {});
+          overlay.classList.add("hidden");
+          setBadge("live", "LIVE");
+        });
+      } else {
+        ovText.textContent = "HLS not supported in this browser";
+        log("HLS not supported", "error");
+      }
+      return;
+    }
+
+    hls = new Hls({
+      lowLatencyMode: false,
+      liveSyncDurationCount: 6,        // 12s behind live – wider cushion for IPTV micro-dropouts
+      liveMaxLatencyDurationCount: 12, // 24s before force-sync
+      liveDurationInfinity: true,
+      manifestLoadingMaxRetry: MAX_RETRIES,
+      levelLoadingMaxRetry: MAX_RETRIES,
+      fragLoadingMaxRetry: MAX_RETRIES,
+      manifestLoadingRetryDelay: 1000,
+      levelLoadingRetryDelay: 1000,
+      fragLoadingRetryDelay: 1000,
+      manifestLoadingTimeOut: 20000,
+      levelLoadingTimeOut: 20000,
+      fragLoadingTimeOut: 20000,
+      maxBufferLength: 60,             // build 60s buffer during stable periods
+      maxMaxBufferLength: 120,
+      debug: false,
+    });
+
+    hls.loadSource(STREAM_URL);
+    hls.attachMedia(video);
+
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      log("Manifest loaded – starting playback", "info");
+      video.play().catch(() => {
+        log("Autoplay blocked – click to play", "warn");
+        ovText.textContent = "Click to play";
+        overlay.classList.remove("hidden");
+        overlay.onclick = () => { video.play(); overlay.classList.add("hidden"); };
+      });
+    });
+
+    hls.on(Hls.Events.LEVEL_SWITCHED, (_, d) => {
+      const l = hls.levels[d.level];
+      log(`Level → ${l.width}×${l.height} @ ${Math.round(l.bitrate/1000)}kbps`);
+    });
+
+    hls.on(Hls.Events.FRAG_CHANGED, () => {
+      overlay.classList.add("hidden");
+      setBadge("live", "LIVE");
+    });
+
+    hls.on(Hls.Events.FRAG_BUFFERED, () => {
+      _recoverCount = 0;
+      // After any recovery, ensure play position hasn't overrun the buffer
+      const buf = video.buffered;
+      if (buf.length > 0 && video.currentTime > buf.end(buf.length - 1)) {
+        video.currentTime = Math.max(buf.end(buf.length - 1) - 0.5, buf.start(0));
+      }
+    });
+
+    let _recoverTimer = null;
+    let _stallTimer   = null;
+    let _recoverCount = 0;
+    const REINIT_AFTER = 6;
+
+    // ── Buffer stall: snap play position into buffered range ──────────────
+    // Does NOT call stopLoad/startLoad(-1) – that seeks video to an unbuffered
+    // position, causing "buffer goes negative / screen crash".
+    function handleBufferStall(label) {
+      log(label, "warn");
+      setBadge("standby", "BUFFERING…");
+      if (_stallTimer || _recoverTimer) return;
+      _stallTimer = setTimeout(() => {
+        _stallTimer = null;
+        if (!hls) return;
+        const buf = video.buffered;
+        if (buf.length > 0) {
+          const buffEnd   = buf.end(buf.length - 1);
+          const buffStart = buf.start(0);
+          if (video.currentTime >= buffEnd - 0.05 || video.currentTime < buffStart) {
+            video.currentTime = Math.max(buffEnd - 0.5, buffStart);
+          }
+          video.play().catch(() => {});
+          setBadge("live", "LIVE");
+        } else {
+          recoverToLiveEdge(500, "Buffer empty – recovering to live edge");
+        }
+      }, 200);
+    }
+
+    // ── Fragment / manifest errors: reload from live edge ─────────────────
+    function recoverToLiveEdge(baseDelay, label) {
+      log(label, "warn");
+      setBadge("standby", "BUFFERING…");
+      if (_recoverTimer) return;
+      _recoverCount++;
+      if (_recoverCount > REINIT_AFTER) {
+        log(`Recovery failed ${_recoverCount - 1}x – full reinit`, "warn");
+        overlay.classList.remove("hidden");
+        ovText.textContent = "Stream unavailable – reconnecting…";
+        _recoverCount = 0;
+        _recoverTimer = setTimeout(() => { _recoverTimer = null; init(); }, 5000);
+        return;
+      }
+      const delay = Math.min(baseDelay * _recoverCount, 8000);
+      _recoverTimer = setTimeout(() => {
+        if (!hls) { _recoverTimer = null; return; }
+        hls.stopLoad();
+        setTimeout(() => {
+          _recoverTimer = null;
+          if (!hls) return;
+          hls.startLoad(-1);
+          video.play().catch(() => {});
+          setBadge("live", "LIVE");
+        }, 300);
+      }, delay);
+    }
+
+    hls.on(Hls.Events.ERROR, (_, data) => {
+      if (data.fatal) {
+        log(`Fatal: ${data.type}/${data.details} – reinit`, "error");
+        setBadge("standby", "RECONNECTING…");
+        overlay.classList.remove("hidden");
+        ovText.textContent = "Stream interrupted – reconnecting…";
+        if (_recoverTimer) { clearTimeout(_recoverTimer); _recoverTimer = null; }
+        if (_stallTimer)   { clearTimeout(_stallTimer);   _stallTimer   = null; }
+        hls.destroy(); hls = null;
+        setTimeout(init, RETRY_DELAY);
+      } else {
+        switch (data.details) {
+          case Hls.ErrorDetails.BUFFER_STALLED_ERROR:
+          case Hls.ErrorDetails.BUFFER_SEEK_OVER_HOLE:
+          case Hls.ErrorDetails.BUFFER_NUDGE_ON_STALL:
+            handleBufferStall(`Stall (${data.details}) – syncing live edge`);
+            break;
+          case Hls.ErrorDetails.FRAG_LOAD_ERROR:
+          case Hls.ErrorDetails.FRAG_LOAD_TIMEOUT:
+            recoverToLiveEdge(1500, `Frag error (${data.details}) – reloading`);
+            break;
+          case Hls.ErrorDetails.LEVEL_LOAD_ERROR:
+          case Hls.ErrorDetails.LEVEL_LOAD_TIMEOUT:
+          case Hls.ErrorDetails.MANIFEST_LOAD_ERROR:
+          case Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT:
+            recoverToLiveEdge(3000, `Manifest/level error (${data.details}) – retrying`);
+            break;
+          default:
+            log(`Non-fatal: ${data.details}`, "warn");
+        }
+      }
+    });
+
+    hls.on(Hls.Events.MEDIA_DETACHING, () => setBadge("error", "OFFLINE"));
+
+    statsTimer = setInterval(updateStats, 2000);
+    log(`Connecting to ${STREAM_URL}`, "info");
+  }
+
+  // ── Kick off ─────────────────────────────────────────────
+  init();
+})();
+</script>
+</body>
+</html>

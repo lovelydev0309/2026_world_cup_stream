@@ -1,0 +1,44 @@
+# /etc/systemd/system/stream-watchdog@.service
+# Template unit – one instance per channel (or run once without @)
+#
+# Enable:  sudo systemctl enable stream-watchdog@channel1
+# Start:   sudo systemctl start  stream-watchdog@channel1
+# Logs:    journalctl -u stream-watchdog@channel1 -f
+# All channels at once: sudo systemctl start stream-watchdog@channel1 stream-watchdog@channel2
+
+[Unit]
+Description=Stream Watchdog – %i
+Documentation=file:///opt/streaming-stack/README.md
+After=network-online.target
+Wants=network-online.target
+After=stream-fallback@%i.service
+
+[Service]
+Type=simple
+User=stream
+Group=stream
+
+WorkingDirectory=/opt/streaming-stack
+
+ExecStart=/usr/bin/python3 /opt/streaming-stack/scripts/watchdog.py \
+    --config /opt/streaming-stack/config/channels.json
+
+# Override if you want the optional API dashboard
+# ExecStart=/usr/bin/python3 /opt/streaming-stack/scripts/watchdog.py --api
+
+Restart=always
+RestartSec=10s
+StartLimitIntervalSec=300s
+StartLimitBurst=10
+
+LimitNOFILE=65536
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=stream-watchdog-%i
+
+# Clean up any stray fallback processes on stop
+ExecStop=/usr/bin/pkill -f "start_fallback.sh %i" || true
+
+[Install]
+WantedBy=multi-user.target

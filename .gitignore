@@ -1,0 +1,29 @@
+# Runtime HLS segments and manifests
+hls/
+
+# Logs
+logs/
+
+# Codec detection cache
+cache/
+
+# Standby video (binary, large)
+standby/*.mp4
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# OS / editor
+.DS_Store
+*.swp
+*~
+
+# Internal / temp ffmpeg dirs
+[internal]/
+CACHED
+CACHED/
+exporting/
+resolve/
+transferring/
+srs/

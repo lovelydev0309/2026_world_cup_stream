@@ -1,0 +1,32 @@
+# /etc/systemd/system/streaming-stack.service
+# Starts the Docker Compose media server stack on boot
+#
+# Enable:  sudo systemctl enable streaming-stack
+# Start:   sudo systemctl start streaming-stack
+
+[Unit]
+Description=Streaming Stack (Docker Compose)
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/streaming-stack
+
+ExecStart=/usr/bin/docker compose up -d --remove-orphans
+ExecStop=/usr/bin/docker compose down
+ExecReload=/usr/bin/docker compose restart
+
+TimeoutStartSec=90s
+TimeoutStopSec=30s
+
+Restart=no
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=streaming-stack
+
+[Install]
+WantedBy=multi-user.target
