@@ -225,12 +225,19 @@
 
     hls = new Hls({
       lowLatencyMode: false,
-      // Time-based sync (seconds) instead of segment-count-based.
-      // Segment-count is unreliable when stream-copy produces variable-length
-      // segments (0.3s–7s). Fixed 20s always keeps the player 20s behind live.
-      liveSyncDuration: 20,
-      liveMaxLatencyDuration: 40,
+      // Sit 30s behind live. The upstream IPTV feed throws transient drops
+      // (HTTP 509) that create 5-12s gaps in segment production; a 30s cushion
+      // absorbs those without the playhead ever reaching an empty buffer.
+      liveSyncDuration: 30,
+      // Tolerate falling up to 90s behind before any force-sync seek, so a
+      // gap never triggers a visible jump-to-live.
+      liveMaxLatencyDuration: 90,
       liveDurationInfinity: true,
+      // Glide over small discontinuities left by FFmpeg's mid-stream reconnect
+      // instead of stalling on them.
+      maxBufferHole: 0.5,
+      nudgeOffset: 0.2,
+      nudgeMaxRetry: 8,
       manifestLoadingMaxRetry: MAX_RETRIES,
       levelLoadingMaxRetry: MAX_RETRIES,
       fragLoadingMaxRetry: MAX_RETRIES,

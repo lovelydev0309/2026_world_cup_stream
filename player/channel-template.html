@@ -225,9 +225,12 @@
 
     hls = new Hls({
       lowLatencyMode: false,
-      liveSyncDuration: 20,
-      liveMaxLatencyDuration: 40,
+      liveSyncDuration: 30,
+      liveMaxLatencyDuration: 90,
       liveDurationInfinity: true,
+      maxBufferHole: 0.5,
+      nudgeOffset: 0.2,
+      nudgeMaxRetry: 8,
       manifestLoadingMaxRetry: MAX_RETRIES,
       levelLoadingMaxRetry: MAX_RETRIES,
       fragLoadingMaxRetry: MAX_RETRIES,

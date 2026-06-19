@@ -94,8 +94,12 @@ CODEC_CACHE="$PROJECT_DIR/cache/codec_${CHANNEL}"
 mkdir -p "$PROJECT_DIR/cache" 2>/dev/null || true
 detect_codec() {
     local result
-    result=$(timeout 10 ffprobe -v quiet -hide_banner \
+    # 5s timeout (was 10s): on a flaky source this probe runs on every
+    # reconnect, so keep it short — it succeeds in 1-2s when the source is up
+    # and falls back to the cached codec otherwise.
+    result=$(timeout 5 ffprobe -v quiet -hide_banner \
         -user_agent "IPTV Smarters/1.0 Dalvik/2.1.0" \
+        -analyzeduration 2000000 -probesize 1000000 \
         -show_streams -select_streams v:0 \
         -print_format csv \
         "$SOURCE_URL" 2>/dev/null | awk -F',' 'NR==1{print $3}')
@@ -206,8 +210,14 @@ push_standby() {
 }
 
 # ── Main loop ─────────────────────────────────────────────────
+# Standby (the holding-pattern clip) should ONLY trigger when the source
+# genuinely can't establish a stream — i.e. rapid back-to-back failures.
+# A run that streamed fine for minutes and then hit a transient upstream
+# drop (e.g. HTTP 509 from the IPTV provider) is NOT a crash-loop; it should
+# reconnect immediately with no standby blackout.
 LIVE_FAIL=0
 MAX_FAILS=3
+HEALTHY_RUN_SECS=45   # a run at least this long = healthy, resets the fail counter
 
 while true; do
     if [[ -n "$SOURCE_URL" ]] && [[ $LIVE_FAIL -lt $MAX_FAILS ]]; then
@@ -215,12 +225,18 @@ while true; do
         push_live
         EXIT=$?
         T_RUN=$(( $(date +%s) - T_START ))
-        LIVE_FAIL=$((LIVE_FAIL + 1))
-        log "Live exited (code=$EXIT) ran=${T_RUN}s fail=$LIVE_FAIL/$MAX_FAILS"
+        if [[ $T_RUN -ge $HEALTHY_RUN_SECS ]]; then
+            # Healthy stream hit a transient drop – reconnect now, no penalty.
+            LIVE_FAIL=0
+            log "Live exited (code=$EXIT) ran=${T_RUN}s – healthy, reconnecting immediately"
+        else
+            LIVE_FAIL=$((LIVE_FAIL + 1))
+            log "Live exited (code=$EXIT) ran=${T_RUN}s fail=$LIVE_FAIL/$MAX_FAILS"
+        fi
     else
         push_standby || true
         log "Standby ended – resetting, retrying live"
         LIVE_FAIL=0
     fi
-    sleep 2
+    sleep 1
 done
