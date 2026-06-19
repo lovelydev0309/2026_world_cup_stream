@@ -30,7 +30,14 @@ if ! flock -n 9; then
 fi
 echo $$ > "$PIDFILE"
 WATCHDOG_PID=0
-trap "flock -u 9; rm -f $PIDFILE $FFMPEG_PID_FILE $LOCKFILE; kill \$WATCHDOG_PID 2>/dev/null; pkill -P $$ 2>/dev/null; exit" INT TERM EXIT
+# NOTE: do NOT rm $LOCKFILE in this trap. Deleting the lockfile path frees the
+# name while another instance may still hold a flock on the old inode; the next
+# instance then creates a FRESH inode at the same path and its `flock -n`
+# succeeds → two run_channel.sh produce into the same HLS dir at once, both
+# rewriting index.m3u8, which corrupts the playlist and freezes the player.
+# The lockfile is a 0-byte marker — leave it on disk permanently so every
+# instance flocks the SAME inode and duplicates are reliably rejected.
+trap "flock -u 9; rm -f $PIDFILE $FFMPEG_PID_FILE; kill \$WATCHDOG_PID 2>/dev/null; pkill -P $$ 2>/dev/null; exit" INT TERM EXIT
 
 # ── Read config ───────────────────────────────────────────────
 # Scalar fields (standby/bitrate/fps) on one line …

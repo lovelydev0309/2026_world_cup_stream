@@ -40,11 +40,14 @@ is_stream_alive() {
     [ "$age" -lt "$STALE_THRESHOLD" ]
 }
 
-# Check if run_channel.sh is running for a channel
+# Check if run_channel.sh is running for a channel.
+# Match the live process by name rather than a PID file: a stale or missing
+# pidfile previously made the RPA's DEAD branch spawn a SECOND run_channel.sh
+# next to a still-running one → two producers writing the same HLS dir → a
+# corrupted/flapping manifest that freezes the player.
 is_script_running() {
     local channel="$1"
-    local pidfile="/tmp/stream_${channel}.pid"
-    [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile" 2>/dev/null)" 2>/dev/null
+    pgrep -f "run_channel.sh $channel" >/dev/null 2>&1
 }
 
 # Start a channel
