@@ -225,8 +225,8 @@
 
     hls = new Hls({
       lowLatencyMode: false,
-      liveSyncDuration: 30,
-      liveMaxLatencyDuration: 90,
+      liveSyncDuration: 40,
+      liveMaxLatencyDuration: 120,
       liveDurationInfinity: true,
       maxBufferHole: 0.5,
       nudgeOffset: 0.2,
@@ -240,8 +240,8 @@
       manifestLoadingTimeOut: 20000,
       levelLoadingTimeOut: 20000,
       fragLoadingTimeOut: 20000,
-      maxBufferLength: 60,
-      maxMaxBufferLength: 120,
+      maxBufferLength: 90,
+      maxMaxBufferLength: 180,
       debug: false,
     });
 

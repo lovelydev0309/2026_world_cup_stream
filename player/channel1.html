@@ -225,13 +225,14 @@
 
     hls = new Hls({
       lowLatencyMode: false,
-      // Sit 30s behind live. The upstream IPTV feed throws transient drops
-      // (HTTP 509) that create 5-12s gaps in segment production; a 30s cushion
-      // absorbs those without the playhead ever reaching an empty buffer.
-      liveSyncDuration: 30,
-      // Tolerate falling up to 90s behind before any force-sync seek, so a
+      // Sit 40s behind live. The upstream IPTV feed throws transient drops
+      // (HTTP 509) that create 5-12s gaps in segment production, sometimes
+      // back-to-back; a 40s cushion (backed by the server's 160s playlist
+      // window) absorbs several blips before the playhead reaches empty buffer.
+      liveSyncDuration: 40,
+      // Tolerate falling up to 120s behind before any force-sync seek, so a
       // gap never triggers a visible jump-to-live.
-      liveMaxLatencyDuration: 90,
+      liveMaxLatencyDuration: 120,
       liveDurationInfinity: true,
       // Glide over small discontinuities left by FFmpeg's mid-stream reconnect
       // instead of stalling on them.
@@ -247,8 +248,8 @@
       manifestLoadingTimeOut: 20000,
       levelLoadingTimeOut: 20000,
       fragLoadingTimeOut: 20000,
-      maxBufferLength: 60,
-      maxMaxBufferLength: 120,
+      maxBufferLength: 90,
+      maxMaxBufferLength: 180,
       debug: false,
     });
 

@@ -1,5 +1,5 @@
 {
-  "_comment": "Channel configuration. source_url = direct IPTV stream URL. Set enabled=false to skip.",
+  "_comment": "Channel configuration. source_url = single IPTV stream URL; source_urls = ordered list of primary + backup URLs tried on failover. Set enabled=false to skip.",
   "server": {
     "rtmp_host": "127.0.0.1",
     "rtmp_port": 1935,
@@ -37,6 +37,12 @@
       "display_name": "MX – Canal 5 HD",
       "enabled": true,
       "source_url": "http://prosclan.fans:2052/JF747456/QG712995/313828",
+      "source_urls": [
+        "http://prosclan.fans:2052/JF747456/QG712995/313828",
+        "http://prosclan.fans:2052/live/JF747456/QG712995/313828.ts",
+        "http://prosclan.fans:2052/JF747456/QG712995/313828.ts",
+        "http://prosclan.fans:2052/live/JF747456/QG712995/313828.m3u8"
+      ],
       "hls_url": "https://live3.mzolotv.com/hls/channel2/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,

@@ -33,14 +33,28 @@ WATCHDOG_PID=0
 trap "flock -u 9; rm -f $PIDFILE $FFMPEG_PID_FILE $LOCKFILE; kill \$WATCHDOG_PID 2>/dev/null; pkill -P $$ 2>/dev/null; exit" INT TERM EXIT
 
 # ── Read config ───────────────────────────────────────────────
-read -r SOURCE_URL STANDBY_REL BITRATE AUDIO_BR FPS < <(python3 -c "
+# Scalar fields (standby/bitrate/fps) on one line …
+read -r STANDBY_REL BITRATE AUDIO_BR FPS < <(python3 -c "
 import json, sys
 cfg = json.load(open('$CONFIG'))
 chs = [c for c in cfg['channels'] if c['channel_name'] == '$CHANNEL']
 if not chs: sys.exit('Channel not found')
 c = chs[0]
-print(c.get('source_url',''), c.get('standby_file','standby/standby.mp4'),
+print(c.get('standby_file','standby/standby.mp4'),
       c.get('bitrate',2500), c.get('audio_bitrate',128), c.get('fps',30))")
+
+# … and the ordered source URL list (primary + optional backups) into an array.
+# Prefers source_urls[] if present, else falls back to the single source_url.
+mapfile -t SOURCE_URLS < <(python3 -c "
+import json, sys
+cfg = json.load(open('$CONFIG'))
+c = [c for c in cfg['channels'] if c['channel_name'] == '$CHANNEL'][0]
+urls = c.get('source_urls') or ([c['source_url']] if c.get('source_url') else [])
+for u in urls:
+    if u: print(u)")
+
+NUM_URLS=${#SOURCE_URLS[@]}
+SOURCE_URL="${SOURCE_URLS[0]:-}"   # active URL; rotated by the main loop on failover
 
 STANDBY="$PROJECT_DIR/$STANDBY_REL"
 HLS_DIR="$PROJECT_DIR/hls/$CHANNEL"
@@ -48,7 +62,7 @@ GOP=$((FPS * 2))
 STALE_KILL_SECS=30   # kill ffmpeg if no new segment for this many seconds
 
 log "=== START $CHANNEL ==="
-log "  source=$SOURCE_URL fps=$FPS gop=$GOP"
+log "  source=$SOURCE_URL fps=$FPS gop=$GOP (${NUM_URLS} source URL(s))"
 
 # ── Ensure HLS dir ─────────────────────────────────────────────
 ensure_hls_dir() {
@@ -140,7 +154,7 @@ push_live() {
             -i "$SOURCE_URL" \
             -c:v copy \
             -c:a copy \
-            -f hls -hls_time 4 -hls_list_size 20 \
+            -f hls -hls_time 4 -hls_list_size 40 \
             -hls_flags delete_segments+append_list+independent_segments \
             -hls_segment_type mpegts \
             -hls_segment_filename "$HLS_DIR/%d.ts" \
@@ -164,7 +178,7 @@ push_live() {
             -force_key_frames "expr:gte(t,n_forced*4)" \
             -c:a aac -b:a "${AUDIO_BR}k" -ar 44100 \
             -af aresample=async=1 \
-            -f hls -hls_time 4 -hls_list_size 20 \
+            -f hls -hls_time 4 -hls_list_size 40 \
             -hls_flags delete_segments+append_list+independent_segments \
             -hls_segment_type mpegts \
             -hls_segment_filename "$HLS_DIR/%d.ts" \
@@ -218,25 +232,36 @@ push_standby() {
 LIVE_FAIL=0
 MAX_FAILS=3
 HEALTHY_RUN_SECS=45   # a run at least this long = healthy, resets the fail counter
+URL_IDX=0             # index into SOURCE_URLS of the currently-active source
 
 while true; do
+    SOURCE_URL="${SOURCE_URLS[$URL_IDX]:-}"
     if [[ -n "$SOURCE_URL" ]] && [[ $LIVE_FAIL -lt $MAX_FAILS ]]; then
         T_START=$(date +%s)
         push_live
         EXIT=$?
         T_RUN=$(( $(date +%s) - T_START ))
         if [[ $T_RUN -ge $HEALTHY_RUN_SECS ]]; then
-            # Healthy stream hit a transient drop – reconnect now, no penalty.
+            # Healthy stream hit a transient drop – reconnect to the SAME working
+            # URL immediately, no penalty and no failover.
             LIVE_FAIL=0
-            log "Live exited (code=$EXIT) ran=${T_RUN}s – healthy, reconnecting immediately"
+            log "Live exited (code=$EXIT) ran=${T_RUN}s on source[$URL_IDX] – healthy, reconnecting"
         else
+            # Fast failure (likely HTTP 509 / dead edge): rotate to the next
+            # backup URL so the next attempt hits a different upstream node.
             LIVE_FAIL=$((LIVE_FAIL + 1))
-            log "Live exited (code=$EXIT) ran=${T_RUN}s fail=$LIVE_FAIL/$MAX_FAILS"
+            if [[ $NUM_URLS -gt 1 ]]; then
+                URL_IDX=$(( (URL_IDX + 1) % NUM_URLS ))
+                log "Live exited (code=$EXIT) ran=${T_RUN}s fail=$LIVE_FAIL/$MAX_FAILS – failover to source[$URL_IDX]"
+            else
+                log "Live exited (code=$EXIT) ran=${T_RUN}s fail=$LIVE_FAIL/$MAX_FAILS"
+            fi
         fi
     else
         push_standby || true
-        log "Standby ended – resetting, retrying live"
+        log "Standby ended – resetting to primary, retrying live"
         LIVE_FAIL=0
+        URL_IDX=0   # after a standby cycle, start over from the primary URL
     fi
     sleep 1
 done
