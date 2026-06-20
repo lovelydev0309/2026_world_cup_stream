@@ -30,7 +30,9 @@
       "bitrate": 2500,
       "resolution": "1280x720",
       "fps": 30,
-      "audio_bitrate": 128
+      "audio_bitrate": 128,
+      "_comment_audio": "force_silent_audio: this source's audio is broken (runaway clock / rate drift) and desyncs the browser. Silent stereo keeps video reliable. Remove this flag if a stable source is provided.",
+      "force_silent_audio": true
     },
     {
       "channel_name": "channel2",

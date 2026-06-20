@@ -51,15 +51,16 @@ trap "flock -u 9; rm -f $PIDFILE $FFMPEG_PID_FILE; kill \$WATCHDOG_PID 2>/dev/nu
 pkill -9 -f "hls/${CHANNEL}/[0-9%]" 2>/dev/null || true
 
 # ── Read config ───────────────────────────────────────────────
-# Scalar fields (standby/bitrate/fps) on one line …
-read -r STANDBY_REL BITRATE AUDIO_BR FPS < <(python3 -c "
+# Scalar fields (standby/bitrate/fps/force_silent_audio) on one line …
+read -r STANDBY_REL BITRATE AUDIO_BR FPS FORCE_SILENT_AUDIO < <(python3 -c "
 import json, sys
 cfg = json.load(open('$CONFIG'))
 chs = [c for c in cfg['channels'] if c['channel_name'] == '$CHANNEL']
 if not chs: sys.exit('Channel not found')
 c = chs[0]
 print(c.get('standby_file','standby/standby.mp4'),
-      c.get('bitrate',2500), c.get('audio_bitrate',128), c.get('fps',30))")
+      c.get('bitrate',2500), c.get('audio_bitrate',128), c.get('fps',30),
+      'true' if c.get('force_silent_audio') else 'false')")
 
 # … and the ordered source URL list (primary + optional backups) into an array.
 # Prefers source_urls[] if present, else falls back to the single source_url.
@@ -229,7 +230,7 @@ push_live() {
     # both breaks browser audio AND makes -re race at ~22x), discard it and feed
     # clean silent stereo from anullsrc instead so the channel still plays 1x.
     local aud_in=() aud_map=() aud_tail=()
-    if detect_audio_ok; then
+    if [ "$FORCE_SILENT_AUDIO" != "true" ] && detect_audio_ok; then
         log "→ LIVE re-encoding to H.264 540p (source audio, A/V realigned)"
         # Regenerate the audio PTS from the REAL decoded SAMPLE COUNT
         # (asetpts=N/SR/TB) so it's pinned to realtime and locked to the video,
