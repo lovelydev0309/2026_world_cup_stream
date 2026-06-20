@@ -109,8 +109,19 @@ ensure_hls_dir
 stale_watchdog() {
     local ffpid="$1"
     local last_seg="" last_size=0 current_seg current_size stale_count=0
+    local last_num=-1 current_num race_count=0
     local interval=5
     local threshold=$(( STALE_KILL_SECS / interval ))
+    # RACING guard: a runaway source clock (some IPTV feeds dump content many x
+    # faster than realtime with bloated timestamps) makes ffmpeg emit segments in
+    # a flood — the HLS live edge races away, the player can't keep up, and the
+    # PTS sprints toward the 33-bit MPEG-TS wraparound. -re can't pace a source
+    # whose own timestamps are wrong. So if >RACE_SEGS segments appear per
+    # interval for RACE_HITS consecutive checks (sustained, not a brief post-
+    # restart catch-up burst), kill ffmpeg — the main loop then falls back to the
+    # paced standby clip instead of serving an unplayable flood.
+    local RACE_SEGS=8     # >8 new segs in 5s ≈ >6x realtime
+    local RACE_HITS=3     # ~15s sustained before acting
     while kill -0 "$ffpid" 2>/dev/null; do
         sleep "$interval"
         current_seg=$(ls -t "$HLS_DIR"/*.ts 2>/dev/null | head -1)
@@ -130,6 +141,20 @@ stale_watchdog() {
             kill -9 "$ffpid" 2>/dev/null
             break
         fi
+        # ── racing detection ──
+        current_num=$(basename "${current_seg:-x}" .ts 2>/dev/null)
+        case "$current_num" in ''|*[!0-9]*) current_num=-1 ;; esac
+        if [ "$last_num" -ge 0 ] && [ "$current_num" -ge 0 ] && [ $(( current_num - last_num )) -gt $RACE_SEGS ]; then
+            race_count=$((race_count + 1))
+            if [ $race_count -ge $RACE_HITS ]; then
+                log "  [WATCHDOG] racing $(( current_num - last_num )) segs/${interval}s (runaway source clock) – killing ffmpeg PID $ffpid"
+                kill -9 "$ffpid" 2>/dev/null
+                break
+            fi
+        else
+            race_count=0
+        fi
+        last_num=$current_num
     done
 }
 WATCHDOG_PID=0
