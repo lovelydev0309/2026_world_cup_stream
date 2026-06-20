@@ -225,14 +225,15 @@
 
     hls = new Hls({
       lowLatencyMode: false,
-      // Middle-ground live tuning: sit ~15s behind the live edge with a ~20s
-      // buffer. Low enough latency to feel current, but enough cushion to ride
-      // out most of channel2's HTTP 509 source dropouts (5-12s gaps) without a
-      // visible stall. FFmpeg's -re pacing keeps the live edge at realtime so
-      // this stays stable.
-      liveSyncDuration: 15,
-      // Resync to live if we drift more than 40s behind.
-      liveMaxLatencyDuration: 40,
+      // Sit 30s behind the live edge. ALL three IPTV sources occasionally hiccup
+      // for 8-13s (measured) and then burst to catch up; a 15s buffer was too
+      // tight to ride those gaps, so the buffer drained → brief stall → the
+      // status badge flickered BUFFERING↔LIVE. 30s comfortably absorbs a 13s gap
+      // with margin. (Trade-off: ~30s latency vs lower. Dial down toward 20 for
+      // less latency if you can tolerate the occasional flicker.)
+      liveSyncDuration: 30,
+      // Don't force a catch-up seek until 60s behind, so a gap never jumps.
+      liveMaxLatencyDuration: 60,
       liveDurationInfinity: true,
       // Glide over small discontinuities from FFmpeg reconnects instead of
       // stalling on them.
@@ -248,9 +249,8 @@
       manifestLoadingTimeOut: 20000,
       levelLoadingTimeOut: 20000,
       fragLoadingTimeOut: 20000,
-      // Cap forward buffer to ~20s (the "Buffer" stat).
-      maxBufferLength: 20,
-      maxMaxBufferLength: 40,
+      maxBufferLength: 45,
+      maxMaxBufferLength: 90,
       debug: false,
     });
 
@@ -274,11 +274,13 @@
 
     hls.on(Hls.Events.FRAG_CHANGED, () => {
       overlay.classList.add("hidden");
+      clearBuffering();
       setBadge("live", "LIVE");
     });
 
     hls.on(Hls.Events.FRAG_BUFFERED, () => {
       _recoverCount = 0;
+      clearBuffering();
       // Resume if the video stalled waiting for this segment to arrive
       if (video.paused) video.play().catch(() => {});
     });
@@ -286,7 +288,24 @@
     let _recoverTimer = null;
     let _stallTimer   = null;
     let _recoverCount = 0;
+    let _badgeTimer   = null;
     const REINIT_AFTER = 6;
+
+    // ── Badge debounce ────────────────────────────────────────────────────
+    // Only flip the badge to BUFFERING if a stall actually persists past 1.5s.
+    // Brief micro-stalls (the player riding over a source's 8-13s production
+    // hiccup) resolve before then, so the status stays LIVE instead of
+    // flickering BUFFERING↔LIVE on every momentary stall.
+    function showBufferingSoon() {
+      if (_badgeTimer) return;
+      _badgeTimer = setTimeout(() => {
+        _badgeTimer = null;
+        setBadge("standby", "BUFFERING…");
+      }, 1500);
+    }
+    function clearBuffering() {
+      if (_badgeTimer) { clearTimeout(_badgeTimer); _badgeTimer = null; }
+    }
 
     // ── Buffer stall handler ──────────────────────────────────────────────
     // NEVER seek backward – that causes the "jumps back a few seconds" bug.
@@ -297,7 +316,7 @@
     //   • Empty buffer           → fall through to live-edge recovery
     function handleBufferStall(label) {
       log(label, "warn");
-      setBadge("standby", "BUFFERING…");
+      showBufferingSoon();
       if (_stallTimer || _recoverTimer) return;
       _stallTimer = setTimeout(() => {
         _stallTimer = null;
@@ -321,7 +340,7 @@
     // ── Fragment / manifest errors: reload from live edge ─────────────────
     function recoverToLiveEdge(baseDelay, label) {
       log(label, "warn");
-      setBadge("standby", "BUFFERING…");
+      showBufferingSoon();
       if (_recoverTimer) return;
       _recoverCount++;
       if (_recoverCount > REINIT_AFTER) {
@@ -341,6 +360,7 @@
           if (!hls) return;
           hls.startLoad(-1);
           video.play().catch(() => {});
+          clearBuffering();
           setBadge("live", "LIVE");
         }, 300);
       }, delay);

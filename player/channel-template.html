@@ -225,11 +225,12 @@
 
     hls = new Hls({
       lowLatencyMode: false,
-      // Middle-ground live tuning: ~15s behind edge, ~20s buffer. Enough
-      // cushion to ride most channel2 source dropouts without a stall, while
-      // keeping latency low. Safe with FFmpeg's -re realtime pacing.
-      liveSyncDuration: 15,
-      liveMaxLatencyDuration: 40,
+      // Sit 30s behind live. All three IPTV sources hiccup 8-13s occasionally
+      // then burst to catch up; 15s was too tight and the buffer drained →
+      // BUFFERING↔LIVE flicker. 30s absorbs a 13s gap with margin. Dial toward
+      // 20 for less latency if occasional flicker is acceptable.
+      liveSyncDuration: 30,
+      liveMaxLatencyDuration: 60,
       liveDurationInfinity: true,
       maxBufferHole: 0.5,
       nudgeOffset: 0.2,
@@ -243,8 +244,8 @@
       manifestLoadingTimeOut: 20000,
       levelLoadingTimeOut: 20000,
       fragLoadingTimeOut: 20000,
-      maxBufferLength: 20,
-      maxMaxBufferLength: 40,
+      maxBufferLength: 45,
+      maxMaxBufferLength: 90,
       debug: false,
     });
 
@@ -268,22 +269,35 @@
 
     hls.on(Hls.Events.FRAG_CHANGED, () => {
       overlay.classList.add("hidden");
+      clearBuffering();
       setBadge("live", "LIVE");
     });
 
     hls.on(Hls.Events.FRAG_BUFFERED, () => {
       _recoverCount = 0;
+      clearBuffering();
       if (video.paused) video.play().catch(() => {});
     });
 
     let _recoverTimer = null;
     let _stallTimer   = null;
     let _recoverCount = 0;
+    let _badgeTimer   = null;
     const REINIT_AFTER = 6;
+
+    // Only flip the badge to BUFFERING if a stall persists past 1.5s, so brief
+    // micro-stalls over a source's production hiccup don't flicker the status.
+    function showBufferingSoon() {
+      if (_badgeTimer) return;
+      _badgeTimer = setTimeout(() => { _badgeTimer = null; setBadge("standby", "BUFFERING…"); }, 1500);
+    }
+    function clearBuffering() {
+      if (_badgeTimer) { clearTimeout(_badgeTimer); _badgeTimer = null; }
+    }
 
     function handleBufferStall(label) {
       log(label, "warn");
-      setBadge("standby", "BUFFERING…");
+      showBufferingSoon();
       if (_stallTimer || _recoverTimer) return;
       _stallTimer = setTimeout(() => {
         _stallTimer = null;
@@ -304,7 +318,7 @@
     // ── Fragment / manifest errors: reload from live edge ─────────────────
     function recoverToLiveEdge(baseDelay, label) {
       log(label, "warn");
-      setBadge("standby", "BUFFERING…");
+      showBufferingSoon();
       if (_recoverTimer) return;
       _recoverCount++;
       if (_recoverCount > REINIT_AFTER) {
@@ -324,6 +338,7 @@
           if (!hls) return;
           hls.startLoad(-1);
           video.play().catch(() => {});
+          clearBuffering();
           setBadge("live", "LIVE");
         }, 300);
       }, delay);
