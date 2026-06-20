@@ -225,18 +225,17 @@
 
     hls = new Hls({
       lowLatencyMode: false,
-      // Low-latency live tuning: sit ~8s behind the live edge for a normal
-      // 2-10s buffer. Now that FFmpeg paces production to realtime (-re), the
-      // big cushion is no longer needed to mask a racing live edge. NOTE: this
-      // smaller buffer means a channel2 source dropout (HTTP 509, 5-12s gaps)
-      // can surface as a brief stall instead of being hidden — raise these if
-      // that channel stutters too much.
-      liveSyncDuration: 8,
-      // Resync to live if we drift more than 24s behind.
-      liveMaxLatencyDuration: 24,
+      // Middle-ground live tuning: sit ~15s behind the live edge with a ~20s
+      // buffer. Low enough latency to feel current, but enough cushion to ride
+      // out most of channel2's HTTP 509 source dropouts (5-12s gaps) without a
+      // visible stall. FFmpeg's -re pacing keeps the live edge at realtime so
+      // this stays stable.
+      liveSyncDuration: 15,
+      // Resync to live if we drift more than 40s behind.
+      liveMaxLatencyDuration: 40,
       liveDurationInfinity: true,
       // Glide over small discontinuities from FFmpeg reconnects instead of
-      // stalling on them (more important now that the buffer is thin).
+      // stalling on them.
       maxBufferHole: 0.5,
       nudgeOffset: 0.2,
       nudgeMaxRetry: 8,
@@ -249,9 +248,9 @@
       manifestLoadingTimeOut: 20000,
       levelLoadingTimeOut: 20000,
       fragLoadingTimeOut: 20000,
-      // Cap forward buffer to ~10s (the "Buffer" stat) instead of 90s.
-      maxBufferLength: 10,
-      maxMaxBufferLength: 20,
+      // Cap forward buffer to ~20s (the "Buffer" stat).
+      maxBufferLength: 20,
+      maxMaxBufferLength: 40,
       debug: false,
     });
 

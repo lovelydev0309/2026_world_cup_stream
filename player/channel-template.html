@@ -225,11 +225,11 @@
 
     hls = new Hls({
       lowLatencyMode: false,
-      // Low-latency live tuning: ~8s behind edge, ~10s buffer (was 40/90).
-      // Safe now that FFmpeg paces to realtime (-re). A channel2 source dropout
-      // may surface as a brief stall with this thinner buffer.
-      liveSyncDuration: 8,
-      liveMaxLatencyDuration: 24,
+      // Middle-ground live tuning: ~15s behind edge, ~20s buffer. Enough
+      // cushion to ride most channel2 source dropouts without a stall, while
+      // keeping latency low. Safe with FFmpeg's -re realtime pacing.
+      liveSyncDuration: 15,
+      liveMaxLatencyDuration: 40,
       liveDurationInfinity: true,
       maxBufferHole: 0.5,
       nudgeOffset: 0.2,
@@ -243,8 +243,8 @@
       manifestLoadingTimeOut: 20000,
       levelLoadingTimeOut: 20000,
       fragLoadingTimeOut: 20000,
-      maxBufferLength: 10,
-      maxMaxBufferLength: 20,
+      maxBufferLength: 20,
+      maxMaxBufferLength: 40,
       debug: false,
     });
 
