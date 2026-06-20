@@ -231,13 +231,16 @@ push_live() {
     local aud_in=() aud_map=() aud_tail=()
     if detect_audio_ok; then
         log "→ LIVE re-encoding to H.264 540p (source audio, A/V realigned)"
-        # Regenerate the audio PTS from the SAMPLE COUNT (asetpts=N/SR/TB), not
-        # from the source clock. channel1's feed has a runaway audio PTS that
-        # raced ~12x ahead of video (audio at 103581s vs video 8657s) and wrapped
-        # the 33-bit MPEG-TS limit, so the browser couldn't align A/V and stuck on
-        # "Loading…". PTS-STARTPTS only fixes the first frame; N/SR/TB pins the
-        # whole audio track to realtime, locked to the video.
-        aud_tail=(-af "aresample=async=1,asetpts=N/SR/TB")
+        # Regenerate the audio PTS from the REAL decoded SAMPLE COUNT
+        # (asetpts=N/SR/TB) so it's pinned to realtime and locked to the video,
+        # immune to channel1's runaway source audio clock (which otherwise raced
+        # the audio tens-of-thousands of seconds ahead of video and wrapped the
+        # 33-bit MPEG-TS limit → browser stuck on "Loading…").
+        # NOTE: do NOT precede this with aresample=async — async hard-fills the
+        # source's huge timestamp gaps with silence, which inflates the sample
+        # count (N) and re-breaks the very alignment we want. -ar on the encoder
+        # handles rate conversion; asetpts alone gives a clean realtime timeline.
+        aud_tail=(-af "asetpts=N/SR/TB")
     else
         log "→ LIVE re-encoding to H.264 540p (source audio broken – silent stereo)"
         aud_in=(-f lavfi -i "anullsrc=channel_layout=stereo:sample_rate=44100")
