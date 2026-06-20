@@ -39,6 +39,17 @@ WATCHDOG_PID=0
 # instance flocks the SAME inode and duplicates are reliably rejected.
 trap "flock -u 9; rm -f $PIDFILE $FFMPEG_PID_FILE; kill \$WATCHDOG_PID 2>/dev/null; pkill -P $$ 2>/dev/null; exit" INT TERM EXIT
 
+# ── Reap orphaned ffmpeg from a prior instance ────────────────
+# We hold the flock, so no other run_channel.sh for this channel is running.
+# But a previous instance killed with SIGKILL (or a hard RPA restart) skips the
+# trap above, leaving its ffmpeg child orphaned (re-parented to init) and still
+# writing our HLS dir. Two+ ffmpeg rewriting one manifest corrupts it → the
+# player loops on levelLoadError and shows a black frame. Kill any such strays
+# now, before we start our own ffmpeg. Match the ffmpeg segment-filename arg
+# (hls/<ch>/%d.ts or hls/<ch>/<num>.ts) — unique to this channel's ffmpeg and
+# absent from any run_channel.sh command line, so nothing else is hit.
+pkill -9 -f "hls/${CHANNEL}/[0-9%]" 2>/dev/null || true
+
 # ── Read config ───────────────────────────────────────────────
 # Scalar fields (standby/bitrate/fps) on one line …
 read -r STANDBY_REL BITRATE AUDIO_BR FPS < <(python3 -c "
