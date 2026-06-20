@@ -225,17 +225,18 @@
 
     hls = new Hls({
       lowLatencyMode: false,
-      // Sit 40s behind live. The upstream IPTV feed throws transient drops
-      // (HTTP 509) that create 5-12s gaps in segment production, sometimes
-      // back-to-back; a 40s cushion (backed by the server's 160s playlist
-      // window) absorbs several blips before the playhead reaches empty buffer.
-      liveSyncDuration: 40,
-      // Tolerate falling up to 120s behind before any force-sync seek, so a
-      // gap never triggers a visible jump-to-live.
-      liveMaxLatencyDuration: 120,
+      // Low-latency live tuning: sit ~8s behind the live edge for a normal
+      // 2-10s buffer. Now that FFmpeg paces production to realtime (-re), the
+      // big cushion is no longer needed to mask a racing live edge. NOTE: this
+      // smaller buffer means a channel2 source dropout (HTTP 509, 5-12s gaps)
+      // can surface as a brief stall instead of being hidden — raise these if
+      // that channel stutters too much.
+      liveSyncDuration: 8,
+      // Resync to live if we drift more than 24s behind.
+      liveMaxLatencyDuration: 24,
       liveDurationInfinity: true,
-      // Glide over small discontinuities left by FFmpeg's mid-stream reconnect
-      // instead of stalling on them.
+      // Glide over small discontinuities from FFmpeg reconnects instead of
+      // stalling on them (more important now that the buffer is thin).
       maxBufferHole: 0.5,
       nudgeOffset: 0.2,
       nudgeMaxRetry: 8,
@@ -248,8 +249,9 @@
       manifestLoadingTimeOut: 20000,
       levelLoadingTimeOut: 20000,
       fragLoadingTimeOut: 20000,
-      maxBufferLength: 90,
-      maxMaxBufferLength: 180,
+      // Cap forward buffer to ~10s (the "Buffer" stat) instead of 90s.
+      maxBufferLength: 10,
+      maxMaxBufferLength: 20,
       debug: false,
     });
 
