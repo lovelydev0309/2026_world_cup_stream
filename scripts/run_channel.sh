@@ -194,6 +194,7 @@ push_live() {
         -i "$SOURCE_URL" \
         -vf "scale=960:540:force_original_aspect_ratio=decrease,pad=960:540:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS" \
         -c:v libx264 -preset ultrafast -crf 28 \
+        -threads 2 \
         -r "$FPS" -g "$GOP" -keyint_min "$GOP" \
         -force_key_frames "expr:gte(t,n_forced*4)" \
         -c:a aac -b:a "${AUDIO_BR}k" -ar 44100 \
