@@ -163,6 +163,23 @@ detect_codec() {
     fi
 }
 
+# ── Detect source audio validity ─────────────────────────────
+# Some IPTV feeds (notably channel2/313828) intermittently deliver a BROKEN
+# audio stream: 0 channels and an invalid 1/0 time_base. That garbage stream
+# poisons ffmpeg's pipeline timing — -re loses pacing so segments race out ~22x
+# realtime (the live edge runs away and the player can't keep up) AND the output
+# audio is undecodable by browsers. Returns success only if the source has at
+# least one real audio channel; otherwise push_live swaps in clean silent stereo.
+detect_audio_ok() {
+    local chans
+    chans=$(timeout 5 ffprobe -v quiet -hide_banner \
+        -user_agent "IPTV Smarters/1.0 Dalvik/2.1.0" \
+        -analyzeduration 2000000 -probesize 1000000 \
+        -select_streams a:0 -show_entries stream=channels \
+        -of csv=p=0 "$SOURCE_URL" 2>/dev/null | head -1)
+    [ -n "$chans" ] && [ "$chans" -ge 1 ] 2>/dev/null
+}
+
 # ── Live push ─────────────────────────────────────────────────
 # ALWAYS re-encode to H.264 540p (no stream-copy). Two source quirks force this:
 #
@@ -181,7 +198,22 @@ detect_codec() {
 # emit ZERO segments); we rely on -fflags +genpts plus the setpts reset instead.
 push_live() {
     ensure_hls_dir
-    log "→ LIVE re-encoding to H.264 540p (A/V realigned, browser-safe)"
+
+    # Pick the audio path. Source audio is used when valid (channel1/3); when the
+    # source delivers a broken 0-channel stream (channel2's feed does this and it
+    # both breaks browser audio AND makes -re race at ~22x), discard it and feed
+    # clean silent stereo from anullsrc instead so the channel still plays 1x.
+    local aud_in=() aud_map=() aud_tail=()
+    if detect_audio_ok; then
+        log "→ LIVE re-encoding to H.264 540p (source audio, A/V realigned)"
+        aud_tail=(-af "aresample=async=1,asetpts=PTS-STARTPTS")
+    else
+        log "→ LIVE re-encoding to H.264 540p (source audio broken – silent stereo)"
+        aud_in=(-f lavfi -i "anullsrc=channel_layout=stereo:sample_rate=44100")
+        aud_map=(-map 0:v:0 -map 1:a:0)
+        aud_tail=(-shortest)
+    fi
+
     ffmpeg -hide_banner -loglevel warning \
         -re \
         -fflags +igndts+discardcorrupt+genpts \
@@ -192,13 +224,15 @@ push_live() {
         -reconnect_streamed 1 -reconnect_delay_max 5 \
         -timeout 10000000 \
         -i "$SOURCE_URL" \
+        "${aud_in[@]}" \
+        "${aud_map[@]}" \
         -vf "scale=960:540:force_original_aspect_ratio=decrease,pad=960:540:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS" \
         -c:v libx264 -preset ultrafast -crf 28 \
         -threads 2 \
         -r "$FPS" -g "$GOP" -keyint_min "$GOP" \
         -force_key_frames "expr:gte(t,n_forced*4)" \
         -c:a aac -b:a "${AUDIO_BR}k" -ar 44100 \
-        -af "aresample=async=1,asetpts=PTS-STARTPTS" \
+        "${aud_tail[@]}" \
         -avoid_negative_ts make_zero \
         -flush_packets 1 \
         -f hls -hls_time 4 -hls_list_size 40 \
