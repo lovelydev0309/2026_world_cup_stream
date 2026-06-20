@@ -153,70 +153,48 @@ detect_codec() {
 }
 
 # ── Live push ─────────────────────────────────────────────────
-# Only confirmed h264 uses stream copy (~2% CPU).
-# Everything else (hevc, unknown, or any probe failure) re-encodes to H.264
-# 540p – safe for all browsers and avoids broken stream copy on HEVC.
+# ALWAYS re-encode to H.264 540p (no stream-copy). Two source quirks force this:
 #
-# `-re` paces input reading to the content's native rate. The IPTV source
-# delivers a buffered backlog ~18x faster than realtime; without -re, ffmpeg
-# writes segments far faster than realtime, the HLS live edge races ahead, and
-# every player keeps falling behind and force-resyncing (the "seizing"). -re
-# pins production to 1x. NOTE: -re is incompatible with
-# -use_wallclock_as_timestamps (together they emit ZERO segments), so that flag
-# was removed; -fflags +genpts regenerates sane timestamps instead.
+# 1. Pacing: the IPTV source delivers a buffered backlog ~18x faster than
+#    realtime. `-re` pins reading to the content's native rate so the HLS live
+#    edge advances at 1x instead of racing ahead (which made players seize).
+#
+# 2. A/V timeline: the source's audio PTS wraps past the 33-bit MPEG-TS limit
+#    on a different boundary than video, so a stream-COPY ends up with audio and
+#    video tens-of-thousands of seconds apart. ffmpeg tolerates it, but browser
+#    MSE/hls.js cannot align them and renders a black 0x0 frame (downloads
+#    segments but never plays). Re-encoding lets us run setpts/asetpts to force
+#    both streams onto a shared, zero-based timeline that every browser plays.
+#
+# NOTE: -re is incompatible with -use_wallclock_as_timestamps (together they
+# emit ZERO segments); we rely on -fflags +genpts plus the setpts reset instead.
 push_live() {
     ensure_hls_dir
-    local codec
-    codec=$(detect_codec)
-    log "→ LIVE codec=${codec:-unknown}"
-
-    if [ "$codec" = "h264" ]; then
-        log "  H.264 source – stream copy (~2% CPU)"
-        ffmpeg -hide_banner -loglevel warning \
-            -re \
-            -fflags +igndts+discardcorrupt+genpts \
-            -err_detect ignore_err \
-            -user_agent "IPTV Smarters/1.0 Dalvik/2.1.0" \
-            -headers "Referer: http://prosclan.fans/" \
-            -reconnect 1 -reconnect_at_eof 1 \
-            -reconnect_streamed 1 -reconnect_delay_max 5 \
-            -timeout 10000000 \
-            -i "$SOURCE_URL" \
-            -c:v copy \
-            -c:a copy \
-            -flush_packets 1 \
-            -f hls -hls_time 4 -hls_list_size 40 \
-            -hls_flags delete_segments+append_list+independent_segments \
-            -hls_segment_type mpegts \
-            -hls_segment_filename "$HLS_DIR/%d.ts" \
-            "$HLS_DIR/index.m3u8" \
-            2>&1 &
-    else
-        log "  non-H.264 source (${codec:-unknown}) – re-encoding to H.264 540p"
-        ffmpeg -hide_banner -loglevel warning \
-            -re \
-            -fflags +igndts+discardcorrupt+genpts \
-            -err_detect ignore_err \
-            -user_agent "IPTV Smarters/1.0 Dalvik/2.1.0" \
-            -headers "Referer: http://prosclan.fans/" \
-            -reconnect 1 -reconnect_at_eof 1 \
-            -reconnect_streamed 1 -reconnect_delay_max 5 \
-            -timeout 10000000 \
-            -i "$SOURCE_URL" \
-            -vf "scale=960:540:force_original_aspect_ratio=decrease,pad=960:540:(ow-iw)/2:(oh-ih)/2" \
-            -c:v libx264 -preset ultrafast -crf 28 \
-            -r "$FPS" -g "$GOP" -keyint_min "$GOP" \
-            -force_key_frames "expr:gte(t,n_forced*4)" \
-            -c:a aac -b:a "${AUDIO_BR}k" -ar 44100 \
-            -af aresample=async=1 \
-            -flush_packets 1 \
-            -f hls -hls_time 4 -hls_list_size 40 \
-            -hls_flags delete_segments+append_list+independent_segments \
-            -hls_segment_type mpegts \
-            -hls_segment_filename "$HLS_DIR/%d.ts" \
-            "$HLS_DIR/index.m3u8" \
-            2>&1 &
-    fi
+    log "→ LIVE re-encoding to H.264 540p (A/V realigned, browser-safe)"
+    ffmpeg -hide_banner -loglevel warning \
+        -re \
+        -fflags +igndts+discardcorrupt+genpts \
+        -err_detect ignore_err \
+        -user_agent "IPTV Smarters/1.0 Dalvik/2.1.0" \
+        -headers "Referer: http://prosclan.fans/" \
+        -reconnect 1 -reconnect_at_eof 1 \
+        -reconnect_streamed 1 -reconnect_delay_max 5 \
+        -timeout 10000000 \
+        -i "$SOURCE_URL" \
+        -vf "scale=960:540:force_original_aspect_ratio=decrease,pad=960:540:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS" \
+        -c:v libx264 -preset ultrafast -crf 28 \
+        -r "$FPS" -g "$GOP" -keyint_min "$GOP" \
+        -force_key_frames "expr:gte(t,n_forced*4)" \
+        -c:a aac -b:a "${AUDIO_BR}k" -ar 44100 \
+        -af "aresample=async=1,asetpts=PTS-STARTPTS" \
+        -avoid_negative_ts make_zero \
+        -flush_packets 1 \
+        -f hls -hls_time 4 -hls_list_size 40 \
+        -hls_flags delete_segments+append_list+independent_segments \
+        -hls_segment_type mpegts \
+        -hls_segment_filename "$HLS_DIR/%d.ts" \
+        "$HLS_DIR/index.m3u8" \
+        2>&1 &
 
     local FPID=$!
     echo $FPID > "$FFMPEG_PID_FILE"
