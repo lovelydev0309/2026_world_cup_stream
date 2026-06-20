@@ -206,6 +206,8 @@
   // ── Init player ──────────────────────────────────────────
   function init() {
     if (hls) { hls.destroy(); hls = null; }
+    if (statsTimer) clearInterval(statsTimer);
+    if (window.__playbackWatchdog) clearInterval(window.__playbackWatchdog);
 
     if (!Hls.isSupported()) {
       // Fallback for Safari native HLS
@@ -383,6 +385,33 @@
     hls.on(Hls.Events.MEDIA_DETACHING, () => setBadge("error", "OFFLINE"));
 
     statsTimer = setInterval(updateStats, 2000);
+
+    // ── Playback watchdog — auto-refresh, never a manual reload ──────────
+    // Some wedge states (A/V desync that never starts, frozen decode, stuck tab
+    // on wake) raise no fatal hls.js error. Watch the real playback clock; if it
+    // stops advancing while we should be live, escalate automatically — soft
+    // live-edge resync (~8s), then a full channel re-init (~18s). In-page "RPA".
+    let _wdLast = -1, _wdStuck = 0;
+    window.__playbackWatchdog = setInterval(() => {
+      if (!hls || document.hidden || video.paused || video.seeking || video.ended) {
+        _wdLast = video.currentTime; _wdStuck = 0; return;
+      }
+      if (video.currentTime > _wdLast + 0.1) {
+        _wdLast = video.currentTime; _wdStuck = 0; return;
+      }
+      _wdStuck++;
+      if (_wdStuck === 4) {
+        recoverToLiveEdge(500, "Playback not advancing – auto-resync");
+      } else if (_wdStuck >= 9) {
+        _wdStuck = 0;
+        log("Playback wedged – auto-reinitializing channel", "warn");
+        setBadge("standby", "RECONNECTING…");
+        overlay.classList.remove("hidden");
+        ovText.textContent = "Reconnecting…";
+        init();
+      }
+    }, 2000);
+
     log(`Connecting to ${STREAM_URL}`, "info");
   }
 

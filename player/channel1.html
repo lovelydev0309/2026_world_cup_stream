@@ -206,6 +206,8 @@
   // ── Init player ──────────────────────────────────────────
   function init() {
     if (hls) { hls.destroy(); hls = null; }
+    if (statsTimer) clearInterval(statsTimer);
+    if (window.__playbackWatchdog) clearInterval(window.__playbackWatchdog);
 
     if (!Hls.isSupported()) {
       // Fallback for Safari native HLS
@@ -406,6 +408,38 @@
     hls.on(Hls.Events.MEDIA_DETACHING, () => setBadge("error", "OFFLINE"));
 
     statsTimer = setInterval(updateStats, 2000);
+
+    // ── Playback watchdog — auto-refresh, never a manual reload ──────────
+    // hls.js fires events for many faults, but some wedge states (an A/V desync
+    // that never starts, a frozen decoder, a stuck tab on wake) raise NO fatal
+    // error and would otherwise sit on "Loading…" forever. This timer watches
+    // the real playback clock: if currentTime stops advancing while we should be
+    // live, it escalates on its own — soft live-edge resync (~8s), then a full
+    // channel re-init (~18s). This is the in-page "RPA" that re-refreshes the
+    // channel automatically, so no one ever has to reload the browser by hand.
+    let _wdLast = -1, _wdStuck = 0;
+    window.__playbackWatchdog = setInterval(() => {
+      // Skip when intentionally paused, seeking, ended, or the tab is hidden
+      // (background tabs throttle timers — don't false-trigger a reload).
+      if (!hls || document.hidden || video.paused || video.seeking || video.ended) {
+        _wdLast = video.currentTime; _wdStuck = 0; return;
+      }
+      if (video.currentTime > _wdLast + 0.1) {        // advancing → healthy
+        _wdLast = video.currentTime; _wdStuck = 0; return;
+      }
+      _wdStuck++;                                      // not advancing
+      if (_wdStuck === 4) {                            // ~8s frozen → soft resync
+        recoverToLiveEdge(500, "Playback not advancing – auto-resync");
+      } else if (_wdStuck >= 9) {                      // ~18s wedged → reload channel
+        _wdStuck = 0;
+        log("Playback wedged – auto-reinitializing channel", "warn");
+        setBadge("standby", "RECONNECTING…");
+        overlay.classList.remove("hidden");
+        ovText.textContent = "Reconnecting…";
+        init();
+      }
+    }, 2000);
+
     log(`Connecting to ${STREAM_URL}`, "info");
   }
 
