@@ -425,30 +425,40 @@
     // live, it escalates on its own — soft live-edge resync (~8s), then a full
     // channel re-init (~18s). This is the in-page "RPA" that re-refreshes the
     // channel automatically, so no one ever has to reload the browser by hand.
-    let _wdLast = -1, _wdStuck = 0;
+    let _wdLast = -1, _wdStuck = 0, _wdStarted = false, _latHits = 0;
     window.__playbackWatchdog = setInterval(() => {
       // Skip when intentionally paused, seeking, ended, or the tab is hidden
       // (background tabs throttle timers — don't false-trigger a reload).
       if (!hls || document.hidden || video.paused || video.seeking || video.ended) {
+        _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
+      }
+      // WARMUP: don't police anything until playback has actually begun. On a
+      // fresh join hls.latency briefly reads the whole manifest window (~160s)
+      // and currentTime sits at 0 while buffering — reacting to either would
+      // wreck startup. Wait for the first real frame, THEN start watching.
+      if (!_wdStarted) {
+        if (video.currentTime > 0.5) _wdStarted = true;
+        _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
+      }
+      // Sustained excessive latency (genuine drift, not a one-off spike) → snap
+      // back to live. Require several consecutive readings so a transient never
+      // triggers it. (Backstop to hls.js's own liveMaxLatencyDuration resync.)
+      if (hls.latency > 50 && hls.liveSyncPosition != null) {
+        if (++_latHits >= 3) {                          // ~6s sustained
+          _latHits = 0;
+          log(`Latency ${hls.latency.toFixed(0)}s – snapping to live`, "warn");
+          video.currentTime = hls.liveSyncPosition;
+          video.play().catch(() => {});
+          _wdLast = video.currentTime; _wdStuck = 0; return;
+        }
+      } else { _latHits = 0; }
+      if (video.currentTime > _wdLast + 0.1) {          // advancing → healthy
         _wdLast = video.currentTime; _wdStuck = 0; return;
       }
-      // Drifted too far behind live (latency creeping from accumulated stalls)?
-      // Snap to the live sync position — trims the bloated buffer and flushes a
-      // wedged decoder, breaking the "stiffening" loop. (Backstop in case the
-      // built-in liveMaxLatencyDuration resync didn't recover.)
-      if (hls.latency > 55 && hls.liveSyncPosition != null) {
-        log(`Latency ${hls.latency.toFixed(0)}s – snapping to live`, "warn");
-        video.currentTime = hls.liveSyncPosition;
-        video.play().catch(() => {});
-        _wdLast = video.currentTime; _wdStuck = 0; return;
-      }
-      if (video.currentTime > _wdLast + 0.1) {        // advancing → healthy
-        _wdLast = video.currentTime; _wdStuck = 0; return;
-      }
-      _wdStuck++;                                      // not advancing
-      if (_wdStuck === 4) {                            // ~8s frozen → soft resync
+      _wdStuck++;                                       // not advancing
+      if (_wdStuck === 4) {                             // ~8s frozen → soft resync
         recoverToLiveEdge(500, "Playback not advancing – auto-resync");
-      } else if (_wdStuck >= 9) {                      // ~18s wedged → reload channel
+      } else if (_wdStuck >= 9) {                       // ~18s wedged → reload channel
         _wdStuck = 0;
         log("Playback wedged – auto-reinitializing channel", "warn");
         setBadge("standby", "RECONNECTING…");

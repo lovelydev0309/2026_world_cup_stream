@@ -394,17 +394,27 @@
     // on wake) raise no fatal hls.js error. Watch the real playback clock; if it
     // stops advancing while we should be live, escalate automatically — soft
     // live-edge resync (~8s), then a full channel re-init (~18s). In-page "RPA".
-    let _wdLast = -1, _wdStuck = 0;
+    let _wdLast = -1, _wdStuck = 0, _wdStarted = false, _latHits = 0;
     window.__playbackWatchdog = setInterval(() => {
       if (!hls || document.hidden || video.paused || video.seeking || video.ended) {
-        _wdLast = video.currentTime; _wdStuck = 0; return;
+        _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
       }
-      if (hls.latency > 55 && hls.liveSyncPosition != null) {   // drifted too far → snap to live
-        log(`Latency ${hls.latency.toFixed(0)}s – snapping to live`, "warn");
-        video.currentTime = hls.liveSyncPosition;
-        video.play().catch(() => {});
-        _wdLast = video.currentTime; _wdStuck = 0; return;
+      // WARMUP: don't police until playback has begun. On join hls.latency reads
+      // the whole window (~160s) and currentTime is 0 while buffering — reacting
+      // to either wrecks startup. Wait for the first real frame.
+      if (!_wdStarted) {
+        if (video.currentTime > 0.5) _wdStarted = true;
+        _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
       }
+      if (hls.latency > 50 && hls.liveSyncPosition != null) {   // SUSTAINED drift → snap to live
+        if (++_latHits >= 3) {
+          _latHits = 0;
+          log(`Latency ${hls.latency.toFixed(0)}s – snapping to live`, "warn");
+          video.currentTime = hls.liveSyncPosition;
+          video.play().catch(() => {});
+          _wdLast = video.currentTime; _wdStuck = 0; return;
+        }
+      } else { _latHits = 0; }
       if (video.currentTime > _wdLast + 0.1) {
         _wdLast = video.currentTime; _wdStuck = 0; return;
       }
