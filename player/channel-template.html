@@ -232,8 +232,11 @@
       // BUFFERING↔LIVE flicker. 30s absorbs a 13s gap with margin. Dial toward
       // 20 for less latency if occasional flicker is acceptable.
       liveSyncDuration: 30,
-      liveMaxLatencyDuration: 60,
+      liveMaxLatencyDuration: 45,
       liveDurationInfinity: true,
+      // CRITICAL for 24/7: cap the back buffer so the MediaSource doesn't grow
+      // with hours of already-played content (the cause of "stiffens over time").
+      backBufferLength: 30,
       maxBufferHole: 0.5,
       nudgeOffset: 0.2,
       nudgeMaxRetry: 8,
@@ -246,8 +249,8 @@
       manifestLoadingTimeOut: 20000,
       levelLoadingTimeOut: 20000,
       fragLoadingTimeOut: 20000,
-      maxBufferLength: 45,
-      maxMaxBufferLength: 90,
+      maxBufferLength: 30,
+      maxMaxBufferLength: 60,
       debug: false,
     });
 
@@ -394,6 +397,12 @@
     let _wdLast = -1, _wdStuck = 0;
     window.__playbackWatchdog = setInterval(() => {
       if (!hls || document.hidden || video.paused || video.seeking || video.ended) {
+        _wdLast = video.currentTime; _wdStuck = 0; return;
+      }
+      if (hls.latency > 55 && hls.liveSyncPosition != null) {   // drifted too far → snap to live
+        log(`Latency ${hls.latency.toFixed(0)}s – snapping to live`, "warn");
+        video.currentTime = hls.liveSyncPosition;
+        video.play().catch(() => {});
         _wdLast = video.currentTime; _wdStuck = 0; return;
       }
       if (video.currentTime > _wdLast + 0.1) {

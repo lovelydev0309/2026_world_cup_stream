@@ -234,9 +234,15 @@
       // with margin. (Trade-off: ~30s latency vs lower. Dial down toward 20 for
       // less latency if you can tolerate the occasional flicker.)
       liveSyncDuration: 30,
-      // Don't force a catch-up seek until 60s behind, so a gap never jumps.
-      liveMaxLatencyDuration: 60,
+      // Snap back toward live if we drift >45s behind (recovers a creeping
+      // latency / a wedged decoder via the seek, instead of stiffening).
+      liveMaxLatencyDuration: 45,
       liveDurationInfinity: true,
+      // CRITICAL for 24/7: cap the BACK buffer. hls.js otherwise keeps growing
+      // the MediaSource with already-played content; over a multi-hour session
+      // that bloats memory and triggers eviction churn → exactly the "stiffens
+      // as time passes" stalls. 30s keeps the SourceBuffer small and stable.
+      backBufferLength: 30,
       // Glide over small discontinuities from FFmpeg reconnects instead of
       // stalling on them.
       maxBufferHole: 0.5,
@@ -251,8 +257,10 @@
       manifestLoadingTimeOut: 20000,
       levelLoadingTimeOut: 20000,
       fragLoadingTimeOut: 20000,
-      maxBufferLength: 45,
-      maxMaxBufferLength: 90,
+      // Forward buffer: enough to ride the sources' 8-13s hiccups, but not so
+      // large it adds memory pressure on long runs.
+      maxBufferLength: 30,
+      maxMaxBufferLength: 60,
       debug: false,
     });
 
@@ -422,6 +430,16 @@
       // Skip when intentionally paused, seeking, ended, or the tab is hidden
       // (background tabs throttle timers — don't false-trigger a reload).
       if (!hls || document.hidden || video.paused || video.seeking || video.ended) {
+        _wdLast = video.currentTime; _wdStuck = 0; return;
+      }
+      // Drifted too far behind live (latency creeping from accumulated stalls)?
+      // Snap to the live sync position — trims the bloated buffer and flushes a
+      // wedged decoder, breaking the "stiffening" loop. (Backstop in case the
+      // built-in liveMaxLatencyDuration resync didn't recover.)
+      if (hls.latency > 55 && hls.liveSyncPosition != null) {
+        log(`Latency ${hls.latency.toFixed(0)}s – snapping to live`, "warn");
+        video.currentTime = hls.liveSyncPosition;
+        video.play().catch(() => {});
         _wdLast = video.currentTime; _wdStuck = 0; return;
       }
       if (video.currentTime > _wdLast + 0.1) {        // advancing → healthy
