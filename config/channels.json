@@ -50,7 +50,9 @@
       "bitrate": 2500,
       "resolution": "1280x720",
       "fps": 30,
-      "audio_bitrate": 128
+      "audio_bitrate": 128,
+      "_comment_audio": "force_silent_audio: this source's audio flaps (0-channel / runaway) and desyncs the browser. Silent keeps video reliable. Remove if a stable source is provided.",
+      "force_silent_audio": true
     },
     {
       "channel_name": "channel3",
@@ -62,7 +64,9 @@
       "bitrate": 2500,
       "resolution": "1280x720",
       "fps": 30,
-      "audio_bitrate": 128
+      "audio_bitrate": 128,
+      "_comment_audio": "force_silent_audio: this source's audio runs away (~6.6x over-delivery) and desyncs A/V by tens-of-thousands of seconds. Silent keeps video reliable. Remove if a stable source is provided.",
+      "force_silent_audio": true
     }
   ]
 }
