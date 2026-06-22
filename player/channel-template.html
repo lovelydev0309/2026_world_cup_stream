@@ -225,18 +225,20 @@
       return;
     }
 
+    // Per-channel buffer profile: channel2's flaky source restarts leave ~50s
+    // gaps, so it gets a large buffer to ride them; stable channels stay tight.
+    const BUF = /\/channel2\//.test(STREAM_URL)
+      ? { sync: 70, latency: 120, back: 75, fwd: 75, fwdMax: 150, snap: 130 }
+      : { sync: 30, latency: 45,  back: 30, fwd: 30, fwdMax: 60,  snap: 50  };
+
     hls = new Hls({
       lowLatencyMode: false,
-      // Sit 30s behind live. All three IPTV sources hiccup 8-13s occasionally
-      // then burst to catch up; 15s was too tight and the buffer drained →
-      // BUFFERING↔LIVE flicker. 30s absorbs a 13s gap with margin. Dial toward
-      // 20 for less latency if occasional flicker is acceptable.
-      liveSyncDuration: 30,
-      liveMaxLatencyDuration: 45,
+      liveSyncDuration: BUF.sync,
+      liveMaxLatencyDuration: BUF.latency,
       liveDurationInfinity: true,
       // CRITICAL for 24/7: cap the back buffer so the MediaSource doesn't grow
       // with hours of already-played content (the cause of "stiffens over time").
-      backBufferLength: 30,
+      backBufferLength: BUF.back,
       maxBufferHole: 0.5,
       nudgeOffset: 0.2,
       nudgeMaxRetry: 8,
@@ -249,8 +251,8 @@
       manifestLoadingTimeOut: 20000,
       levelLoadingTimeOut: 20000,
       fragLoadingTimeOut: 20000,
-      maxBufferLength: 30,
-      maxMaxBufferLength: 60,
+      maxBufferLength: BUF.fwd,
+      maxMaxBufferLength: BUF.fwdMax,
       debug: false,
     });
 
@@ -406,7 +408,7 @@
         if (video.currentTime > 0.5) _wdStarted = true;
         _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
       }
-      if (hls.latency > 50 && hls.liveSyncPosition != null) {   // SUSTAINED drift → snap to live
+      if (hls.latency > BUF.snap && hls.liveSyncPosition != null) {   // SUSTAINED drift → snap to live
         if (++_latHits >= 3) {
           _latHits = 0;
           log(`Latency ${hls.latency.toFixed(0)}s – snapping to live`, "warn");
