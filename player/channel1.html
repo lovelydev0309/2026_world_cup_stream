@@ -473,6 +473,15 @@
 
   // ── Kick off ─────────────────────────────────────────────
   init();
+
+  // ── Periodic full refresh — memory hygiene for 24/7 playback ─────────
+  // The freeze you saw after long playback is the CLIENT (browser/PC) running
+  // low on memory, not the server. Over many hours the tab slowly accumulates
+  // MediaSource buffers + hls.js state (and, if DevTools is open, its network
+  // log can balloon to >1 GB on its own). Reload the whole page every few hours
+  // so memory is reclaimed before it can exhaust RAM. autoplay + the no-cache
+  // header make this a ~1-2s seamless blip, and it also clears the DevTools log.
+  setTimeout(() => location.reload(), 4 * 60 * 60 * 1000);  // every 4 hours
 })();
 </script>
 </body>

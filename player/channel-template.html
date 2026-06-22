@@ -436,6 +436,12 @@
 
   // ── Kick off ─────────────────────────────────────────────
   init();
+
+  // Periodic full refresh — memory hygiene for 24/7 playback. Over many hours
+  // the browser tab accumulates MediaSource/hls.js memory (and the DevTools
+  // network log if open) until the PC can freeze. Reload every few hours to
+  // reclaim it. autoplay + no-cache make it a ~1-2s blip.
+  setTimeout(() => location.reload(), 4 * 60 * 60 * 1000);  // every 4 hours
 })();
 </script>
 </body>
