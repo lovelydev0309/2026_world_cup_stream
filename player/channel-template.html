@@ -111,9 +111,6 @@
   .log-line.warn  { color: #c90; }
   .log-line.error { color: #e44; }
   .log-line.info  { color: #4af; }
-  /* Operational WARN lines are hidden by default for a clean client view.
-     Reveal on demand: press "d" or load with ?debug=1 (toggles .show-warn). */
-  body:not(.show-warn) .log-line.warn { display: none; }
 </style>
 </head>
 <body>
@@ -172,25 +169,6 @@
     if (logBox.children.length > 50) logBox.lastChild.remove();
   }
 
-  // ── Diagnostic-log visibility ────────────────────────────────────────
-  // WARN lines are hidden by default (noise to a client). Reveal on demand:
-  // press "d" to toggle, or load with ?debug=1; the choice persists. INFO and
-  // ERROR lines are always shown.
-  (function () {
-    const p = new URLSearchParams(location.search);
-    let show = localStorage.getItem("showWarn") === "1";
-    if (p.get("debug") === "1" || p.get("warn") === "1") show = true;
-    document.body.classList.toggle("show-warn", show);
-    document.addEventListener("keydown", (e) => {
-      if ((e.key === "d" || e.key === "D") && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        const on = !document.body.classList.contains("show-warn");
-        document.body.classList.toggle("show-warn", on);
-        localStorage.setItem("showWarn", on ? "1" : "0");
-        log("Diagnostic warnings " + (on ? "shown" : "hidden"), "info");
-      }
-    });
-  })();
-
   // ── Badge helper ─────────────────────────────────────────
   function setBadge(state, text) {
     badge.className = state;
@@ -230,8 +208,6 @@
     if (hls) { hls.destroy(); hls = null; }
     if (statsTimer) clearInterval(statsTimer);
     if (window.__playbackWatchdog) clearInterval(window.__playbackWatchdog);
-    if (window.__playRetry) clearTimeout(window.__playRetry);
-    if (window.__resumeTimer) clearTimeout(window.__resumeTimer);
 
     if (!Hls.isSupported()) {
       // Fallback for Safari native HLS
@@ -249,19 +225,18 @@
       return;
     }
 
-    // Buffer profile — IDENTICAL for all channels. channel2 is no longer
-    // special-cased; its roughness is purely its unstable SOURCE feed, not the
-    // player. (Bump these for ch2 only if that feed's stalls cause too many blips.)
-    const BUF = { sync: 30, latency: 45, back: 30, fwd: 30, fwdMax: 60, snap: 50 };
-
     hls = new Hls({
       lowLatencyMode: false,
-      liveSyncDuration: BUF.sync,
-      liveMaxLatencyDuration: BUF.latency,
+      // Sit 30s behind live. All three IPTV sources hiccup 8-13s occasionally
+      // then burst to catch up; 15s was too tight and the buffer drained →
+      // BUFFERING↔LIVE flicker. 30s absorbs a 13s gap with margin. Dial toward
+      // 20 for less latency if occasional flicker is acceptable.
+      liveSyncDuration: 30,
+      liveMaxLatencyDuration: 45,
       liveDurationInfinity: true,
       // CRITICAL for 24/7: cap the back buffer so the MediaSource doesn't grow
       // with hours of already-played content (the cause of "stiffens over time").
-      backBufferLength: BUF.back,
+      backBufferLength: 30,
       maxBufferHole: 0.5,
       nudgeOffset: 0.2,
       nudgeMaxRetry: 8,
@@ -274,78 +249,23 @@
       manifestLoadingTimeOut: 20000,
       levelLoadingTimeOut: 20000,
       fragLoadingTimeOut: 20000,
-      maxBufferLength: BUF.fwd,
-      maxMaxBufferLength: BUF.fwdMax,
+      maxBufferLength: 30,
+      maxMaxBufferLength: 60,
       debug: false,
     });
 
     hls.loadSource(STREAM_URL);
     hls.attachMedia(video);
 
-    // Robust autoplay: force muted, always start at the live edge, and retry if
-    // blocked — so the player never sits paused at a stale position (which over
-    // time falls out of the live window → fragLoadError loop).
-    // Debounce bursts of resume requests (watchdog, 1s retry, onpause,
-    // FRAG_BUFFERED) so concurrent play() calls don't interrupt each other into
-    // AbortError. CRUCIAL: a TIME GATE, not a boolean latch — a stalled live
-    // stream can leave play()'s promise unresolved forever, and a boolean latch
-    // would stick and block every future resume (restart only on a manual
-    // click). The gate reopens after 700ms, so auto-resume can never wedge.
-    // Seconds of contiguous buffered video ahead of the playhead (0 = stranded).
-    function fwdBuffer() {
-      const b = video.buffered, t = video.currentTime;
-      for (let i = 0; i < b.length; i++) {
-        if (t >= b.start(i) - 0.3 && t <= b.end(i)) return b.end(i) - t;
-      }
-      return 0;
-    }
-    let _playAt = 0;
-    function startPlayback() {
-      if (Date.now() - _playAt < 700) return;
-      _playAt = Date.now();
-      video.muted = true;              // muted autoplay is always allowed
-      // Only JUMP to live when STRANDED (no buffer ahead: fresh start, or a
-      // drained buffer left behind live on deleted segments). If buffer exists
-      // ahead, resume IN PLACE — seeking to live then discards good buffer and
-      // drops us at the edge with nothing buffered, re-stalling every segment.
-      if (hls && isFinite(hls.liveSyncPosition) && fwdBuffer() < 1) {
-        try { video.currentTime = hls.liveSyncPosition; } catch (e) {}
-      }
-      video.play().then(() => {
-        overlay.classList.add("hidden");
-        if (window.__playRetry) { clearTimeout(window.__playRetry); window.__playRetry = null; }
-      }).catch((err) => {
-        // NotAllowedError = genuine autoplay-policy block (needs a gesture).
-        // Anything else (AbortError / no-data-yet) is transient — retry quietly.
-        if (err && err.name === "NotAllowedError") {
-          log("Autoplay blocked by browser – click to start", "warn");
-          ovText.textContent = "Click to play";
-          overlay.classList.remove("hidden");
-          overlay.onclick = () => startPlayback();
-        }
-        if (window.__playRetry) clearTimeout(window.__playRetry);
-        window.__playRetry = setTimeout(startPlayback, 1000);
-      });
-    }
-
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
       log("Manifest loaded – starting playback", "info");
-      startPlayback();
+      video.play().catch(() => {
+        log("Autoplay blocked – click to play", "warn");
+        ovText.textContent = "Click to play";
+        overlay.classList.remove("hidden");
+        overlay.onclick = () => { video.play(); overlay.classList.add("hidden"); };
+      });
     });
-
-    // Auto-resume: a live channel should never sit paused. Resume at the live
-    // edge after any pause (buffer underrun, stall, accidental click). Property
-    // (not addEventListener) so re-init replaces it. Skips hidden tabs / ended.
-    video.onpause = () => {
-      if (video.ended || document.hidden) return;
-      if (window.__resumeTimer) clearTimeout(window.__resumeTimer);
-      window.__resumeTimer = setTimeout(() => {
-        if (hls && video.paused && !video.ended && !document.hidden) {
-          log("Paused – auto-resuming at live", "warn");
-          startPlayback();
-        }
-      }, 800);
-    };
 
     hls.on(Hls.Events.LEVEL_SWITCHED, (_, d) => {
       const l = hls.levels[d.level];
@@ -361,7 +281,7 @@
     hls.on(Hls.Events.FRAG_BUFFERED, () => {
       _recoverCount = 0;
       clearBuffering();
-      if (video.paused) startPlayback();   // guarded resume after a stall
+      if (video.paused) video.play().catch(() => {});
     });
 
     let _recoverTimer = null;
@@ -422,9 +342,7 @@
           _recoverTimer = null;
           if (!hls) return;
           hls.startLoad(-1);
-          // Guarded resume — startPlayback() seeks to live only if stranded;
-          // don't force a seek here (the live edge isn't buffered yet).
-          startPlayback();
+          video.play().catch(() => {});
           clearBuffering();
           setBadge("live", "LIVE");
         }, 300);
@@ -478,19 +396,7 @@
     // live-edge resync (~8s), then a full channel re-init (~18s). In-page "RPA".
     let _wdLast = -1, _wdStuck = 0, _wdStarted = false, _latHits = 0;
     window.__playbackWatchdog = setInterval(() => {
-      // Hidden/ended/no-hls → leave alone (browser pauses background tabs).
-      if (!hls || document.hidden || video.ended) {
-        _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
-      }
-      // A live channel must NEVER sit paused. Whatever paused it (autoplay
-      // rejection after reinit, interrupted play(), stray click, stall settled
-      // while paused), resume at the live edge — the reliable backstop behind
-      // startPlayback's retry and onpause, returning the picture within ~2s.
-      if (video.paused) {
-        startPlayback();
-        _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
-      }
-      if (video.seeking) {
+      if (!hls || document.hidden || video.paused || video.seeking || video.ended) {
         _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
       }
       // WARMUP: don't police until playback has begun. On join hls.latency reads
@@ -500,7 +406,7 @@
         if (video.currentTime > 0.5) _wdStarted = true;
         _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
       }
-      if (hls.latency > BUF.snap && hls.liveSyncPosition != null) {   // SUSTAINED drift → snap to live
+      if (hls.latency > 50 && hls.liveSyncPosition != null) {   // SUSTAINED drift → snap to live
         if (++_latHits >= 3) {
           _latHits = 0;
           log(`Latency ${hls.latency.toFixed(0)}s – snapping to live`, "warn");
