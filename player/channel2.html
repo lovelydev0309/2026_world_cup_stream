@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live – {{CHANNEL_NAME}}</title>
+<title>Live – MX – Canal 5 HD</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -116,7 +116,7 @@
 <body>
 
 <header>
-  <h1>{{CHANNEL_NAME}}</h1>
+  <h1>MX – Canal 5 HD</h1>
   <span id="badge"><span id="dot"></span><span id="badge-text">Connecting…</span></span>
 </header>
 
@@ -144,8 +144,8 @@
 <script>
 (function () {
   // ── Config ──────────────────────────────────────────────
-  const STREAM_URL  = "{{HLS_URL}}";       // e.g. http://HOST:8080/hls/channel1/index.m3u8
-  const CHANNEL     = "{{CHANNEL_NAME}}";
+  const STREAM_URL  = "https://live3.mzolotv.com/hls/channel2/index.m3u8";
+  const CHANNEL     = "MX - Canal 5 HD";
   const RETRY_DELAY = 5000;   // ms between reconnect attempts
   const MAX_RETRIES = 999;    // effectively infinite
 
@@ -227,19 +227,31 @@
       return;
     }
 
-    // Buffer profile — IDENTICAL for all channels. channel2 is no longer
-    // special-cased; its roughness is purely its unstable SOURCE feed, not the
-    // player. (Bump these for ch2 only if that feed's stalls cause too many blips.)
+    // ── Buffer profile — IDENTICAL for all channels ─────────────────────
+    // All three channels use the exact same tuning; channel2 is no longer
+    // special-cased. channel2's remaining roughness is purely its unstable
+    // SOURCE feed (313828: frequent stalls/races/restarts), which no player
+    // setting can fix — the real cure is a stable source. (If that feed's
+    // stalls cause too many visible blips, bump these values up for ch2.)
     const BUF = { sync: 30, latency: 45, back: 30, fwd: 30, fwdMax: 60, snap: 50 };
 
     hls = new Hls({
       lowLatencyMode: false,
+      // Sit BUF.sync s behind the live edge (30s stable / 70s for flaky ch2).
+      // The buffer must exceed the worst expected production gap so it never
+      // drains to a freeze.
       liveSyncDuration: BUF.sync,
+      // Snap back toward live only if we drift well past the target (recovers a
+      // creeping latency / wedged decoder without fighting the normal buffer).
       liveMaxLatencyDuration: BUF.latency,
       liveDurationInfinity: true,
-      // CRITICAL for 24/7: cap the back buffer so the MediaSource doesn't grow
-      // with hours of already-played content (the cause of "stiffens over time").
+      // CRITICAL for 24/7: cap the BACK buffer. hls.js otherwise keeps growing
+      // the MediaSource with already-played content; over a multi-hour session
+      // that bloats memory and triggers eviction churn → "stiffens as time
+      // passes" stalls. Keeps the SourceBuffer bounded.
       backBufferLength: BUF.back,
+      // Glide over small discontinuities from FFmpeg reconnects instead of
+      // stalling on them.
       maxBufferHole: 0.5,
       nudgeOffset: 0.2,
       nudgeMaxRetry: 8,
@@ -252,6 +264,8 @@
       manifestLoadingTimeOut: 20000,
       levelLoadingTimeOut: 20000,
       fragLoadingTimeOut: 20000,
+      // Forward buffer: sized per channel (BUF.fwd) so it can hold enough to
+      // ride the source's worst gap without freezing.
       maxBufferLength: BUF.fwd,
       maxMaxBufferLength: BUF.fwdMax,
       debug: false,
@@ -260,9 +274,13 @@
     hls.loadSource(STREAM_URL);
     hls.attachMedia(video);
 
-    // Robust autoplay: force muted, always start at the live edge, and retry if
-    // blocked — so the player never sits paused at a stale position (which over
-    // time falls out of the live window → fragLoadError loop).
+    // Robust autoplay. The freeze-after-long-play we saw came from autoplay
+    // being blocked: the video sat PAUSED at position 0 while the live stream
+    // advanced, until that position's segments were deleted → fragLoadError
+    // loop. So: (1) force muted (browsers allow muted autoplay), (2) always
+    // start AT THE LIVE EDGE (never a stale position), (3) if still blocked,
+    // keep retrying on a timer so an unattended display starts on its own
+    // instead of sitting paused forever.
     function startPlayback() {
       video.muted = true;
       if (hls && isFinite(hls.liveSyncPosition) &&
@@ -287,9 +305,12 @@
       startPlayback();
     });
 
-    // Auto-resume: a live channel should never sit paused. Resume at the live
-    // edge after any pause (buffer underrun, stall, accidental click). Property
-    // (not addEventListener) so re-init replaces it. Skips hidden tabs / ended.
+    // ── Auto-resume — a live channel should never sit paused ─────────────
+    // If playback pauses for ANY reason (buffer underrun, a transient stall, an
+    // accidental click on the controls), resume at the live edge after a short
+    // debounce. Set as a property (not addEventListener) so a re-init replaces
+    // the handler instead of stacking duplicates. Skipped when the tab is hidden
+    // (the browser pauses background video on purpose) and after the stream ends.
     video.onpause = () => {
       if (video.ended || document.hidden) return;
       if (window.__resumeTimer) clearTimeout(window.__resumeTimer);
@@ -315,6 +336,7 @@
     hls.on(Hls.Events.FRAG_BUFFERED, () => {
       _recoverCount = 0;
       clearBuffering();
+      // Resume if the video stalled waiting for this segment to arrive
       if (video.paused) video.play().catch(() => {});
     });
 
@@ -324,16 +346,29 @@
     let _badgeTimer   = null;
     const REINIT_AFTER = 6;
 
-    // Only flip the badge to BUFFERING if a stall persists past 1.5s, so brief
-    // micro-stalls over a source's production hiccup don't flicker the status.
+    // ── Badge debounce ────────────────────────────────────────────────────
+    // Only flip the badge to BUFFERING if a stall actually persists past 1.5s.
+    // Brief micro-stalls (the player riding over a source's 8-13s production
+    // hiccup) resolve before then, so the status stays LIVE instead of
+    // flickering BUFFERING↔LIVE on every momentary stall.
     function showBufferingSoon() {
       if (_badgeTimer) return;
-      _badgeTimer = setTimeout(() => { _badgeTimer = null; setBadge("standby", "BUFFERING…"); }, 1500);
+      _badgeTimer = setTimeout(() => {
+        _badgeTimer = null;
+        setBadge("standby", "BUFFERING…");
+      }, 1500);
     }
     function clearBuffering() {
       if (_badgeTimer) { clearTimeout(_badgeTimer); _badgeTimer = null; }
     }
 
+    // ── Buffer stall handler ──────────────────────────────────────────────
+    // NEVER seek backward – that causes the "jumps back a few seconds" bug.
+    // Strategy:
+    //   • Gap before buffer start → seek forward to buf.start (fixes discontinuities)
+    //   • At/past live edge      → wait; hls.js will append next segment and
+    //                              FRAG_BUFFERED will resume play automatically
+    //   • Empty buffer           → fall through to live-edge recovery
     function handleBufferStall(label) {
       log(label, "warn");
       showBufferingSoon();
@@ -348,8 +383,11 @@
         }
         const buffStart = buf.start(0);
         if (video.currentTime < buffStart - 0.1) {
+          // Play head fell before buffer start (gap): skip forward to buffer start
           video.currentTime = buffStart + 0.1;
         }
+        // Otherwise we're at the live edge waiting for the next segment.
+        // hls.js is already fetching it; FRAG_BUFFERED will call play() when ready.
         video.play().catch(() => {});
       }, 500);
     }
@@ -400,6 +438,7 @@
             handleBufferStall(`Stall (${data.details}) – waiting for next segment`);
             break;
           case Hls.ErrorDetails.BUFFER_SEEK_OVER_HOLE:
+            // hls.js already seeked past the gap; just resume
             log(`Seek over hole – resuming`, "warn");
             video.play().catch(() => {});
             break;
@@ -424,24 +463,33 @@
     statsTimer = setInterval(updateStats, 2000);
 
     // ── Playback watchdog — auto-refresh, never a manual reload ──────────
-    // Some wedge states (A/V desync that never starts, frozen decode, stuck tab
-    // on wake) raise no fatal hls.js error. Watch the real playback clock; if it
-    // stops advancing while we should be live, escalate automatically — soft
-    // live-edge resync (~8s), then a full channel re-init (~18s). In-page "RPA".
+    // hls.js fires events for many faults, but some wedge states (an A/V desync
+    // that never starts, a frozen decoder, a stuck tab on wake) raise NO fatal
+    // error and would otherwise sit on "Loading…" forever. This timer watches
+    // the real playback clock: if currentTime stops advancing while we should be
+    // live, it escalates on its own — soft live-edge resync (~8s), then a full
+    // channel re-init (~18s). This is the in-page "RPA" that re-refreshes the
+    // channel automatically, so no one ever has to reload the browser by hand.
     let _wdLast = -1, _wdStuck = 0, _wdStarted = false, _latHits = 0;
     window.__playbackWatchdog = setInterval(() => {
+      // Skip when intentionally paused, seeking, ended, or the tab is hidden
+      // (background tabs throttle timers — don't false-trigger a reload).
       if (!hls || document.hidden || video.paused || video.seeking || video.ended) {
         _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
       }
-      // WARMUP: don't police until playback has begun. On join hls.latency reads
-      // the whole window (~160s) and currentTime is 0 while buffering — reacting
-      // to either wrecks startup. Wait for the first real frame.
+      // WARMUP: don't police anything until playback has actually begun. On a
+      // fresh join hls.latency briefly reads the whole manifest window (~160s)
+      // and currentTime sits at 0 while buffering — reacting to either would
+      // wreck startup. Wait for the first real frame, THEN start watching.
       if (!_wdStarted) {
         if (video.currentTime > 0.5) _wdStarted = true;
         _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
       }
-      if (hls.latency > BUF.snap && hls.liveSyncPosition != null) {   // SUSTAINED drift → snap to live
-        if (++_latHits >= 3) {
+      // Sustained excessive latency (genuine drift, not a one-off spike) → snap
+      // back to live. Require several consecutive readings so a transient never
+      // triggers it. (Backstop to hls.js's own liveMaxLatencyDuration resync.)
+      if (hls.latency > BUF.snap && hls.liveSyncPosition != null) {
+        if (++_latHits >= 3) {                          // ~6s sustained
           _latHits = 0;
           log(`Latency ${hls.latency.toFixed(0)}s – snapping to live`, "warn");
           video.currentTime = hls.liveSyncPosition;
@@ -449,13 +497,13 @@
           _wdLast = video.currentTime; _wdStuck = 0; return;
         }
       } else { _latHits = 0; }
-      if (video.currentTime > _wdLast + 0.1) {
+      if (video.currentTime > _wdLast + 0.1) {          // advancing → healthy
         _wdLast = video.currentTime; _wdStuck = 0; return;
       }
-      _wdStuck++;
-      if (_wdStuck === 4) {
+      _wdStuck++;                                       // not advancing
+      if (_wdStuck === 4) {                             // ~8s frozen → soft resync
         recoverToLiveEdge(500, "Playback not advancing – auto-resync");
-      } else if (_wdStuck >= 9) {
+      } else if (_wdStuck >= 9) {                       // ~18s wedged → reload channel
         _wdStuck = 0;
         log("Playback wedged – auto-reinitializing channel", "warn");
         setBadge("standby", "RECONNECTING…");
@@ -471,10 +519,13 @@
   // ── Kick off ─────────────────────────────────────────────
   init();
 
-  // Periodic full refresh — memory hygiene for 24/7 playback. Over many hours
-  // the browser tab accumulates MediaSource/hls.js memory (and the DevTools
-  // network log if open) until the PC can freeze. Reload every few hours to
-  // reclaim it. autoplay + no-cache make it a ~1-2s blip.
+  // ── Periodic full refresh — memory hygiene for 24/7 playback ─────────
+  // The freeze you saw after long playback is the CLIENT (browser/PC) running
+  // low on memory, not the server. Over many hours the tab slowly accumulates
+  // MediaSource buffers + hls.js state (and, if DevTools is open, its network
+  // log can balloon to >1 GB on its own). Reload the whole page every few hours
+  // so memory is reclaimed before it can exhaust RAM. autoplay + the no-cache
+  // header make this a ~1-2s seamless blip, and it also clears the DevTools log.
   setTimeout(() => location.reload(), 4 * 60 * 60 * 1000);  // every 4 hours
 })();
 </script>

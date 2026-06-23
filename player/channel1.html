@@ -227,17 +227,13 @@
       return;
     }
 
-    // ── Per-channel buffer profile ───────────────────────────────────────
-    // channel2's source (MX Canal 5) is unstable: it intermittently STALLS
-    // (~45s with no data → the server watchdog kills+restarts the encoder) and
-    // RACES. Each restart leaves a ~50-55s gap plus a discontinuity, which
-    // drains the normal 30s buffer and FREEZES the picture. A large buffer lets
-    // channel2 ride straight over those gaps — worth the extra latency for a
-    // flaky feed. The stable channels (FIFA/ESPN, 24h+ uptime) keep the tight,
-    // low-latency 30s buffer.
-    const BUF = /\/channel2\//.test(STREAM_URL)
-      ? { sync: 70, latency: 120, back: 75, fwd: 75, fwdMax: 150, snap: 130 }
-      : { sync: 30, latency: 45,  back: 30, fwd: 30, fwdMax: 60,  snap: 50  };
+    // ── Buffer profile — IDENTICAL for all channels ─────────────────────
+    // All three channels use the exact same tuning; channel2 is no longer
+    // special-cased. channel2's remaining roughness is purely its unstable
+    // SOURCE feed (313828: frequent stalls/races/restarts), which no player
+    // setting can fix — the real cure is a stable source. (If that feed's
+    // stalls cause too many visible blips, bump these values up for ch2.)
+    const BUF = { sync: 30, latency: 45, back: 30, fwd: 30, fwdMax: 60, snap: 50 };
 
     hls = new Hls({
       lowLatencyMode: false,
