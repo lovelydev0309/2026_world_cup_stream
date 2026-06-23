@@ -111,6 +111,9 @@
   .log-line.warn  { color: #c90; }
   .log-line.error { color: #e44; }
   .log-line.info  { color: #4af; }
+  /* Operational WARN lines are hidden by default for a clean client view.
+     Reveal on demand: press "d" or load with ?debug=1 (toggles .show-warn). */
+  body:not(.show-warn) .log-line.warn { display: none; }
 </style>
 </head>
 <body>
@@ -168,6 +171,25 @@
     logBox.prepend(el);
     if (logBox.children.length > 50) logBox.lastChild.remove();
   }
+
+  // ── Diagnostic-log visibility ────────────────────────────────────────
+  // WARN lines are hidden by default (noise to a client). Reveal on demand:
+  // press "d" to toggle, or load with ?debug=1; the choice persists. INFO and
+  // ERROR lines are always shown.
+  (function () {
+    const p = new URLSearchParams(location.search);
+    let show = localStorage.getItem("showWarn") === "1";
+    if (p.get("debug") === "1" || p.get("warn") === "1") show = true;
+    document.body.classList.toggle("show-warn", show);
+    document.addEventListener("keydown", (e) => {
+      if ((e.key === "d" || e.key === "D") && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const on = !document.body.classList.contains("show-warn");
+        document.body.classList.toggle("show-warn", on);
+        localStorage.setItem("showWarn", on ? "1" : "0");
+        log("Diagnostic warnings " + (on ? "shown" : "hidden"), "info");
+      }
+    });
+  })();
 
   // ── Badge helper ─────────────────────────────────────────
   function setBadge(state, text) {
