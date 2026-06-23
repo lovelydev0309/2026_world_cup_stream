@@ -39,15 +39,15 @@
       "channel_name": "channel2",
       "display_name": "MX – Canal 5 HD",
       "enabled": true,
-      "source_url": "http://tvon247.com/9WZELTN/JTBML46/1028333",
+      "source_url": "http://tvon247.com/9WZELTN/JTBML46/1349033",
       "hls_url": "https://live3.mzolotv.com/hls/channel2/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
       "resolution": "1280x720",
       "fps": 30,
       "audio_bitrate": 128,
-      "_comment_source": "tvon247 id 1028333 = MX - CANAL 5 HD (HEVC 720p30, AAC stereo). HEVC decode → H264 re-encode; watch CPU on the 2-vCPU box.",
-      "_comment_audio": "Real source audio restored (A/V gap ~0.003s, clean). Old prosclan source was forced silent due to runaway/0-channel audio; this provider is clean.",
+      "_comment_source": "tvon247 id 1349033 = (ES) VIX - CANAL 5, H264 720p30 + AAC stereo. Switched from 1028333 (MX CANAL 5 HD) on 2026-06-24: that feed stalled-then-raced and flipped HEVC<->H264 (delivered 0s in a 25s raw test). VIX delivers steadily AND is consistent H264 (cheaper decode than the HEVC feed). Other Canal 5 ids on this provider were down at switch time: 30634 LATINO, 214633 HOND (0s); 273253 UY raced (2x).",
+      "_comment_audio": "Real source audio (A/V clean). Set force_silent_audio=true only if a feed's audio desyncs.",
       "force_silent_audio": false
     },
     {
