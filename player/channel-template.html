@@ -285,30 +285,30 @@
     // Robust autoplay: force muted, always start at the live edge, and retry if
     // blocked — so the player never sits paused at a stale position (which over
     // time falls out of the live window → fragLoadError loop).
-    // One in-flight play() at a time — the watchdog, the 1s retry, onpause and
-    // FRAG_BUFFERED can all ask to resume; without this guard their concurrent
-    // video.play() calls interrupt one another → AbortError loop (mislabelled
-    // "Autoplay blocked"). The guard collapses them into a single attempt.
-    let _playPending = false;
+    // Debounce bursts of resume requests (watchdog, 1s retry, onpause,
+    // FRAG_BUFFERED) so concurrent play() calls don't interrupt each other into
+    // AbortError. CRUCIAL: a TIME GATE, not a boolean latch — a stalled live
+    // stream can leave play()'s promise unresolved forever, and a boolean latch
+    // would stick and block every future resume (restart only on a manual
+    // click). The gate reopens after 700ms, so auto-resume can never wedge.
+    let _playAt = 0;
     function startPlayback() {
-      if (_playPending) return;
+      if (Date.now() - _playAt < 700) return;
+      _playAt = Date.now();
       video.muted = true;              // muted autoplay is always allowed
+      // Always resume AT THE LIVE EDGE — a drained buffer leaves the playhead
+      // tens of seconds behind live on deleted segments; jumping to live lands
+      // on the freshest segment where recovery actually succeeds.
       if (hls && isFinite(hls.liveSyncPosition) &&
           Math.abs(video.currentTime - hls.liveSyncPosition) > 5) {
         try { video.currentTime = hls.liveSyncPosition; } catch (e) {}
       }
-      _playPending = true;
       video.play().then(() => {
-        _playPending = false;
         overlay.classList.add("hidden");
         if (window.__playRetry) { clearTimeout(window.__playRetry); window.__playRetry = null; }
       }).catch((err) => {
-        _playPending = false;
-        // NotAllowedError = genuine autoplay-policy block (needs a gesture) —
-        // show a click target. Anything else (AbortError / no-data-yet) is NOT a
-        // real block: retry silently so a transient stall isn't shown as a dead
-        // stream. A fast retry always stays pending, so the channel can never be
-        // left sitting paused.
+        // NotAllowedError = genuine autoplay-policy block (needs a gesture).
+        // Anything else (AbortError / no-data-yet) is transient — retry quietly.
         if (err && err.name === "NotAllowedError") {
           log("Autoplay blocked by browser – click to start", "warn");
           ovText.textContent = "Click to play";
@@ -414,6 +414,11 @@
           _recoverTimer = null;
           if (!hls) return;
           hls.startLoad(-1);
+          // Jump to the freshly-loaded live edge — a drained buffer strands us
+          // behind live on deleted segments, so staying put just stalls again.
+          if (isFinite(hls.liveSyncPosition)) {
+            try { video.currentTime = hls.liveSyncPosition; } catch (e) {}
+          }
           video.play().catch(() => {});
           clearBuffering();
           setBadge("live", "LIVE");
