@@ -208,6 +208,8 @@
     if (hls) { hls.destroy(); hls = null; }
     if (statsTimer) clearInterval(statsTimer);
     if (window.__playbackWatchdog) clearInterval(window.__playbackWatchdog);
+    if (window.__playRetry) { clearTimeout(window.__playRetry); window.__playRetry = null; }
+    if (window.__resumeTimer) { clearTimeout(window.__resumeTimer); window.__resumeTimer = null; }
 
     if (!Hls.isSupported()) {
       // Fallback for Safari native HLS
@@ -257,15 +259,55 @@
     hls.loadSource(STREAM_URL);
     hls.attachMedia(video);
 
+    // ── Auto-replay: resume on empty buffer / block, no manual click ─────
+    function fwdBuffer() {
+      const b = video.buffered, t = video.currentTime;
+      for (let i = 0; i < b.length; i++) {
+        if (t >= b.start(i) - 0.3 && t <= b.end(i)) return b.end(i) - t;
+      }
+      return 0;
+    }
+    // 700ms time gate (not a boolean latch — a stalled stream can leave play()
+    // unresolved forever); jump to live ONLY when stranded (no buffer ahead).
+    let _playAt = 0;
+    function startPlayback() {
+      if (Date.now() - _playAt < 700) return;
+      _playAt = Date.now();
+      video.muted = true;
+      if (hls && isFinite(hls.liveSyncPosition) && fwdBuffer() < 1) {
+        try { video.currentTime = hls.liveSyncPosition; } catch (e) {}
+      }
+      video.play().then(() => {
+        overlay.classList.add("hidden");
+        if (window.__playRetry) { clearTimeout(window.__playRetry); window.__playRetry = null; }
+      }).catch((err) => {
+        if (err && err.name === "NotAllowedError") {
+          log("Autoplay blocked by browser – click to start", "warn");
+          ovText.textContent = "Click to play";
+          overlay.classList.remove("hidden");
+          overlay.onclick = () => startPlayback();
+        }
+        if (window.__playRetry) clearTimeout(window.__playRetry);
+        window.__playRetry = setTimeout(startPlayback, 1000);
+      });
+    }
+
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
       log("Manifest loaded – starting playback", "info");
-      video.play().catch(() => {
-        log("Autoplay blocked – click to play", "warn");
-        ovText.textContent = "Click to play";
-        overlay.classList.remove("hidden");
-        overlay.onclick = () => { video.play(); overlay.classList.add("hidden"); };
-      });
+      startPlayback();
     });
+
+    // A live channel must never sit paused — auto-resume after ANY pause.
+    video.onpause = () => {
+      if (video.ended || document.hidden) return;
+      if (window.__resumeTimer) clearTimeout(window.__resumeTimer);
+      window.__resumeTimer = setTimeout(() => {
+        if (hls && video.paused && !video.ended && !document.hidden) {
+          log("Paused – auto-resuming", "warn");
+          startPlayback();
+        }
+      }, 800);
+    };
 
     hls.on(Hls.Events.LEVEL_SWITCHED, (_, d) => {
       const l = hls.levels[d.level];
@@ -281,7 +323,7 @@
     hls.on(Hls.Events.FRAG_BUFFERED, () => {
       _recoverCount = 0;
       clearBuffering();
-      if (video.paused) video.play().catch(() => {});
+      if (video.paused) startPlayback();
     });
 
     let _recoverTimer = null;
@@ -342,7 +384,7 @@
           _recoverTimer = null;
           if (!hls) return;
           hls.startLoad(-1);
-          video.play().catch(() => {});
+          startPlayback();   // guarded resume — seeks to live only if stranded
           clearBuffering();
           setBadge("live", "LIVE");
         }, 300);
@@ -396,7 +438,14 @@
     // live-edge resync (~8s), then a full channel re-init (~18s). In-page "RPA".
     let _wdLast = -1, _wdStuck = 0, _wdStarted = false, _latHits = 0;
     window.__playbackWatchdog = setInterval(() => {
-      if (!hls || document.hidden || video.paused || video.seeking || video.ended) {
+      if (!hls || document.hidden || video.ended) {
+        _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
+      }
+      if (video.paused) {
+        startPlayback();
+        _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
+      }
+      if (video.seeking) {
         _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
       }
       // WARMUP: don't police until playback has begun. On join hls.latency reads

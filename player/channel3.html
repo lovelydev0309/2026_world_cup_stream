@@ -208,6 +208,8 @@
     if (hls) { hls.destroy(); hls = null; }
     if (statsTimer) clearInterval(statsTimer);
     if (window.__playbackWatchdog) clearInterval(window.__playbackWatchdog);
+    if (window.__playRetry) { clearTimeout(window.__playRetry); window.__playRetry = null; }
+    if (window.__resumeTimer) { clearTimeout(window.__resumeTimer); window.__resumeTimer = null; }
 
     if (!Hls.isSupported()) {
       // Fallback for Safari native HLS
@@ -267,15 +269,63 @@
     hls.loadSource(STREAM_URL);
     hls.attachMedia(video);
 
+    // ── Auto-replay: resume on empty buffer / block, no manual click ─────
+    // Seconds of contiguous buffered video ahead of the playhead (0 = stranded).
+    function fwdBuffer() {
+      const b = video.buffered, t = video.currentTime;
+      for (let i = 0; i < b.length; i++) {
+        if (t >= b.start(i) - 0.3 && t <= b.end(i)) return b.end(i) - t;
+      }
+      return 0;
+    }
+    // Resume and KEEP trying until playback starts — the in-page auto-replay.
+    // A 700ms time gate collapses concurrent resume requests into a single
+    // play() WITHOUT latching: a stalled live stream can leave play()'s promise
+    // unresolved forever, and a boolean "in-flight" guard would then stick and
+    // block every later resume (needing a manual press — the bug we're fixing).
+    // Jump to the live edge ONLY when stranded (no buffer ahead) so we never
+    // discard good buffer or re-stall at the edge on every segment.
+    let _playAt = 0;
+    function startPlayback() {
+      if (Date.now() - _playAt < 700) return;
+      _playAt = Date.now();
+      video.muted = true;
+      if (hls && isFinite(hls.liveSyncPosition) && fwdBuffer() < 1) {
+        try { video.currentTime = hls.liveSyncPosition; } catch (e) {}
+      }
+      video.play().then(() => {
+        overlay.classList.add("hidden");
+        if (window.__playRetry) { clearTimeout(window.__playRetry); window.__playRetry = null; }
+      }).catch((err) => {
+        if (err && err.name === "NotAllowedError") {
+          log("Autoplay blocked by browser – click to start", "warn");
+          ovText.textContent = "Click to play";
+          overlay.classList.remove("hidden");
+          overlay.onclick = () => startPlayback();
+        }
+        if (window.__playRetry) clearTimeout(window.__playRetry);
+        window.__playRetry = setTimeout(startPlayback, 1000);
+      });
+    }
+
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
       log("Manifest loaded – starting playback", "info");
-      video.play().catch(() => {
-        log("Autoplay blocked – click to play", "warn");
-        ovText.textContent = "Click to play";
-        overlay.classList.remove("hidden");
-        overlay.onclick = () => { video.play(); overlay.classList.add("hidden"); };
-      });
+      startPlayback();
     });
+
+    // A live channel must never sit paused — auto-resume after ANY pause
+    // (a buffer underrun that drained to 0, an autoplay rejection, a stray
+    // click). Skipped for hidden tabs (browser pauses them on purpose) / ended.
+    video.onpause = () => {
+      if (video.ended || document.hidden) return;
+      if (window.__resumeTimer) clearTimeout(window.__resumeTimer);
+      window.__resumeTimer = setTimeout(() => {
+        if (hls && video.paused && !video.ended && !document.hidden) {
+          log("Paused – auto-resuming", "warn");
+          startPlayback();
+        }
+      }, 800);
+    };
 
     hls.on(Hls.Events.LEVEL_SWITCHED, (_, d) => {
       const l = hls.levels[d.level];
@@ -292,7 +342,7 @@
       _recoverCount = 0;
       clearBuffering();
       // Resume if the video stalled waiting for this segment to arrive
-      if (video.paused) video.play().catch(() => {});
+      if (video.paused) startPlayback();
     });
 
     let _recoverTimer = null;
@@ -369,7 +419,7 @@
           _recoverTimer = null;
           if (!hls) return;
           hls.startLoad(-1);
-          video.play().catch(() => {});
+          startPlayback();   // guarded resume — seeks to live only if stranded
           clearBuffering();
           setBadge("live", "LIVE");
         }, 300);
@@ -427,9 +477,18 @@
     // channel automatically, so no one ever has to reload the browser by hand.
     let _wdLast = -1, _wdStuck = 0, _wdStarted = false, _latHits = 0;
     window.__playbackWatchdog = setInterval(() => {
-      // Skip when intentionally paused, seeking, ended, or the tab is hidden
-      // (background tabs throttle timers — don't false-trigger a reload).
-      if (!hls || document.hidden || video.paused || video.seeking || video.ended) {
+      // Hidden/ended/no-hls → leave alone (browser pauses background tabs).
+      if (!hls || document.hidden || video.ended) {
+        _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
+      }
+      // A live channel must NEVER sit paused — whatever paused it (drained
+      // buffer, autoplay rejection, stray click), resume it. This is the
+      // backstop behind onpause + the retry timer, ~2s max to recover.
+      if (video.paused) {
+        startPlayback();
+        _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
+      }
+      if (video.seeking) {
         _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
       }
       // WARMUP: don't police anything until playback has actually begun. On a
