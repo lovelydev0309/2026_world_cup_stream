@@ -281,22 +281,40 @@
     // start AT THE LIVE EDGE (never a stale position), (3) if still blocked,
     // keep retrying on a timer so an unattended display starts on its own
     // instead of sitting paused forever.
+    // One in-flight play() at a time. The watchdog, the 1s retry, the onpause
+    // handler and FRAG_BUFFERED can all ask to resume; without this guard their
+    // concurrent video.play() calls interrupt one another and each rejects with
+    // AbortError — a self-inflicted "can't start" loop that the old code logged
+    // as "Autoplay blocked". The guard collapses them into a single attempt.
+    let _playPending = false;
     function startPlayback() {
-      video.muted = true;
+      if (_playPending) return;
+      video.muted = true;              // muted autoplay is always allowed
       if (hls && isFinite(hls.liveSyncPosition) &&
           Math.abs(video.currentTime - hls.liveSyncPosition) > 5) {
         try { video.currentTime = hls.liveSyncPosition; } catch (e) {}
       }
+      _playPending = true;
       video.play().then(() => {
+        _playPending = false;
         overlay.classList.add("hidden");
         if (window.__playRetry) { clearTimeout(window.__playRetry); window.__playRetry = null; }
-      }).catch(() => {
-        log("Autoplay blocked – retrying (muted)", "warn");
-        ovText.textContent = "Click to play";
-        overlay.classList.remove("hidden");
-        overlay.onclick = () => startPlayback();
+      }).catch((err) => {
+        _playPending = false;
+        // NotAllowedError = a genuine autoplay-policy block (needs a user
+        // gesture) — show a click target. Everything else (AbortError from a
+        // reinit/load race, or simply "no data yet") is NOT a real block: keep
+        // retrying silently so a transient stall doesn't masquerade as a dead
+        // stream. Either way a fast retry stays pending until playback starts,
+        // so the channel can never be left sitting paused.
+        if (err && err.name === "NotAllowedError") {
+          log("Autoplay blocked by browser – click to start", "warn");
+          ovText.textContent = "Click to play";
+          overlay.classList.remove("hidden");
+          overlay.onclick = () => startPlayback();
+        }
         if (window.__playRetry) clearTimeout(window.__playRetry);
-        window.__playRetry = setTimeout(startPlayback, 2000);
+        window.__playRetry = setTimeout(startPlayback, 1000);
       });
     }
 
@@ -337,7 +355,7 @@
       _recoverCount = 0;
       clearBuffering();
       // Resume if the video stalled waiting for this segment to arrive
-      if (video.paused) video.play().catch(() => {});
+      if (video.paused) startPlayback();
     });
 
     let _recoverTimer = null;
@@ -472,9 +490,21 @@
     // channel automatically, so no one ever has to reload the browser by hand.
     let _wdLast = -1, _wdStuck = 0, _wdStarted = false, _latHits = 0;
     window.__playbackWatchdog = setInterval(() => {
-      // Skip when intentionally paused, seeking, ended, or the tab is hidden
-      // (background tabs throttle timers — don't false-trigger a reload).
-      if (!hls || document.hidden || video.paused || video.seeking || video.ended) {
+      // Hidden/ended/no-hls → leave it alone (the browser pauses background
+      // tabs on purpose; throttled timers must not false-trigger a reload).
+      if (!hls || document.hidden || video.ended) {
+        _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
+      }
+      // A live channel must NEVER sit paused. Whatever paused it (an autoplay
+      // rejection after a reinit, an interrupted play(), a stray click, a stall
+      // that settled while paused), resume at the live edge. This is the
+      // reliable backstop behind startPlayback's retry and the onpause handler —
+      // it guarantees the picture returns within ~2s with no manual reload.
+      if (video.paused) {
+        startPlayback();
+        _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
+      }
+      if (video.seeking) {
         _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
       }
       // WARMUP: don't police anything until playback has actually begun. On a
