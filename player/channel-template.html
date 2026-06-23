@@ -209,6 +209,7 @@
     if (statsTimer) clearInterval(statsTimer);
     if (window.__playbackWatchdog) clearInterval(window.__playbackWatchdog);
     if (window.__playRetry) clearTimeout(window.__playRetry);
+    if (window.__resumeTimer) clearTimeout(window.__resumeTimer);
 
     if (!Hls.isSupported()) {
       // Fallback for Safari native HLS
@@ -286,6 +287,20 @@
       log("Manifest loaded – starting playback", "info");
       startPlayback();
     });
+
+    // Auto-resume: a live channel should never sit paused. Resume at the live
+    // edge after any pause (buffer underrun, stall, accidental click). Property
+    // (not addEventListener) so re-init replaces it. Skips hidden tabs / ended.
+    video.onpause = () => {
+      if (video.ended || document.hidden) return;
+      if (window.__resumeTimer) clearTimeout(window.__resumeTimer);
+      window.__resumeTimer = setTimeout(() => {
+        if (hls && video.paused && !video.ended && !document.hidden) {
+          log("Paused – auto-resuming at live", "warn");
+          startPlayback();
+        }
+      }, 800);
+    };
 
     hls.on(Hls.Events.LEVEL_SWITCHED, (_, d) => {
       const l = hls.levels[d.level];
