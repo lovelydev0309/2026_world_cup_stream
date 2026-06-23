@@ -229,16 +229,17 @@
 
     hls = new Hls({
       lowLatencyMode: false,
-      // Sit 30s behind the live edge. ALL three IPTV sources occasionally hiccup
-      // for 8-13s (measured) and then burst to catch up; a 15s buffer was too
-      // tight to ride those gaps, so the buffer drained → brief stall → the
-      // status badge flickered BUFFERING↔LIVE. 30s comfortably absorbs a 13s gap
-      // with margin. (Trade-off: ~30s latency vs lower. Dial down toward 20 for
-      // less latency if you can tolerate the occasional flicker.)
-      liveSyncDuration: 30,
-      // Snap back toward live if we drift >45s behind (recovers a creeping
-      // latency / a wedged decoder via the seek, instead of stiffening).
-      liveMaxLatencyDuration: 45,
+      // Sit ~45s behind the live edge — a DEEP cushion so the buffer doesn't
+      // drain to 0 when the source hiccups. The IPTV feeds intermittently
+      // restart (the in-encoder watchdog kills a stalled pull after 45s, then
+      // reconnects), which leaves a gap of up to ~45-50s; a 30s buffer emptied
+      // during those, stopping the picture. 45s rides almost all of them.
+      // (Trade-off: ~45s latency. The auto-replay below covers the rare gap that
+      // still outlasts the buffer. Dial toward 30 if you want lower latency.)
+      liveSyncDuration: 45,
+      // Only force a snap-to-live on GENUINE excess drift (>90s behind), well
+      // past the 45s resting point, so normal operation is never yanked.
+      liveMaxLatencyDuration: 90,
       liveDurationInfinity: true,
       // CRITICAL for 24/7: cap the BACK buffer. hls.js otherwise keeps growing
       // the MediaSource with already-played content; over a multi-hour session
@@ -259,10 +260,11 @@
       manifestLoadingTimeOut: 20000,
       levelLoadingTimeOut: 20000,
       fragLoadingTimeOut: 20000,
-      // Forward buffer: enough to ride the sources' 8-13s hiccups, but not so
-      // large it adds memory pressure on long runs.
-      maxBufferLength: 30,
-      maxMaxBufferLength: 60,
+      // Forward buffer: build a deep cushion (up to ~60s, capped in practice by
+      // the 45s distance to the live edge) so a source restart gap doesn't drain
+      // it to 0. backBufferLength above stays small for 24/7 memory hygiene.
+      maxBufferLength: 60,
+      maxMaxBufferLength: 90,
       debug: false,
     });
 
@@ -502,7 +504,7 @@
       // Sustained excessive latency (genuine drift, not a one-off spike) → snap
       // back to live. Require several consecutive readings so a transient never
       // triggers it. (Backstop to hls.js's own liveMaxLatencyDuration resync.)
-      if (hls.latency > 50 && hls.liveSyncPosition != null) {
+      if (hls.latency > 90 && hls.liveSyncPosition != null) {
         if (++_latHits >= 3) {                          // ~6s sustained
           _latHits = 0;
           log(`Latency ${hls.latency.toFixed(0)}s – snapping to live`, "warn");
