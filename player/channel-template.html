@@ -208,6 +208,7 @@
     if (hls) { hls.destroy(); hls = null; }
     if (statsTimer) clearInterval(statsTimer);
     if (window.__playbackWatchdog) clearInterval(window.__playbackWatchdog);
+    if (window.__playRetry) clearTimeout(window.__playRetry);
 
     if (!Hls.isSupported()) {
       // Fallback for Safari native HLS
@@ -259,14 +260,31 @@
     hls.loadSource(STREAM_URL);
     hls.attachMedia(video);
 
-    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      log("Manifest loaded – starting playback", "info");
-      video.play().catch(() => {
-        log("Autoplay blocked – click to play", "warn");
+    // Robust autoplay: force muted, always start at the live edge, and retry if
+    // blocked — so the player never sits paused at a stale position (which over
+    // time falls out of the live window → fragLoadError loop).
+    function startPlayback() {
+      video.muted = true;
+      if (hls && isFinite(hls.liveSyncPosition) &&
+          Math.abs(video.currentTime - hls.liveSyncPosition) > 5) {
+        try { video.currentTime = hls.liveSyncPosition; } catch (e) {}
+      }
+      video.play().then(() => {
+        overlay.classList.add("hidden");
+        if (window.__playRetry) { clearTimeout(window.__playRetry); window.__playRetry = null; }
+      }).catch(() => {
+        log("Autoplay blocked – retrying (muted)", "warn");
         ovText.textContent = "Click to play";
         overlay.classList.remove("hidden");
-        overlay.onclick = () => { video.play(); overlay.classList.add("hidden"); };
+        overlay.onclick = () => startPlayback();
+        if (window.__playRetry) clearTimeout(window.__playRetry);
+        window.__playRetry = setTimeout(startPlayback, 2000);
       });
+    }
+
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      log("Manifest loaded – starting playback", "info");
+      startPlayback();
     });
 
     hls.on(Hls.Events.LEVEL_SWITCHED, (_, d) => {
