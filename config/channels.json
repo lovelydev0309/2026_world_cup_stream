@@ -1,5 +1,5 @@
 {
-  "_comment": "Channel configuration. source_url = single IPTV stream URL; source_urls = ordered list of primary + backup URLs tried on failover. Set enabled=false to skip.",
+  "_comment": "Channel configuration. source_url = single IPTV stream URL; source_urls = ordered list of primary + backup URLs tried on failover. Set enabled=false to skip. PROVIDER NOTE (tvon247.com): Xtream panel that (a) FILTERS user-agents — only an app/browser UA passes, the IPTV Smarters UA in run_channel.sh works; (b) serves live via a no-extension URL that 302-redirects to a tokenized segment host; ffmpeg follows it automatically. Account 9WZELTN, 5 max connections.",
   "server": {
     "rtmp_host": "127.0.0.1",
     "rtmp_port": 1935,
@@ -15,58 +15,55 @@
     "restart_cooldown_seconds": 30
   },
   "iptv": {
-    "base_url": "http://prosclan.fans:2052",
-    "username": "JF747456",
-    "password": "QG712995"
+    "base_url": "http://tvon247.com",
+    "username": "9WZELTN",
+    "password": "JTBML46"
   },
   "channels": [
     {
       "channel_name": "channel1",
       "display_name": "FIFA World Cup 2026 – Match Feed",
       "enabled": true,
-      "source_url": "http://prosclan.fans:2052/JF747456/QG712995/1459243",
+      "source_url": "http://tvon247.com/9WZELTN/JTBML46/1027109",
       "hls_url": "https://live3.mzolotv.com/hls/channel1/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
       "resolution": "1280x720",
       "fps": 30,
       "audio_bitrate": 128,
-      "_comment_audio": "force_silent_audio: this source's audio is broken (runaway clock / rate drift) and desyncs the browser. Silent stereo keeps video reliable. Remove this flag if a stable source is provided.",
-      "force_silent_audio": true
+      "_comment_source": "tvon247 id 1027109 = DAZN MUNDIAL HD (the live World Cup / Mundial feed; H264 1080p25, MP2 stereo). No channel is literally named 'FIFA World Cup 2026' on this provider — DAZN Mundial is the live match carrier for the MX/LatAm package.",
+      "_comment_audio": "Real source audio restored: this provider delivers clean, tightly-synced stereo (A/V gap ~0.3s, not the old runaway clocks). Set force_silent_audio=true only if a specific feed's audio desyncs.",
+      "force_silent_audio": false
     },
     {
       "channel_name": "channel2",
       "display_name": "MX – Canal 5 HD",
       "enabled": true,
-      "source_url": "http://prosclan.fans:2052/JF747456/QG712995/313828",
-      "source_urls": [
-        "http://prosclan.fans:2052/JF747456/QG712995/313828",
-        "http://prosclan.fans:2052/live/JF747456/QG712995/313828.ts",
-        "http://prosclan.fans:2052/JF747456/QG712995/313828.ts",
-        "http://prosclan.fans:2052/live/JF747456/QG712995/313828.m3u8"
-      ],
+      "source_url": "http://tvon247.com/9WZELTN/JTBML46/1028333",
       "hls_url": "https://live3.mzolotv.com/hls/channel2/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
       "resolution": "1280x720",
       "fps": 30,
       "audio_bitrate": 128,
-      "_comment_audio": "force_silent_audio: this source's audio flaps (0-channel / runaway) and desyncs the browser. Silent keeps video reliable. Remove if a stable source is provided.",
-      "force_silent_audio": true
+      "_comment_source": "tvon247 id 1028333 = MX - CANAL 5 HD (HEVC 720p30, AAC stereo). HEVC decode → H264 re-encode; watch CPU on the 2-vCPU box.",
+      "_comment_audio": "Real source audio restored (A/V gap ~0.003s, clean). Old prosclan source was forced silent due to runaway/0-channel audio; this provider is clean.",
+      "force_silent_audio": false
     },
     {
       "channel_name": "channel3",
       "display_name": "ESPN HD",
       "enabled": true,
-      "source_url": "http://prosclan.fans:2052/JF747456/QG712995/3648",
+      "source_url": "http://tvon247.com/9WZELTN/JTBML46/1028359",
       "hls_url": "https://live3.mzolotv.com/hls/channel3/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
       "resolution": "1280x720",
       "fps": 30,
       "audio_bitrate": 128,
-      "_comment_audio": "force_silent_audio: this source's audio runs away (~6.6x over-delivery) and desyncs A/V by tens-of-thousands of seconds. Silent keeps video reliable. Remove if a stable source is provided.",
-      "force_silent_audio": true
+      "_comment_source": "tvon247 id 1028359 = MX - ESPN HD (H264 720p60, AAC stereo).",
+      "_comment_audio": "Real source audio restored (A/V gap ~0.01s, clean).",
+      "force_silent_audio": false
     }
   ]
 }

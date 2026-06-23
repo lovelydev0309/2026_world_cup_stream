@@ -254,7 +254,6 @@ push_live() {
         -fflags +igndts+discardcorrupt+genpts \
         -err_detect ignore_err \
         -user_agent "IPTV Smarters/1.0 Dalvik/2.1.0" \
-        -headers "Referer: http://prosclan.fans/" \
         -reconnect 1 -reconnect_at_eof 1 \
         -reconnect_streamed 1 -reconnect_delay_max 5 \
         -timeout 10000000 \
