@@ -52,7 +52,7 @@ pkill -9 -f "hls/${CHANNEL}/[0-9%]" 2>/dev/null || true
 
 # ── Read config ───────────────────────────────────────────────
 # Scalar fields (standby/bitrate/fps/force_silent_audio) on one line …
-read -r STANDBY_REL BITRATE AUDIO_BR FPS FORCE_SILENT_AUDIO < <(python3 -c "
+read -r STANDBY_REL BITRATE AUDIO_BR FPS FORCE_SILENT_AUDIO AUDIO_SYNC < <(python3 -c "
 import json, sys
 cfg = json.load(open('$CONFIG'))
 chs = [c for c in cfg['channels'] if c['channel_name'] == '$CHANNEL']
@@ -60,7 +60,8 @@ if not chs: sys.exit('Channel not found')
 c = chs[0]
 print(c.get('standby_file','standby/standby.mp4'),
       c.get('bitrate',2500), c.get('audio_bitrate',128), c.get('fps',30),
-      'true' if c.get('force_silent_audio') else 'false')")
+      'true' if c.get('force_silent_audio') else 'false',
+      c.get('audio_sync','regen'))")
 
 # … and the ordered source URL list (primary + optional backups) into an array.
 # Prefers source_urls[] if present, else falls back to the single source_url.
@@ -230,17 +231,27 @@ push_live() {
     # both breaks browser audio AND makes -re race at ~22x), discard it and feed
     # clean silent stereo from anullsrc instead so the channel still plays 1x.
     local aud_in=() aud_map=() aud_tail=()
-    if [ "$FORCE_SILENT_AUDIO" != "true" ] && detect_audio_ok; then
+    if [ "$FORCE_SILENT_AUDIO" != "true" ] && detect_audio_ok && [ "$AUDIO_SYNC" = "preserve" ]; then
+        log "→ LIVE re-encoding to H.264 540p (source audio, timestamps PRESERVED)"
+        # PRESERVE mode — for sources whose A/V is ALIGNED at the source but which
+        # OVER-DELIVER audio (send a backlog faster than realtime, e.g. VIX Canal
+        # 5). The default regen path (asetpts=N/SR/TB) rebuilds the audio PTS from
+        # the decoded SAMPLE COUNT; the surplus samples inflate that count so the
+        # audio races ahead and eventually drifts hours past the video (channel2
+        # drifted ~26h → browser could not align → would not start). -re already
+        # paces the INPUT to realtime by the source PTS, so we KEEP the source's
+        # aligned timestamps and just zero-base them (parallel to the video's
+        # setpts=PTS-STARTPTS) instead of regenerating from sample count.
+        aud_tail=(-af "asetpts=PTS-STARTPTS")
+    elif [ "$FORCE_SILENT_AUDIO" != "true" ] && detect_audio_ok; then
         log "→ LIVE re-encoding to H.264 540p (source audio, A/V realigned)"
         # Regenerate the audio PTS from the REAL decoded SAMPLE COUNT
         # (asetpts=N/SR/TB) so it's pinned to realtime and locked to the video,
-        # immune to channel1's runaway source audio clock (which otherwise raced
-        # the audio tens-of-thousands of seconds ahead of video and wrapped the
-        # 33-bit MPEG-TS limit → browser stuck on "Loading…").
-        # NOTE: do NOT precede this with aresample=async — async hard-fills the
-        # source's huge timestamp gaps with silence, which inflates the sample
-        # count (N) and re-breaks the very alignment we want. -ar on the encoder
-        # handles rate conversion; asetpts alone gives a clean realtime timeline.
+        # immune to a runaway source audio clock (which otherwise raced the audio
+        # tens-of-thousands of seconds ahead of video and wrapped the 33-bit
+        # MPEG-TS limit → browser stuck on "Loading…"). Used when the SOURCE
+        # timestamps themselves are unreliable. For aligned-but-over-delivering
+        # feeds use audio_sync="preserve" instead (above).
         aud_tail=(-af "asetpts=N/SR/TB")
     else
         log "→ LIVE re-encoding to H.264 540p (source audio broken – silent stereo)"
