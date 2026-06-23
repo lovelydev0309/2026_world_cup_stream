@@ -47,8 +47,8 @@
       "fps": 30,
       "audio_bitrate": 128,
       "_comment_source": "tvon247 id 1349033 = (ES) VIX - CANAL 5, H264 720p30 + AAC stereo. Switched from 1028333 (MX CANAL 5 HD) on 2026-06-24: that feed stalled-then-raced and flipped HEVC<->H264 (delivered 0s in a 25s raw test). VIX delivers steadily AND is consistent H264 (cheaper decode than the HEVC feed). Other Canal 5 ids on this provider were down at switch time: 30634 LATINO, 214633 HOND (0s); 273253 UY raced (2x).",
-      "_comment_audio": "Real source audio (A/V clean). Set force_silent_audio=true only if a feed's audio desyncs.",
-      "force_silent_audio": false
+      "_comment_audio": "FORCED SILENT 2026-06-24: VIX Canal 5 audio has a runaway clock — its PTS raced ~94,582s (≈26h) ahead of video, which the browser can't align, so channel2 wouldn't start playing ('Loading forever', black 0x0). asetpts=N/SR/TB in the encoder isn't enough for this over-delivered audio. Silent stereo (anullsrc, locked to video) makes it play reliably. Set back to false only if a Canal 5 feed with clean audio is found.",
+      "force_silent_audio": true
     },
     {
       "channel_name": "channel3",
