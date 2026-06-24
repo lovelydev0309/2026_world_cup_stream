@@ -111,6 +111,10 @@
   .log-line.warn  { color: #c90; }
   .log-line.error { color: #e44; }
   .log-line.info  { color: #4af; }
+  /* Operational WARN lines (stalls, resyncs, reconnects) are noise to a client,
+     so they're HIDDEN by default. Reveal on demand: press the "d" key or load
+     with ?debug=1 — both toggle .show-warn on <body>; the choice persists. */
+  body:not(.show-warn) .log-line.warn { display: none; }
 </style>
 </head>
 <body>
@@ -168,6 +172,26 @@
     logBox.prepend(el);
     if (logBox.children.length > 50) logBox.lastChild.remove();
   }
+
+  // ── Diagnostic-log visibility ────────────────────────────────────────
+  // WARN lines (stalls, resyncs, reconnects) are noise to a client, so they are
+  // hidden by default. The operator can reveal them on demand — press "d" to
+  // toggle, or load the page with ?debug=1 — and the choice sticks across
+  // reloads. INFO and ERROR lines are always shown.
+  (function () {
+    const p = new URLSearchParams(location.search);
+    let show = localStorage.getItem("showWarn") === "1";
+    if (p.get("debug") === "1" || p.get("warn") === "1") show = true;
+    document.body.classList.toggle("show-warn", show);
+    document.addEventListener("keydown", (e) => {
+      if ((e.key === "d" || e.key === "D") && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const on = !document.body.classList.contains("show-warn");
+        document.body.classList.toggle("show-warn", on);
+        localStorage.setItem("showWarn", on ? "1" : "0");
+        log("Diagnostic warnings " + (on ? "shown" : "hidden"), "info");
+      }
+    });
+  })();
 
   // ── Badge helper ─────────────────────────────────────────
   function setBadge(state, text) {
