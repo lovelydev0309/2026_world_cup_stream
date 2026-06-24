@@ -52,7 +52,7 @@ pkill -9 -f "hls/${CHANNEL}/[0-9%]" 2>/dev/null || true
 
 # ── Read config ───────────────────────────────────────────────
 # Scalar fields (standby/bitrate/fps/force_silent_audio) on one line …
-read -r STANDBY_REL BITRATE AUDIO_BR FPS FORCE_SILENT_AUDIO AUDIO_SYNC VIDEO_MODE < <(python3 -c "
+read -r STANDBY_REL BITRATE AUDIO_BR FPS FORCE_SILENT_AUDIO AUDIO_SYNC VIDEO_MODE ENC_RES < <(python3 -c "
 import json, sys
 cfg = json.load(open('$CONFIG'))
 chs = [c for c in cfg['channels'] if c['channel_name'] == '$CHANNEL']
@@ -62,7 +62,12 @@ print(c.get('standby_file','standby/standby.mp4'),
       c.get('bitrate',2500), c.get('audio_bitrate',128), c.get('fps',30),
       'true' if c.get('force_silent_audio') else 'false',
       c.get('audio_sync','regen'),
-      c.get('video_mode','encode'))")
+      c.get('video_mode','encode'),
+      c.get('encode_resolution','960x540'))")
+# Output resolution for re-encode mode (WxH). Default 960x540. Per-channel so the
+# marquee feeds can run 720p while the heavy 60fps one stays 540p for CPU.
+ENC_W=${ENC_RES%x*}; ENC_H=${ENC_RES#*x}
+[ -z "$ENC_W" ] && ENC_W=960; [ -z "$ENC_H" ] && ENC_H=540
 
 # … and the ordered source URL list (primary + optional backups) into an array.
 # Prefers source_urls[] if present, else falls back to the single source_url.
@@ -278,8 +283,8 @@ push_live() {
         # tail for the source-audio case (aud_in empty == not the silent branch).
         [ ${#aud_in[@]} -eq 0 ] && aud_tail=()
     else
-        vid_args=(-vf "scale=960:540:force_original_aspect_ratio=decrease,pad=960:540:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS" \
-                  -c:v libx264 -preset ultrafast -crf 28 -threads 2 \
+        vid_args=(-vf "scale=${ENC_W}:${ENC_H}:force_original_aspect_ratio=decrease,pad=${ENC_W}:${ENC_H}:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS" \
+                  -c:v libx264 -preset ultrafast -crf 24 -threads 2 \
                   -r "$FPS" -g "$GOP" -keyint_min "$GOP" \
                   -force_key_frames "expr:gte(t,n_forced*4)")
     fi

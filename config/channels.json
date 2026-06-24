@@ -34,8 +34,15 @@
       "_comment_source": "tvon247 id 1027109 = DAZN MUNDIAL HD (the live World Cup / Mundial feed; H264 1080p25, MP2 stereo). No channel is literally named 'FIFA World Cup 2026' on this provider — DAZN Mundial is the live match carrier for the MX/LatAm package.",
       "_comment_audio": "Real source audio restored: this provider delivers clean, tightly-synced stereo (A/V gap ~0.3s, not the old runaway clocks). Set force_silent_audio=true only if a specific feed's audio desyncs.",
       "force_silent_audio": false,
-      "_comment_video": "REVERTED to encode 2026-06-24: copy mode broke with mediaError/bufferAppendError when this flaky source dropped to the re-encoded STANDBY clip — the codec params differ from the copied live stream, so hls.js could not append across the live<->standby transition. The 540p re-encode normalizes live+standby to identical params (robust). Copy needs the standby-codec-mismatch fixed before re-enabling.",
-      "video_mode": "encode"
+      "_comment_video": "encode @ 540p, CRF24 (sharper than the old crf28). 720p was tried 2026-06-24 but 720p re-encode on 2 vCPU overran the box (load 3.2+); 540p is this box's re-encode ceiling. Native HD needs either a bigger server or the copy-standby fix. Copy was reverted (bufferAppendError at live<->standby codec boundary).",
+      "video_mode": "encode",
+      "encode_resolution": "960x540",
+      "_comment_failover": "Backups are the same World Cup match on DAZN MUNDIAL FHD/HD2 — a dropped primary fails over instantly instead of going to a standby gap.",
+      "source_urls": [
+        "http://tvon247.com/9WZELTN/JTBML46/1027109",
+        "http://tvon247.com/9WZELTN/JTBML46/309042",
+        "http://tvon247.com/9WZELTN/JTBML46/1027112"
+      ]
     },
     {
       "channel_name": "channel2",
@@ -52,8 +59,13 @@
       "_comment_audio": "REAL AUDIO via audio_sync=preserve (2026-06-24). VIX Canal 5's A/V is aligned AT THE SOURCE (gap ~0.06s) but it OVER-DELIVERS audio; the default asetpts=N/SR/TB regen rebuilt PTS from the inflated sample count and raced the audio ~26h ahead of video (browser wouldn't start). 'preserve' keeps the source's aligned PTS (asetpts=PTS-STARTPTS) instead. If audio ever desyncs again, set force_silent_audio=true to fall back to silent.",
       "audio_sync": "preserve",
       "force_silent_audio": false,
-      "_comment_video": "REVERTED to encode 2026-06-24 (same reason as channel1): copy mode bufferAppendError at the live<->standby codec boundary on this flaky source. Re-enable copy only after the standby-codec-mismatch is fixed (e.g. skip standby for copy channels, or insert a clean discontinuity + codec re-init).",
-      "video_mode": "encode"
+      "_comment_video": "encode @ 540p, CRF24 (720p overran 2 vCPU; 540p is the ceiling).",
+      "video_mode": "encode",
+      "encode_resolution": "960x540",
+      "source_urls": [
+        "http://tvon247.com/9WZELTN/JTBML46/1349033",
+        "http://tvon247.com/9WZELTN/JTBML46/273253"
+      ]
     },
     {
       "channel_name": "channel3",
@@ -69,8 +81,14 @@
       "_comment_source": "tvon247 id 1028359 = MX - ESPN HD (H264 720p60, AAC stereo).",
       "_comment_audio": "Real source audio restored (A/V gap ~0.01s, clean).",
       "force_silent_audio": false,
-      "_comment_video": "video_mode: COPY pending bitrate validation. 2026-06-24: its 720p60 source was fast-failing (stuck in STANDBY), so the live copy bitrate could not be measured against the ~6.4 Mbps client link. Left on 'encode' (proven 540p30) for safety. Flip to 'copy' to restore native 720p60 once the source is stable enough to confirm copy bitrate <~4.5 Mbps and segments <~10s.",
-      "video_mode": "encode"
+      "_comment_video": "encode @ 540p CRF24 (kept 540p — 60fps source re-encode is the heaviest; 720p for all 3 overruns 2 vCPU). Primary 1028359 was DOWN 2026-06-24, so failover to LAT/US ESPN feeds keeps it alive.",
+      "video_mode": "encode",
+      "encode_resolution": "960x540",
+      "source_urls": [
+        "http://tvon247.com/9WZELTN/JTBML46/1028359",
+        "http://tvon247.com/9WZELTN/JTBML46/325567",
+        "http://tvon247.com/9WZELTN/JTBML46/71936"
+      ]
     }
   ]
 }
