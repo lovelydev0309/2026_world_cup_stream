@@ -171,6 +171,7 @@ WATCHDOG_PID=0
 # Caches result in /tmp/codec_${CHANNEL} so restarts don't re-probe.
 # Falls back to cached value if probe times out (source temporarily down).
 CODEC_CACHE="$PROJECT_DIR/cache/codec_${CHANNEL}"
+AUDIO_CACHE="$PROJECT_DIR/cache/audio_${CHANNEL}"
 mkdir -p "$PROJECT_DIR/cache" 2>/dev/null || true
 detect_codec() {
     local result
@@ -204,13 +205,29 @@ detect_codec() {
 # audio is undecodable by browsers. Returns success only if the source has at
 # least one real audio channel; otherwise push_live swaps in clean silent stereo.
 detect_audio_ok() {
+    # CACHE the decision (cleared on a STANDBY cycle, where the source may have
+    # changed — see the main loop). A source's audio config is stable, so probing
+    # on every ~45s token-cadence reconnect is wasteful AND dangerous: when the
+    # probe momentarily fails MID-RECONNECT (source between tokens) the old code
+    # returned "no audio" and dropped to SILENT — the sound the client hears
+    # cutting out. Probe once, then trust the cache; a transient probe failure
+    # before any cache stays silent only that one time.
+    if [ -f "$AUDIO_CACHE" ]; then
+        [ "$(cat "$AUDIO_CACHE" 2>/dev/null)" = "ok" ]
+        return
+    fi
     local chans
     chans=$(timeout 5 ffprobe -v quiet -hide_banner \
         -user_agent "IPTV Smarters/1.0 Dalvik/2.1.0" \
         -analyzeduration 2000000 -probesize 1000000 \
         -select_streams a:0 -show_entries stream=channels \
         -of csv=p=0 "$SOURCE_URL" 2>/dev/null | head -1)
-    [ -n "$chans" ] && [ "$chans" -ge 1 ] 2>/dev/null
+    if [ -n "$chans" ] && [ "$chans" -ge 1 ] 2>/dev/null; then
+        echo ok > "$AUDIO_CACHE" 2>/dev/null; return 0     # confirmed real audio
+    elif [ -n "$chans" ]; then
+        echo no > "$AUDIO_CACHE" 2>/dev/null; return 1     # genuine 0-channel feed
+    fi
+    return 1                                               # transient fail, no cache yet
 }
 
 # ── Live push ─────────────────────────────────────────────────
@@ -388,6 +405,7 @@ while true; do
         log "Standby ended – resetting to primary, retrying live"
         LIVE_FAIL=0
         URL_IDX=0   # after a standby cycle, start over from the primary URL
+        rm -f "$AUDIO_CACHE" 2>/dev/null   # source may have changed → re-probe audio
     fi
     sleep 1
 done
