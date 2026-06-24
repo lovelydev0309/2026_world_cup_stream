@@ -34,8 +34,8 @@
       "_comment_source": "tvon247 id 1027109 = DAZN MUNDIAL HD (the live World Cup / Mundial feed; H264 1080p25, MP2 stereo). No channel is literally named 'FIFA World Cup 2026' on this provider — DAZN Mundial is the live match carrier for the MX/LatAm package.",
       "_comment_audio": "Real source audio restored: this provider delivers clean, tightly-synced stereo (A/V gap ~0.3s, not the old runaway clocks). Set force_silent_audio=true only if a specific feed's audio desyncs.",
       "force_silent_audio": false,
-      "_comment_video": "video_mode=copy: stream-COPY the native 1080p H.264 (no transcode, ~0 CPU) instead of downscaling to 540p. Audio still re-encoded MP2->AAC. Remove this field (or set 'encode') to instantly roll back to the 540p path.",
-      "video_mode": "copy"
+      "_comment_video": "REVERTED to encode 2026-06-24: copy mode broke with mediaError/bufferAppendError when this flaky source dropped to the re-encoded STANDBY clip — the codec params differ from the copied live stream, so hls.js could not append across the live<->standby transition. The 540p re-encode normalizes live+standby to identical params (robust). Copy needs the standby-codec-mismatch fixed before re-enabling.",
+      "video_mode": "encode"
     },
     {
       "channel_name": "channel2",
@@ -52,8 +52,8 @@
       "_comment_audio": "REAL AUDIO via audio_sync=preserve (2026-06-24). VIX Canal 5's A/V is aligned AT THE SOURCE (gap ~0.06s) but it OVER-DELIVERS audio; the default asetpts=N/SR/TB regen rebuilt PTS from the inflated sample count and raced the audio ~26h ahead of video (browser wouldn't start). 'preserve' keeps the source's aligned PTS (asetpts=PTS-STARTPTS) instead. If audio ever desyncs again, set force_silent_audio=true to fall back to silent.",
       "audio_sync": "preserve",
       "force_silent_audio": false,
-      "_comment_video": "video_mode=copy: stream-COPY native 720p H.264 (~0 CPU). In copy mode the audio_sync filter is dropped (best A/V sync); audio still re-encoded AAC. Set 'encode' to roll back to 540p.",
-      "video_mode": "copy"
+      "_comment_video": "REVERTED to encode 2026-06-24 (same reason as channel1): copy mode bufferAppendError at the live<->standby codec boundary on this flaky source. Re-enable copy only after the standby-codec-mismatch is fixed (e.g. skip standby for copy channels, or insert a clean discontinuity + codec re-init).",
+      "video_mode": "encode"
     },
     {
       "channel_name": "channel3",
