@@ -175,20 +175,22 @@
 
   // ── Diagnostic-log visibility ────────────────────────────────────────
   // WARN lines (stalls, resyncs, reconnects) are noise to a client, so they are
-  // hidden by default. The operator can reveal them on demand — press "d" to
-  // toggle, or load the page with ?debug=1 — and the choice sticks across
-  // reloads. INFO and ERROR lines are always shown.
+  // HIDDEN BY DEFAULT on every load. The operator reveals them on demand —
+  // press "d" to toggle for the current view, or load with ?debug=1 — but that
+  // is NOT remembered, so a plain reload is always clean. INFO/ERROR always show.
   (function () {
+    // Clear any "showWarn" persisted by an earlier build; otherwise a previous
+    // "shown" choice (e.g. from pressing "d" to read the logs) would keep
+    // warnings visible against this hidden default.
+    try { localStorage.removeItem("showWarn"); } catch (e) {}
     const p = new URLSearchParams(location.search);
-    let show = localStorage.getItem("showWarn") === "1";
-    if (p.get("debug") === "1" || p.get("warn") === "1") show = true;
-    document.body.classList.toggle("show-warn", show);
+    document.body.classList.toggle("show-warn",
+      p.get("debug") === "1" || p.get("warn") === "1");
     document.addEventListener("keydown", (e) => {
       if ((e.key === "d" || e.key === "D") && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        const on = !document.body.classList.contains("show-warn");
-        document.body.classList.toggle("show-warn", on);
-        localStorage.setItem("showWarn", on ? "1" : "0");
-        log("Diagnostic warnings " + (on ? "shown" : "hidden"), "info");
+        document.body.classList.toggle("show-warn");
+        log("Diagnostic warnings " +
+            (document.body.classList.contains("show-warn") ? "shown" : "hidden"), "info");
       }
     });
   })();

@@ -172,19 +172,18 @@
     if (logBox.children.length > 50) logBox.lastChild.remove();
   }
 
-  // WARN lines hidden by default (noise to a client); reveal with "d" or
-  // ?debug=1, choice persists. INFO/ERROR always shown.
+  // WARN lines HIDDEN BY DEFAULT on every load (noise to a client). Reveal with
+  // "d" (current view only) or ?debug=1; not remembered, so a reload is clean.
   (function () {
+    try { localStorage.removeItem("showWarn"); } catch (e) {}
     const p = new URLSearchParams(location.search);
-    let show = localStorage.getItem("showWarn") === "1";
-    if (p.get("debug") === "1" || p.get("warn") === "1") show = true;
-    document.body.classList.toggle("show-warn", show);
+    document.body.classList.toggle("show-warn",
+      p.get("debug") === "1" || p.get("warn") === "1");
     document.addEventListener("keydown", (e) => {
       if ((e.key === "d" || e.key === "D") && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        const on = !document.body.classList.contains("show-warn");
-        document.body.classList.toggle("show-warn", on);
-        localStorage.setItem("showWarn", on ? "1" : "0");
-        log("Diagnostic warnings " + (on ? "shown" : "hidden"), "info");
+        document.body.classList.toggle("show-warn");
+        log("Diagnostic warnings " +
+            (document.body.classList.contains("show-warn") ? "shown" : "hidden"), "info");
       }
     });
   })();
