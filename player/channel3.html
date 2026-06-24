@@ -545,13 +545,30 @@
       _wdStuck++;                                       // not advancing
       if (_wdStuck === 4) {                             // ~8s frozen → soft resync
         recoverToLiveEdge(500, "Playback not advancing – auto-resync");
-      } else if (_wdStuck >= 9) {                       // ~18s wedged → reload channel
+      } else if (_wdStuck >= 9) {                       // ~18s wedged
+        // Soft recovery didn't take. If the BUFFER has drained to ~0, do a full
+        // BROWSER REFRESH — it clears any wedged client state a soft re-init
+        // can't. Guarded two ways so a dead source can't reload-loop: only when
+        // the buffer is actually empty, and at most once per 60s (sessionStorage
+        // survives the reload). Within that cooldown, fall back to the lighter
+        // in-page re-init instead of hammering reload.
         _wdStuck = 0;
-        log("Playback wedged – auto-reinitializing channel", "warn");
-        setBadge("standby", "RECONNECTING…");
-        overlay.classList.remove("hidden");
-        ovText.textContent = "Reconnecting…";
-        init();
+        const now = Date.now();
+        const last = +(sessionStorage.getItem("__lastReload") || 0);
+        if (fwdBuffer() < 0.5 && now - last > 60000) {
+          sessionStorage.setItem("__lastReload", String(now));
+          log("Buffer empty – refreshing browser", "warn");
+          setBadge("standby", "RECONNECTING…");
+          overlay.classList.remove("hidden");
+          ovText.textContent = "Refreshing…";
+          location.reload();
+        } else {
+          log("Playback wedged – re-initializing channel", "warn");
+          setBadge("standby", "RECONNECTING…");
+          overlay.classList.remove("hidden");
+          ovText.textContent = "Reconnecting…";
+          init();
+        }
       }
     }, 2000);
 

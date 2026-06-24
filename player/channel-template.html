@@ -490,12 +490,27 @@
       if (_wdStuck === 4) {
         recoverToLiveEdge(500, "Playback not advancing – auto-resync");
       } else if (_wdStuck >= 9) {
+        // Buffer drained to ~0 → full BROWSER REFRESH (clears wedged client
+        // state). Guarded: only when buffer is empty, and <=1 reload/60s
+        // (sessionStorage survives reload) so a dead source can't loop; within
+        // cooldown fall back to a soft in-page re-init.
         _wdStuck = 0;
-        log("Playback wedged – auto-reinitializing channel", "warn");
-        setBadge("standby", "RECONNECTING…");
-        overlay.classList.remove("hidden");
-        ovText.textContent = "Reconnecting…";
-        init();
+        const now = Date.now();
+        const last = +(sessionStorage.getItem("__lastReload") || 0);
+        if (fwdBuffer() < 0.5 && now - last > 60000) {
+          sessionStorage.setItem("__lastReload", String(now));
+          log("Buffer empty – refreshing browser", "warn");
+          setBadge("standby", "RECONNECTING…");
+          overlay.classList.remove("hidden");
+          ovText.textContent = "Refreshing…";
+          location.reload();
+        } else {
+          log("Playback wedged – re-initializing channel", "warn");
+          setBadge("standby", "RECONNECTING…");
+          overlay.classList.remove("hidden");
+          ovText.textContent = "Reconnecting…";
+          init();
+        }
       }
     }, 2000);
 
