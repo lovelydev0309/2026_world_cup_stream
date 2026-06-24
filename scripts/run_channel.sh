@@ -52,7 +52,7 @@ pkill -9 -f "hls/${CHANNEL}/[0-9%]" 2>/dev/null || true
 
 # ── Read config ───────────────────────────────────────────────
 # Scalar fields (standby/bitrate/fps/force_silent_audio) on one line …
-read -r STANDBY_REL BITRATE AUDIO_BR FPS FORCE_SILENT_AUDIO AUDIO_SYNC < <(python3 -c "
+read -r STANDBY_REL BITRATE AUDIO_BR FPS FORCE_SILENT_AUDIO AUDIO_SYNC VIDEO_MODE < <(python3 -c "
 import json, sys
 cfg = json.load(open('$CONFIG'))
 chs = [c for c in cfg['channels'] if c['channel_name'] == '$CHANNEL']
@@ -61,7 +61,8 @@ c = chs[0]
 print(c.get('standby_file','standby/standby.mp4'),
       c.get('bitrate',2500), c.get('audio_bitrate',128), c.get('fps',30),
       'true' if c.get('force_silent_audio') else 'false',
-      c.get('audio_sync','regen'))")
+      c.get('audio_sync','regen'),
+      c.get('video_mode','encode'))")
 
 # … and the ordered source URL list (primary + optional backups) into an array.
 # Prefers source_urls[] if present, else falls back to the single source_url.
@@ -232,7 +233,7 @@ push_live() {
     # clean silent stereo from anullsrc instead so the channel still plays 1x.
     local aud_in=() aud_map=() aud_tail=()
     if [ "$FORCE_SILENT_AUDIO" != "true" ] && detect_audio_ok && [ "$AUDIO_SYNC" = "preserve" ]; then
-        log "→ LIVE re-encoding to H.264 540p (source audio, timestamps PRESERVED)"
+        log "→ LIVE (source audio, timestamps PRESERVED)"
         # PRESERVE mode — for sources whose A/V is ALIGNED at the source but which
         # OVER-DELIVER audio (send a backlog faster than realtime, e.g. VIX Canal
         # 5). The default regen path (asetpts=N/SR/TB) rebuilds the audio PTS from
@@ -244,7 +245,7 @@ push_live() {
         # setpts=PTS-STARTPTS) instead of regenerating from sample count.
         aud_tail=(-af "asetpts=PTS-STARTPTS")
     elif [ "$FORCE_SILENT_AUDIO" != "true" ] && detect_audio_ok; then
-        log "→ LIVE re-encoding to H.264 540p (source audio, A/V realigned)"
+        log "→ LIVE (source audio, A/V realigned)"
         # Regenerate the audio PTS from the REAL decoded SAMPLE COUNT
         # (asetpts=N/SR/TB) so it's pinned to realtime and locked to the video,
         # immune to a runaway source audio clock (which otherwise raced the audio
@@ -254,10 +255,33 @@ push_live() {
         # feeds use audio_sync="preserve" instead (above).
         aud_tail=(-af "asetpts=N/SR/TB")
     else
-        log "→ LIVE re-encoding to H.264 540p (source audio broken – silent stereo)"
+        log "→ LIVE (source audio broken – silent stereo)"
         aud_in=(-f lavfi -i "anullsrc=channel_layout=stereo:sample_rate=44100")
         aud_map=(-map 0:v:0 -map 1:a:0)
         aud_tail=(-shortest)
+    fi
+
+    # ── Video path: COPY (native HD, ~0 CPU) vs re-encode 540p ──────────
+    # video_mode=copy stream-COPIES the source's H.264 video at native resolution
+    # (1080p / 720p / 720p60) for near-zero CPU — the big quality win on this
+    # 2-vCPU, no-HW-encoder box. The 540p libx264 path is the DEFAULT and the
+    # instant per-channel rollback (video_mode=encode). Audio is re-encoded to
+    # AAC in BOTH modes (never -c:a copy — copying both raw streams re-exposes
+    # the 33-bit-PTS-wrap 0x0 black-frame bug this pipeline was written to avoid).
+    local vid_args=()
+    if [ "$VIDEO_MODE" = "copy" ]; then
+        log "  video_mode=COPY (native-resolution H.264 passthrough, ~0 CPU)"
+        vid_args=(-c:v copy)
+        # Copy keeps the source video timeline, so re-encoded audio aligns BEST
+        # with NO PTS filter (measured A/V 0.13s, vs 0.33s with asetpts which
+        # zeros the audio independently of the copied video). Drop the asetpts
+        # tail for the source-audio case (aud_in empty == not the silent branch).
+        [ ${#aud_in[@]} -eq 0 ] && aud_tail=()
+    else
+        vid_args=(-vf "scale=960:540:force_original_aspect_ratio=decrease,pad=960:540:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS" \
+                  -c:v libx264 -preset ultrafast -crf 28 -threads 2 \
+                  -r "$FPS" -g "$GOP" -keyint_min "$GOP" \
+                  -force_key_frames "expr:gte(t,n_forced*4)")
     fi
 
     ffmpeg -hide_banner -loglevel warning \
@@ -271,14 +295,10 @@ push_live() {
         -i "$SOURCE_URL" \
         "${aud_in[@]}" \
         "${aud_map[@]}" \
-        -vf "scale=960:540:force_original_aspect_ratio=decrease,pad=960:540:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS" \
-        -c:v libx264 -preset ultrafast -crf 28 \
-        -threads 2 \
-        -r "$FPS" -g "$GOP" -keyint_min "$GOP" \
-        -force_key_frames "expr:gte(t,n_forced*4)" \
+        "${vid_args[@]}" \
         -c:a aac -b:a "${AUDIO_BR}k" -ar 44100 \
         "${aud_tail[@]}" \
-        -avoid_negative_ts make_zero \
+        -avoid_negative_ts make_zero -muxpreload 0 -muxdelay 0 \
         -flush_packets 1 \
         -f hls -hls_time 4 -hls_list_size 40 \
         -hls_flags delete_segments+append_list+independent_segments \
