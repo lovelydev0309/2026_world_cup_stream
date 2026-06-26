@@ -85,7 +85,14 @@ SOURCE_URL="${SOURCE_URLS[0]:-}"   # active URL; rotated by the main loop on fai
 STANDBY="$PROJECT_DIR/$STANDBY_REL"
 HLS_DIR="$PROJECT_DIR/hls/$CHANNEL"
 GOP=$((FPS * 2))
-STALE_KILL_SECS=45   # kill ffmpeg only after this many seconds of ZERO write progress
+STALE_KILL_SECS=25   # kill ffmpeg after this many seconds of ZERO write progress.
+# Was 45s, but the live3 player rides ~45s behind the edge (liveSyncDuration:45); a
+# 45s stall-detect drains that whole cushion BEFORE we even kill+reconnect, so the
+# viewer sees a freeze. 25s of zero byte-growth (≈6 missed 4s segments) is still a
+# definitively-dead feed — ffmpeg's own -reconnect recovers real hiccups within
+# ~5-8s and resumes byte-growth (resetting the counter), so this only ever fires on
+# a genuinely frozen source. 25s detect + ~10s reconnect ≈ 35s gap < 45s cushion →
+# failover completes while the player is still playing buffered content (no freeze).
 # Periodic PTS reset: append_list carries the output PTS across failover restarts,
 # so on a long-lived channel it climbs without bound. hls.js remuxes TS→MP4 with a
 # 32-bit baseMediaDecodeTime; at 90kHz that overflows at 2^32/90000 ≈ 47,700s ≈
