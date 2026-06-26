@@ -86,6 +86,16 @@ STANDBY="$PROJECT_DIR/$STANDBY_REL"
 HLS_DIR="$PROJECT_DIR/hls/$CHANNEL"
 GOP=$((FPS * 2))
 STALE_KILL_SECS=45   # kill ffmpeg only after this many seconds of ZERO write progress
+# Periodic PTS reset: append_list carries the output PTS across failover restarts,
+# so on a long-lived channel it climbs without bound. hls.js remuxes TS→MP4 with a
+# 32-bit baseMediaDecodeTime; at 90kHz that overflows at 2^32/90000 ≈ 47,700s ≈
+# 13.2h, after which audio/video land at wrapped, mismatched positions and the
+# browser sees an empty buffer intersection → infinite "loading"/lag (observed on
+# channel1 after long uptime). Every MAX_SESSION_SECS we wipe the manifest to
+# zero-base the PTS again; well under the 13.2h ceiling, one brief reload apart.
+MAX_SESSION_SECS=21600          # 6h — ~2.2x margin below the hls.js 13.2h ceiling
+SESSION_FILE="$PROJECT_DIR/cache/session_${CHANNEL}"
+mkdir -p "$PROJECT_DIR/cache" 2>/dev/null || true
 
 log "=== START $CHANNEL ==="
 log "  source=$SOURCE_URL fps=$FPS gop=$GOP (${NUM_URLS} source URL(s))"
@@ -249,6 +259,23 @@ detect_audio_ok() {
 push_live() {
     ensure_hls_dir
 
+    # ── Periodic PTS reset (see MAX_SESSION_SECS note above) ─────────────
+    # When the manifest "session" exceeds MAX_SESSION_SECS, wipe the HLS dir so
+    # the next ffmpeg starts a fresh, zero-based timeline (keeps the PTS far below
+    # hls.js's 13.2h 32-bit ceiling). -t SESSION_T below caps each ffmpeg so even
+    # a perfectly stable feed gets reset on schedule, not just on a failover.
+    local _now=$(date +%s)
+    local _sess=$(cat "$SESSION_FILE" 2>/dev/null)
+    [ -z "$_sess" ] && { _sess=$_now; echo "$_now" > "$SESSION_FILE"; }
+    local _age=$(( _now - _sess ))
+    if [ "$_age" -ge "$MAX_SESSION_SECS" ]; then
+        log "  PTS-RESET: fresh manifest (session ${_age}s ≥ ${MAX_SESSION_SECS}s) – avoids hls.js 32-bit timestamp overflow"
+        rm -f "$HLS_DIR"/*.ts "$HLS_DIR"/*.m3u8 2>/dev/null
+        echo "$_now" > "$SESSION_FILE"; _age=0
+    fi
+    local SESSION_T=$(( MAX_SESSION_SECS - _age ))   # ffmpeg exits when the session hits MAX
+    [ "$SESSION_T" -lt 60 ] && SESSION_T=60          # floor; never a 0/negative -t
+
     # Pick the audio path. Source audio is used when valid (channel1/3); when the
     # source delivers a broken 0-channel stream (channel2's feed does this and it
     # both breaks browser audio AND makes -re race at ~22x), discard it and feed
@@ -321,6 +348,7 @@ push_live() {
         -c:a aac -b:a "${AUDIO_BR}k" -ar 44100 \
         "${aud_tail[@]}" \
         -avoid_negative_ts make_zero -muxpreload 0 -muxdelay 0 \
+        -t "$SESSION_T" \
         -flush_packets 1 \
         -f hls -hls_time 4 -hls_list_size 40 \
         -hls_flags delete_segments+append_list+independent_segments \
