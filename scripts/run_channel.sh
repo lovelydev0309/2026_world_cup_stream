@@ -52,7 +52,7 @@ pkill -9 -f "hls/${CHANNEL}/[0-9%]" 2>/dev/null || true
 
 # ── Read config ───────────────────────────────────────────────
 # Scalar fields (standby/bitrate/fps/force_silent_audio) on one line …
-read -r STANDBY_REL BITRATE AUDIO_BR FPS FORCE_SILENT_AUDIO AUDIO_SYNC VIDEO_MODE ENC_RES < <(python3 -c "
+read -r STANDBY_REL BITRATE AUDIO_BR FPS FORCE_SILENT_AUDIO AUDIO_SYNC VIDEO_MODE ENC_RES USE_STANDBY < <(python3 -c "
 import json, sys
 cfg = json.load(open('$CONFIG'))
 chs = [c for c in cfg['channels'] if c['channel_name'] == '$CHANNEL']
@@ -63,7 +63,8 @@ print(c.get('standby_file','standby/standby.mp4'),
       'true' if c.get('force_silent_audio') else 'false',
       c.get('audio_sync','regen'),
       c.get('video_mode','encode'),
-      c.get('encode_resolution','960x540'))")
+      c.get('encode_resolution','960x540'),
+      'true' if c.get('use_standby', True) else 'false')")
 # Output resolution for re-encode mode (WxH). Default 960x540. Per-channel so the
 # marquee feeds can run 720p while the heavy 60fps one stays 540p for CPU.
 ENC_W=${ENC_RES%x*}; ENC_H=${ENC_RES#*x}
@@ -436,10 +437,19 @@ while true; do
             fi
         fi
     else
-        push_standby || true
-        log "Standby ended – resetting to primary, retrying live"
+        if [ "$USE_STANDBY" = "false" ]; then
+            # Copy-mode channels skip the re-encoded standby clip: its SPS/PPS differ
+            # from the copied native stream, so a live↔standby swap triggers hls.js
+            # bufferAppendError. Instead just hold briefly and retry live (the source
+            # is a stable mainstream feed; drops are rare and self-heal on reconnect).
+            log "Live unavailable – no-standby (copy) mode; brief hold, retrying live"
+            sleep 5
+        else
+            push_standby || true
+            log "Standby ended – resetting to primary, retrying live"
+        fi
         LIVE_FAIL=0
-        URL_IDX=0   # after a standby cycle, start over from the primary URL
+        URL_IDX=0   # after a standby/hold cycle, start over from the primary URL
         rm -f "$AUDIO_CACHE" 2>/dev/null   # source may have changed → re-probe audio
     fi
     sleep 1

@@ -91,6 +91,182 @@
         "http://tvon247.com/9WZELTN/JTBML46/325567",
         "http://tvon247.com/9WZELTN/JTBML46/71936"
       ]
+    },
+    {
+      "channel_name": "channel4",
+      "display_name": "Las Estrellas HD",
+      "enabled": true,
+      "source_url": "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028334",
+      "hls_url": "https://live3.mzolotv.com/hls/channel4/index.m3u8",
+      "standby_file": "standby/standby.mp4",
+      "bitrate": 2500,
+      "resolution": "1280x720",
+      "fps": 30,
+      "audio_bitrate": 128,
+      "_comment_source": "tvon247 id 1028334 = MX - CANAL DE LAS ESTRELLAS HD (Televisa flagship), H264 720p30 + AAC. Served via BACKUP account GR4GMBC (host vwvtru.tvon247.com) so the connection load stays off 9WZELTN.",
+      "_comment_video": "video_mode=copy (stream-copy, ~0 CPU) — the 2-vCPU box is saturated by the 3 existing 540p re-encodes, so added channels are native-HD passthrough. use_standby=false: copy can't cross the re-encoded-standby SPS/PPS boundary (hls.js bufferAppendError), so on a source drop it holds+retries live instead of showing standby.",
+      "audio_sync": "preserve",
+      "force_silent_audio": false,
+      "video_mode": "copy",
+      "use_standby": false,
+      "encode_resolution": "960x540",
+      "source_urls": [
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028334"
+      ]
+    },
+    {
+      "channel_name": "channel5",
+      "display_name": "Azteca Uno HD",
+      "enabled": true,
+      "source_url": "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028329",
+      "hls_url": "https://live3.mzolotv.com/hls/channel5/index.m3u8",
+      "standby_file": "standby/standby.mp4",
+      "bitrate": 2500,
+      "resolution": "1280x720",
+      "fps": 30,
+      "audio_bitrate": 128,
+      "_comment_source": "tvon247 id 1028329 = MX - AZTECA UNO HD (H264 720p). Served via backup account 3U5M6YY (host mqvty.tvon247.com).",
+      "_comment_video": "video_mode=copy (native-HD passthrough, ~0 CPU); use_standby=false (copy can't cross the re-encoded-standby codec boundary). Added while the 2-vCPU box is saturated by the 3 re-encodes.",
+      "audio_sync": "preserve",
+      "force_silent_audio": false,
+      "video_mode": "copy",
+      "use_standby": false,
+      "encode_resolution": "960x540",
+      "source_urls": [
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028329"
+      ]
+    },
+    {
+      "channel_name": "channel6",
+      "display_name": "Imagen Television FHD",
+      "enabled": true,
+      "source_url": "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028364",
+      "hls_url": "https://live3.mzolotv.com/hls/channel6/index.m3u8",
+      "standby_file": "standby/standby.mp4",
+      "bitrate": 2500,
+      "resolution": "1280x720",
+      "fps": 30,
+      "audio_bitrate": 128,
+      "_comment_source": "tvon247 id 1028364 = MX - IMAGEN TV FHD (H264 1080p). Served via backup account 3U5M6YY (host mqvty.tvon247.com).",
+      "_comment_video": "video_mode=copy (native-HD passthrough, ~0 CPU); use_standby=false (copy can't cross the re-encoded-standby codec boundary). Added while the 2-vCPU box is saturated by the 3 re-encodes.",
+      "audio_sync": "preserve",
+      "force_silent_audio": false,
+      "video_mode": "copy",
+      "use_standby": false,
+      "encode_resolution": "960x540",
+      "source_urls": [
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028364"
+      ]
+    },
+    {
+      "channel_name": "channel7",
+      "display_name": "ForoTV",
+      "enabled": true,
+      "source_url": "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1279016",
+      "hls_url": "https://live3.mzolotv.com/hls/channel7/index.m3u8",
+      "standby_file": "standby/standby.mp4",
+      "bitrate": 2500,
+      "resolution": "1280x720",
+      "fps": 30,
+      "audio_bitrate": 128,
+      "_comment_source": "tvon247 id 1279016 = MX - ForoTV (H264 720p). Served via backup account FQXTMAJ (host bywwr.tvon247.com).",
+      "_comment_video": "video_mode=copy (native-HD passthrough, ~0 CPU); use_standby=false (copy can't cross the re-encoded-standby codec boundary). Added while the 2-vCPU box is saturated by the 3 re-encodes.",
+      "audio_sync": "preserve",
+      "force_silent_audio": false,
+      "video_mode": "copy",
+      "use_standby": false,
+      "encode_resolution": "960x540",
+      "source_urls": [
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1279016"
+      ]
+    },
+    {
+      "channel_name": "channel8",
+      "display_name": "Fox Sports 1 HD",
+      "enabled": true,
+      "source_url": "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/140278",
+      "hls_url": "https://live3.mzolotv.com/hls/channel8/index.m3u8",
+      "standby_file": "standby/standby.mp4",
+      "bitrate": 2500,
+      "resolution": "1280x720",
+      "fps": 30,
+      "audio_bitrate": 128,
+      "_comment_source": "tvon247 id 140278 = MX - FOX SPORTS 1 HD (H264 720p). Served via backup account FQXTMAJ (host bywwr.tvon247.com).",
+      "_comment_video": "video_mode=copy (native-HD passthrough, ~0 CPU); use_standby=false (copy can't cross the re-encoded-standby codec boundary). Added while the 2-vCPU box is saturated by the 3 re-encodes.",
+      "audio_sync": "preserve",
+      "force_silent_audio": false,
+      "video_mode": "copy",
+      "use_standby": false,
+      "encode_resolution": "960x540",
+      "source_urls": [
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/140278"
+      ]
+    },
+    {
+      "channel_name": "channel9",
+      "display_name": "ESPN 2 HD",
+      "enabled": true,
+      "source_url": "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028360",
+      "hls_url": "https://live3.mzolotv.com/hls/channel9/index.m3u8",
+      "standby_file": "standby/standby.mp4",
+      "bitrate": 2500,
+      "resolution": "1280x720",
+      "fps": 30,
+      "audio_bitrate": 128,
+      "_comment_source": "tvon247 id 1028360 = MX - ESPN 2 HD (H264 1080p). Served via backup account FQXTMAJ (host bywwr.tvon247.com).",
+      "_comment_video": "video_mode=copy (native-HD passthrough, ~0 CPU); use_standby=false (copy can't cross the re-encoded-standby codec boundary). Added while the 2-vCPU box is saturated by the 3 re-encodes.",
+      "audio_sync": "preserve",
+      "force_silent_audio": false,
+      "video_mode": "copy",
+      "use_standby": false,
+      "encode_resolution": "960x540",
+      "source_urls": [
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028360"
+      ]
+    },
+    {
+      "channel_name": "channel10",
+      "display_name": "TUDN FHD",
+      "enabled": true,
+      "source_url": "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028371",
+      "hls_url": "https://live3.mzolotv.com/hls/channel10/index.m3u8",
+      "standby_file": "standby/standby.mp4",
+      "bitrate": 2500,
+      "resolution": "1280x720",
+      "fps": 30,
+      "audio_bitrate": 128,
+      "_comment_source": "tvon247 id 1028371 = MX - TUDN FHD (H264 720p). Served via backup account FQXTMAJ (host bywwr.tvon247.com).",
+      "_comment_video": "video_mode=copy (native-HD passthrough, ~0 CPU); use_standby=false (copy can't cross the re-encoded-standby codec boundary). Added while the 2-vCPU box is saturated by the 3 re-encodes.",
+      "audio_sync": "preserve",
+      "force_silent_audio": false,
+      "video_mode": "copy",
+      "use_standby": false,
+      "encode_resolution": "960x540",
+      "source_urls": [
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028371"
+      ]
+    },
+    {
+      "channel_name": "channel11",
+      "display_name": "Cartoon Network FHD",
+      "enabled": true,
+      "source_url": "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028338",
+      "hls_url": "https://live3.mzolotv.com/hls/channel11/index.m3u8",
+      "standby_file": "standby/standby.mp4",
+      "bitrate": 2500,
+      "resolution": "1280x720",
+      "fps": 30,
+      "audio_bitrate": 128,
+      "_comment_source": "tvon247 id 1028338 = MX - CARTOON NETWORK FHD (H264 720p). Served via backup account GR4GMBC (host vwvtru.tvon247.com).",
+      "_comment_video": "video_mode=copy (native-HD passthrough, ~0 CPU); use_standby=false (copy can't cross the re-encoded-standby codec boundary). Added while the 2-vCPU box is saturated by the 3 re-encodes.",
+      "audio_sync": "preserve",
+      "force_silent_audio": false,
+      "video_mode": "copy",
+      "use_standby": false,
+      "encode_resolution": "960x540",
+      "source_urls": [
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028338"
+      ]
     }
   ]
 }
