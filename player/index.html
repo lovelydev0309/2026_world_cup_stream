@@ -58,95 +58,29 @@
 </head>
 <body>
 <h1>&#9654; Live Channels</h1>
-<div class="grid">
-  <a class="card" href="/player/channel1.html">
-    <div class="thumb"><img src="/player/logos/channel1.png" alt="" loading="lazy"></div>
-    <div class="info">
-      <h2>FIFA World Cup 2026 – Match Feed</h2>
-      <span class="badge">LIVE</span>
-      <div class="m3u8">https://live3.mzolotv.com/hls/channel1/index.m3u8</div>
-    </div>
-  </a>
-  <a class="card" href="/player/channel2.html">
-    <div class="thumb"><img src="/player/logos/channel2.png" alt="" loading="lazy"></div>
-    <div class="info">
-      <h2>MX – Canal 5 HD</h2>
-      <span class="badge">LIVE</span>
-      <div class="m3u8">https://live3.mzolotv.com/hls/channel2/index.m3u8</div>
-    </div>
-  </a>
-  <a class="card" href="/player/channel3.html">
-    <div class="thumb"><img src="/player/logos/channel3.png" alt="" loading="lazy"></div>
-    <div class="info">
-      <h2>ESPN HD</h2>
-      <span class="badge">LIVE</span>
-      <div class="m3u8">https://live3.mzolotv.com/hls/channel3/index.m3u8</div>
-    </div>
-  </a>
-  <a class="card" href="/player/channel4.html">
-    <div class="thumb"><img src="/player/logos/channel4.png" alt="" loading="lazy"></div>
-    <div class="info">
-      <h2>Las Estrellas HD</h2>
-      <span class="badge">LIVE</span>
-      <div class="m3u8">https://live3.mzolotv.com/hls/channel4/index.m3u8</div>
-    </div>
-  </a>
-  <a class="card" href="/player/channel5.html">
-    <div class="thumb"><img src="/player/logos/channel5.png" alt="" loading="lazy"></div>
-    <div class="info">
-      <h2>Azteca Uno HD</h2>
-      <span class="badge">LIVE</span>
-      <div class="m3u8">https://live3.mzolotv.com/hls/channel5/index.m3u8</div>
-    </div>
-  </a>
-  <a class="card" href="/player/channel6.html">
-    <div class="thumb"><img src="/player/logos/channel6.png" alt="" loading="lazy"></div>
-    <div class="info">
-      <h2>Imagen Televisión HD</h2>
-      <span class="badge">LIVE</span>
-      <div class="m3u8">https://live3.mzolotv.com/hls/channel6/index.m3u8</div>
-    </div>
-  </a>
-  <a class="card" href="/player/channel7.html">
-    <div class="thumb"><img src="/player/logos/channel7.png" alt="" loading="lazy"></div>
-    <div class="info">
-      <h2>ForoTV</h2>
-      <span class="badge">LIVE</span>
-      <div class="m3u8">https://live3.mzolotv.com/hls/channel7/index.m3u8</div>
-    </div>
-  </a>
-  <a class="card" href="/player/channel8.html">
-    <div class="thumb"><img src="/player/logos/channel8.png" alt="" loading="lazy"></div>
-    <div class="info">
-      <h2>Fox Sports 1 HD</h2>
-      <span class="badge">LIVE</span>
-      <div class="m3u8">https://live3.mzolotv.com/hls/channel8/index.m3u8</div>
-    </div>
-  </a>
-  <a class="card" href="/player/channel9.html">
-    <div class="thumb"><img src="/player/logos/channel9.png" alt="" loading="lazy"></div>
-    <div class="info">
-      <h2>ESPN 2 HD</h2>
-      <span class="badge">LIVE</span>
-      <div class="m3u8">https://live3.mzolotv.com/hls/channel9/index.m3u8</div>
-    </div>
-  </a>
-  <a class="card" href="/player/channel10.html">
-    <div class="thumb"><img src="/player/logos/channel10.png" alt="" loading="lazy"></div>
-    <div class="info">
-      <h2>TUDN</h2>
-      <span class="badge">LIVE</span>
-      <div class="m3u8">https://live3.mzolotv.com/hls/channel10/index.m3u8</div>
-    </div>
-  </a>
-  <a class="card" href="/player/channel11.html">
-    <div class="thumb"><img src="/player/logos/channel11.png" alt="" loading="lazy"></div>
-    <div class="info">
-      <h2>Cartoon Network HD</h2>
-      <span class="badge">LIVE</span>
-      <div class="m3u8">https://live3.mzolotv.com/hls/channel11/index.m3u8</div>
-    </div>
-  </a>
-</div>
+<div class="grid" id="grid"></div>
+<script>
+(function () {
+  var grid = document.getElementById('grid');
+  function esc(s){ return String(s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  fetch('/player/channels.json', { cache: 'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (list) {
+      if (!Array.isArray(list) || !list.length) {
+        grid.innerHTML = '<p style="color:#888">No live channels.</p>'; return; }
+      grid.innerHTML = list.map(function (ch) {
+        return '<a class="card" href="' + esc(ch.page) + '">'
+          + '<div class="thumb"><img src="' + esc(ch.logo) + '" alt="" loading="lazy"'
+          + ' onerror="this.style.display=\'none\'"></div>'
+          + '<div class="info"><h2>' + esc(ch.title) + '</h2>'
+          + '<span class="badge">LIVE</span>'
+          + '<div class="m3u8">' + esc(ch.hls) + '</div></div></a>';
+      }).join('');
+    })
+    .catch(function () {
+      grid.innerHTML = '<p style="color:#888">Could not load channel list.</p>'; });
+})();
+</script>
 </body>
 </html>
