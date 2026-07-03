@@ -123,7 +123,7 @@
     {
       "channel_name": "channel5",
       "display_name": "Azteca Uno HD",
-      "enabled": true,
+      "enabled": false,
       "source_url": "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028329",
       "hls_url": "https://live3.mzolotv.com/hls/channel5/index.m3u8",
       "standby_file": "standby/standby.mp4",
@@ -143,12 +143,13 @@
         "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028329",
         "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028329"
       ],
-      "logo": "/player/logos/channel5.png"
+      "logo": "/player/logos/channel5.png",
+      "_comment_disabled": "Disabled 2026-07-03: copy passed through source defects (choppy DTS / 1080p too heavy for clients / irregular-segment audio) and this 2-vCPU box has no CPU to re-encode it. Re-enable + set video_mode=encode on the larger server."
     },
     {
       "channel_name": "channel6",
       "display_name": "Imagen Television FHD",
-      "enabled": true,
+      "enabled": false,
       "source_url": "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028364",
       "hls_url": "https://live3.mzolotv.com/hls/channel6/index.m3u8",
       "standby_file": "standby/standby.mp4",
@@ -168,7 +169,8 @@
         "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028364",
         "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028364"
       ],
-      "logo": "/player/logos/channel6.png"
+      "logo": "/player/logos/channel6.png",
+      "_comment_disabled": "Disabled 2026-07-03: copy passed through source defects (choppy DTS / 1080p too heavy for clients / irregular-segment audio) and this 2-vCPU box has no CPU to re-encode it. Re-enable + set video_mode=encode on the larger server."
     },
     {
       "channel_name": "channel7",
@@ -198,7 +200,7 @@
     {
       "channel_name": "channel8",
       "display_name": "Fox Sports 1 HD",
-      "enabled": true,
+      "enabled": false,
       "source_url": "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/140278",
       "hls_url": "https://live3.mzolotv.com/hls/channel8/index.m3u8",
       "standby_file": "standby/standby.mp4",
@@ -218,12 +220,13 @@
         "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/140278",
         "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/140278"
       ],
-      "logo": "/player/logos/channel8.png"
+      "logo": "/player/logos/channel8.png",
+      "_comment_disabled": "Disabled 2026-07-03: copy passed through source defects (choppy DTS / 1080p too heavy for clients / irregular-segment audio) and this 2-vCPU box has no CPU to re-encode it. Re-enable + set video_mode=encode on the larger server."
     },
     {
       "channel_name": "channel9",
       "display_name": "ESPN 2 HD",
-      "enabled": true,
+      "enabled": false,
       "source_url": "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028360",
       "hls_url": "https://live3.mzolotv.com/hls/channel9/index.m3u8",
       "standby_file": "standby/standby.mp4",
@@ -243,12 +246,13 @@
         "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028360",
         "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028360"
       ],
-      "logo": "/player/logos/channel9.png"
+      "logo": "/player/logos/channel9.png",
+      "_comment_disabled": "Disabled 2026-07-03: copy passed through source defects (choppy DTS / 1080p too heavy for clients / irregular-segment audio) and this 2-vCPU box has no CPU to re-encode it. Re-enable + set video_mode=encode on the larger server."
     },
     {
       "channel_name": "channel10",
       "display_name": "TUDN FHD",
-      "enabled": true,
+      "enabled": false,
       "source_url": "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028371",
       "hls_url": "https://live3.mzolotv.com/hls/channel10/index.m3u8",
       "standby_file": "standby/standby.mp4",
@@ -268,7 +272,8 @@
         "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028371",
         "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028371"
       ],
-      "logo": "/player/logos/channel10.png"
+      "logo": "/player/logos/channel10.png",
+      "_comment_disabled": "Disabled 2026-07-03: copy passed through source defects (choppy DTS / 1080p too heavy for clients / irregular-segment audio) and this 2-vCPU box has no CPU to re-encode it. Re-enable + set video_mode=encode on the larger server."
     },
     {
       "channel_name": "channel11",
