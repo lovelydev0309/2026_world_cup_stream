@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live – Las Estrellas HD</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0d0d0d;
+    color: #e0e0e0;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 24px 12px;
+  }
+  header {
+    width: 100%;
+    max-width: 960px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  h1 { font-size: 1.2rem; letter-spacing: 0.05em; }
+  #badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 99px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: #222;
+  }
+  #badge.live   { background: #d00; }
+  #badge.standby{ background: #555; }
+  #badge.error  { background: #8b0; color: #000; }
+  #dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #fff;
+    animation: pulse 1.5s ease infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .player-wrap {
+    width: 100%;
+    max-width: 960px;
+    aspect-ratio: 16/9;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+  video {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  #overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,.7);
+    color: #fff;
+    font-size: 1.1rem;
+    gap: 12px;
+    transition: opacity .3s;
+  }
+  #overlay.hidden { opacity: 0; pointer-events: none; }
+  #spinner {
+    width: 40px; height: 40px;
+    border: 4px solid rgba(255,255,255,.2);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #info {
+    width: 100%;
+    max-width: 960px;
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+    font-size: 0.78rem;
+    color: #999;
+  }
+  .stat { background: #1a1a1a; border-radius: 6px; padding: 8px 12px; }
+  .stat b { display: block; color: #ccc; font-size: 0.85rem; margin-bottom: 2px; }
+  #log {
+    width: 100%;
+    max-width: 960px;
+    margin-top: 16px;
+    background: #111;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 0.72rem;
+    font-family: monospace;
+    color: #888;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .log-line { margin-bottom: 2px; }
+  .log-line.warn  { color: #c90; }
+  .log-line.error { color: #e44; }
+  .log-line.info  { color: #4af; }
+  /* Operational WARN lines (stalls, resyncs, reconnects) are noise to a client,
+     so they're HIDDEN by default. Reveal on demand: press the "d" key or load
+     with ?debug=1 — both toggle .show-warn on <body>; the choice persists. */
+  body:not(.show-warn) .log-line.warn { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Las Estrellas HD</h1>
+  <span id="badge"><span id="dot"></span><span id="badge-text">Connecting…</span></span>
+</header>
+
+<div class="player-wrap">
+  <video id="video" autoplay muted playsinline controls></video>
+  <div id="overlay">
+    <div id="spinner"></div>
+    <span id="overlay-text">Loading stream…</span>
+  </div>
+</div>
+
+<div id="info">
+  <div class="stat"><b>Resolution</b><span id="res">–</span></div>
+  <div class="stat"><b>Bitrate</b><span id="brate">–</span></div>
+  <div class="stat"><b>Buffer</b><span id="buf">–</span></div>
+  <div class="stat"><b>Dropped</b><span id="dropped">–</span></div>
+  <div class="stat"><b>Latency</b><span id="latency">–</span></div>
+  <div class="stat"><b>Bandwidth</b><span id="bw">–</span></div>
+</div>
+
+<div id="log"></div>
+
+<!-- hls.js from CDN (pin version for production) -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
+<script>
+(function () {
+  // ── Config ──────────────────────────────────────────────
+  const STREAM_URL  = "https://stream.tv247on.com/hls/channel13/index.m3u8";
+  const CHANNEL     = "Las Estrellas HD";
+  const RETRY_DELAY = 5000;   // ms between reconnect attempts
+  const MAX_RETRIES = 999;    // effectively infinite
+
+  // ── DOM refs ─────────────────────────────────────────────
+  const video    = document.getElementById("video");
+  const overlay  = document.getElementById("overlay");
+  const ovText   = document.getElementById("overlay-text");
+  const badge    = document.getElementById("badge");
+  const badgeTxt = document.getElementById("badge-text");
+  const logBox   = document.getElementById("log");
+
+  let hls, retries = 0, statsTimer, levelTimer;
+
+  // ── Log ──────────────────────────────────────────────────
+  function log(msg, type = "") {
+    const d = new Date().toISOString().slice(11, 19);
+    const el = document.createElement("div");
+    el.className = "log-line " + type;
+    el.textContent = `[${d}] ${msg}`;
+    logBox.prepend(el);
+    if (logBox.children.length > 50) logBox.lastChild.remove();
+  }
+
+  // ── Diagnostic-log visibility ────────────────────────────────────────
+  // WARN lines (stalls, resyncs, reconnects) are noise to a client, so they are
+  // HIDDEN BY DEFAULT on every load. The operator reveals them on demand —
+  // press "d" to toggle for the current view, or load with ?debug=1 — but that
+  // is NOT remembered, so a plain reload is always clean. INFO/ERROR always show.
+  (function () {
+    // Clear any "showWarn" persisted by an earlier build; otherwise a previous
+    // "shown" choice (e.g. from pressing "d" to read the logs) would keep
+    // warnings visible against this hidden default.
+    try { localStorage.removeItem("showWarn"); } catch (e) {}
+    const p = new URLSearchParams(location.search);
+    document.body.classList.toggle("show-warn",
+      p.get("debug") === "1" || p.get("warn") === "1");
+    document.addEventListener("keydown", (e) => {
+      if ((e.key === "d" || e.key === "D") && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        document.body.classList.toggle("show-warn");
+        log("Diagnostic warnings " +
+            (document.body.classList.contains("show-warn") ? "shown" : "hidden"), "info");
+      }
+    });
+  })();
+
+  // ── Badge helper ─────────────────────────────────────────
+  function setBadge(state, text) {
+    badge.className = state;
+    badgeTxt.textContent = text;
+  }
+
+  // ── Stats overlay ─────────────────────────────────────────
+  function updateStats() {
+    if (!hls) return;
+    const level = hls.levels[hls.currentLevel];
+    if (level) {
+      document.getElementById("res").textContent =
+        `${level.width}×${level.height}`;
+      document.getElementById("brate").textContent =
+        `${Math.round(level.bitrate / 1000)} kbps`;
+    }
+    const buf = video.buffered;
+    if (buf.length) {
+      const ahead = buf.end(buf.length - 1) - video.currentTime;
+      document.getElementById("buf").textContent = `${Math.max(ahead, 0).toFixed(1)} s`;
+    }
+    document.getElementById("dropped").textContent =
+      video.getVideoPlaybackQuality
+        ? video.getVideoPlaybackQuality().droppedVideoFrames
+        : "–";
+    if (hls.latency !== undefined) {
+      document.getElementById("latency").textContent = `${hls.latency.toFixed(1)} s`;
+    }
+    document.getElementById("bw").textContent =
+      hls.bandwidthEstimate
+        ? `${Math.round(hls.bandwidthEstimate / 1000)} kbps`
+        : "–";
+  }
+
+  // ── Init player ──────────────────────────────────────────
+  function init() {
+    if (hls) { hls.destroy(); hls = null; }
+    if (statsTimer) clearInterval(statsTimer);
+    if (window.__playbackWatchdog) clearInterval(window.__playbackWatchdog);
+    if (window.__playRetry) { clearTimeout(window.__playRetry); window.__playRetry = null; }
+    if (window.__resumeTimer) { clearTimeout(window.__resumeTimer); window.__resumeTimer = null; }
+
+    if (!Hls.isSupported()) {
+      // Fallback for Safari native HLS
+      if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = STREAM_URL;
+        video.addEventListener("loadedmetadata", () => {
+          video.play().catch(() => {});
+          overlay.classList.add("hidden");
+          setBadge("live", "LIVE");
+        });
+      } else {
+        ovText.textContent = "HLS not supported in this browser";
+        log("HLS not supported", "error");
+      }
+      return;
+    }
+
+    hls = new Hls({
+      lowLatencyMode: false,
+      // Sit ~45s behind the live edge — a DEEP cushion so the buffer doesn't
+      // drain to 0 when the source hiccups. The IPTV feeds intermittently
+      // restart (the in-encoder watchdog kills a stalled pull after 45s, then
+      // reconnects), which leaves a gap of up to ~45-50s; a 30s buffer emptied
+      // during those, stopping the picture. 45s rides almost all of them.
+      // (Trade-off: ~45s latency. The auto-replay below covers the rare gap that
+      // still outlasts the buffer. Dial toward 30 if you want lower latency.)
+      liveSyncDuration: 45,
+      // Only force a snap-to-live on GENUINE excess drift (>90s behind), well
+      // past the 45s resting point, so normal operation is never yanked.
+      liveMaxLatencyDuration: 90,
+      liveDurationInfinity: true,
+      // CRITICAL for 24/7: cap the BACK buffer. hls.js otherwise keeps growing
+      // the MediaSource with already-played content; over a multi-hour session
+      // that bloats memory and triggers eviction churn → exactly the "stiffens
+      // as time passes" stalls. 30s keeps the SourceBuffer small and stable.
+      backBufferLength: 30,
+      // Glide over small discontinuities from FFmpeg reconnects instead of
+      // stalling on them.
+      maxBufferHole: 0.5,
+      nudgeOffset: 0.2,
+      nudgeMaxRetry: 8,
+      manifestLoadingMaxRetry: MAX_RETRIES,
+      levelLoadingMaxRetry: MAX_RETRIES,
+      fragLoadingMaxRetry: MAX_RETRIES,
+      manifestLoadingRetryDelay: 1000,
+      levelLoadingRetryDelay: 1000,
+      fragLoadingRetryDelay: 1000,
+      manifestLoadingTimeOut: 20000,
+      levelLoadingTimeOut: 20000,
+      fragLoadingTimeOut: 20000,
+      // Forward buffer: build a deep cushion (up to ~60s, capped in practice by
+      // the 45s distance to the live edge) so a source restart gap doesn't drain
+      // it to 0. backBufferLength above stays small for 24/7 memory hygiene.
+      maxBufferLength: 60,
+      maxMaxBufferLength: 90,
+      debug: false,
+    });
+
+    hls.loadSource(STREAM_URL);
+    hls.attachMedia(video);
+
+    // ── Auto-replay: resume on empty buffer / block, no manual click ─────
+    // Seconds of contiguous buffered video ahead of the playhead (0 = stranded).
+    function fwdBuffer() {
+      const b = video.buffered, t = video.currentTime;
+      for (let i = 0; i < b.length; i++) {
+        if (t >= b.start(i) - 0.3 && t <= b.end(i)) return b.end(i) - t;
+      }
+      return 0;
+    }
+    // Resume and KEEP trying until playback starts — the in-page auto-replay.
+    // A 700ms time gate collapses concurrent resume requests into a single
+    // play() WITHOUT latching: a stalled live stream can leave play()'s promise
+    // unresolved forever, and a boolean "in-flight" guard would then stick and
+    // block every later resume (needing a manual press — the bug we're fixing).
+    // Jump to the live edge ONLY when stranded (no buffer ahead) so we never
+    // discard good buffer or re-stall at the edge on every segment.
+    let _playAt = 0;
+    function startPlayback() {
+      if (Date.now() - _playAt < 700) return;
+      _playAt = Date.now();
+      video.muted = true;
+      if (hls && isFinite(hls.liveSyncPosition) && fwdBuffer() < 1) {
+        try { video.currentTime = hls.liveSyncPosition; } catch (e) {}
+      }
+      video.play().then(() => {
+        overlay.classList.add("hidden");
+        if (window.__playRetry) { clearTimeout(window.__playRetry); window.__playRetry = null; }
+      }).catch((err) => {
+        if (err && err.name === "NotAllowedError") {
+          log("Autoplay blocked by browser – click to start", "warn");
+          ovText.textContent = "Click to play";
+          overlay.classList.remove("hidden");
+          overlay.onclick = () => startPlayback();
+        }
+        if (window.__playRetry) clearTimeout(window.__playRetry);
+        window.__playRetry = setTimeout(startPlayback, 1000);
+      });
+    }
+
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      log("Manifest loaded – starting playback", "info");
+      startPlayback();
+    });
+
+    // A live channel must never sit paused — auto-resume after ANY pause
+    // (a buffer underrun that drained to 0, an autoplay rejection, a stray
+    // click). Skipped for hidden tabs (browser pauses them on purpose) / ended.
+    video.onpause = () => {
+      if (video.ended || document.hidden) return;
+      if (window.__resumeTimer) clearTimeout(window.__resumeTimer);
+      window.__resumeTimer = setTimeout(() => {
+        if (hls && video.paused && !video.ended && !document.hidden) {
+          log("Paused – auto-resuming", "warn");
+          startPlayback();
+        }
+      }, 800);
+    };
+
+    hls.on(Hls.Events.LEVEL_SWITCHED, (_, d) => {
+      const l = hls.levels[d.level];
+      log(`Level → ${l.width}×${l.height} @ ${Math.round(l.bitrate/1000)}kbps`);
+    });
+
+    hls.on(Hls.Events.FRAG_CHANGED, () => {
+      overlay.classList.add("hidden");
+      clearBuffering();
+      setBadge("live", "LIVE");
+    });
+
+    hls.on(Hls.Events.FRAG_BUFFERED, () => {
+      _recoverCount = 0;
+      clearBuffering();
+      // Resume if the video stalled waiting for this segment to arrive
+      if (video.paused) startPlayback();
+    });
+
+    let _recoverTimer = null;
+    let _stallTimer   = null;
+    let _recoverCount = 0;
+    let _badgeTimer   = null;
+    const REINIT_AFTER = 6;
+
+    // ── Badge debounce ────────────────────────────────────────────────────
+    // Only flip the badge to BUFFERING if a stall actually persists past 1.5s.
+    // Brief micro-stalls (the player riding over a source's 8-13s production
+    // hiccup) resolve before then, so the status stays LIVE instead of
+    // flickering BUFFERING↔LIVE on every momentary stall.
+    function showBufferingSoon() {
+      if (_badgeTimer) return;
+      _badgeTimer = setTimeout(() => {
+        _badgeTimer = null;
+        setBadge("standby", "BUFFERING…");
+      }, 1500);
+    }
+    function clearBuffering() {
+      if (_badgeTimer) { clearTimeout(_badgeTimer); _badgeTimer = null; }
+    }
+
+    // ── Buffer stall handler ──────────────────────────────────────────────
+    // NEVER seek backward – that causes the "jumps back a few seconds" bug.
+    // Strategy:
+    //   • Gap before buffer start → seek forward to buf.start (fixes discontinuities)
+    //   • At/past live edge      → wait; hls.js will append next segment and
+    //                              FRAG_BUFFERED will resume play automatically
+    //   • Empty buffer           → fall through to live-edge recovery
+    function handleBufferStall(label) {
+      log(label, "warn");
+      showBufferingSoon();
+      if (_stallTimer || _recoverTimer) return;
+      _stallTimer = setTimeout(() => {
+        _stallTimer = null;
+        if (!hls) return;
+        const buf = video.buffered;
+        if (buf.length === 0) {
+          recoverToLiveEdge(500, "Buffer empty – recovering to live edge");
+          return;
+        }
+        const buffStart = buf.start(0);
+        if (video.currentTime < buffStart - 0.1) {
+          // Play head fell before buffer start (gap): skip forward to buffer start
+          video.currentTime = buffStart + 0.1;
+        }
+        // Otherwise we're at the live edge waiting for the next segment.
+        // hls.js is already fetching it; FRAG_BUFFERED will call play() when ready.
+        video.play().catch(() => {});
+      }, 500);
+    }
+
+    // ── Fragment / manifest errors: reload from live edge ─────────────────
+    function recoverToLiveEdge(baseDelay, label) {
+      log(label, "warn");
+      showBufferingSoon();
+      if (_recoverTimer) return;
+      _recoverCount++;
+      if (_recoverCount > REINIT_AFTER) {
+        log(`Recovery failed ${_recoverCount - 1}x – full reinit`, "warn");
+        overlay.classList.remove("hidden");
+        ovText.textContent = "Stream unavailable – reconnecting…";
+        _recoverCount = 0;
+        _recoverTimer = setTimeout(() => { _recoverTimer = null; init(); }, 5000);
+        return;
+      }
+      const delay = Math.min(baseDelay * _recoverCount, 8000);
+      _recoverTimer = setTimeout(() => {
+        if (!hls) { _recoverTimer = null; return; }
+        hls.stopLoad();
+        setTimeout(() => {
+          _recoverTimer = null;
+          if (!hls) return;
+          hls.startLoad(-1);
+          startPlayback();   // guarded resume — seeks to live only if stranded
+          clearBuffering();
+          setBadge("live", "LIVE");
+        }, 300);
+      }, delay);
+    }
+
+    hls.on(Hls.Events.ERROR, (_, data) => {
+      if (data.fatal) {
+        log(`Fatal: ${data.type}/${data.details} – reinit`, "error");
+        setBadge("standby", "RECONNECTING…");
+        overlay.classList.remove("hidden");
+        ovText.textContent = "Stream interrupted – reconnecting…";
+        if (_recoverTimer) { clearTimeout(_recoverTimer); _recoverTimer = null; }
+        if (_stallTimer)   { clearTimeout(_stallTimer);   _stallTimer   = null; }
+        hls.destroy(); hls = null;
+        setTimeout(init, RETRY_DELAY);
+      } else {
+        switch (data.details) {
+          case Hls.ErrorDetails.BUFFER_STALLED_ERROR:
+          case Hls.ErrorDetails.BUFFER_NUDGE_ON_STALL:
+            handleBufferStall(`Stall (${data.details}) – waiting for next segment`);
+            break;
+          case Hls.ErrorDetails.BUFFER_SEEK_OVER_HOLE:
+            // hls.js already seeked past the gap; just resume
+            log(`Seek over hole – resuming`, "warn");
+            video.play().catch(() => {});
+            break;
+          case Hls.ErrorDetails.FRAG_LOAD_ERROR:
+          case Hls.ErrorDetails.FRAG_LOAD_TIMEOUT:
+            recoverToLiveEdge(1500, `Frag error (${data.details}) – reloading`);
+            break;
+          case Hls.ErrorDetails.LEVEL_LOAD_ERROR:
+          case Hls.ErrorDetails.LEVEL_LOAD_TIMEOUT:
+          case Hls.ErrorDetails.MANIFEST_LOAD_ERROR:
+          case Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT:
+            recoverToLiveEdge(3000, `Manifest/level error (${data.details}) – retrying`);
+            break;
+          default:
+            log(`Non-fatal: ${data.details}`, "warn");
+        }
+      }
+    });
+
+    hls.on(Hls.Events.MEDIA_DETACHING, () => setBadge("error", "OFFLINE"));
+
+    statsTimer = setInterval(updateStats, 2000);
+
+    // ── Playback watchdog — auto-refresh, never a manual reload ──────────
+    // hls.js fires events for many faults, but some wedge states (an A/V desync
+    // that never starts, a frozen decoder, a stuck tab on wake) raise NO fatal
+    // error and would otherwise sit on "Loading…" forever. This timer watches
+    // the real playback clock: if currentTime stops advancing while we should be
+    // live, it escalates on its own — soft live-edge resync (~8s), then a full
+    // channel re-init (~18s). This is the in-page "RPA" that re-refreshes the
+    // channel automatically, so no one ever has to reload the browser by hand.
+    let _wdLast = -1, _wdStuck = 0, _wdStarted = false, _latHits = 0;
+    window.__playbackWatchdog = setInterval(() => {
+      // Hidden/ended/no-hls → leave alone (browser pauses background tabs).
+      if (!hls || document.hidden || video.ended) {
+        _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
+      }
+      // A live channel must NEVER sit paused — whatever paused it (drained
+      // buffer, autoplay rejection, stray click), resume it. This is the
+      // backstop behind onpause + the retry timer, ~2s max to recover.
+      if (video.paused) {
+        startPlayback();
+        _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
+      }
+      if (video.seeking) {
+        _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
+      }
+      // WARMUP: don't police anything until playback has actually begun. On a
+      // fresh join hls.latency briefly reads the whole manifest window (~160s)
+      // and currentTime sits at 0 while buffering — reacting to either would
+      // wreck startup. Wait for the first real frame, THEN start watching.
+      if (!_wdStarted) {
+        if (video.currentTime > 0.5) _wdStarted = true;
+        _wdLast = video.currentTime; _wdStuck = 0; _latHits = 0; return;
+      }
+      // Sustained excessive latency (genuine drift, not a one-off spike) → snap
+      // back to live. Require several consecutive readings so a transient never
+      // triggers it. (Backstop to hls.js's own liveMaxLatencyDuration resync.)
+      if (hls.latency > 90 && hls.liveSyncPosition != null) {
+        if (++_latHits >= 3) {                          // ~6s sustained
+          _latHits = 0;
+          log(`Latency ${hls.latency.toFixed(0)}s – snapping to live`, "warn");
+          video.currentTime = hls.liveSyncPosition;
+          video.play().catch(() => {});
+          _wdLast = video.currentTime; _wdStuck = 0; return;
+        }
+      } else { _latHits = 0; }
+      if (video.currentTime > _wdLast + 0.1) {          // advancing → healthy
+        _wdLast = video.currentTime; _wdStuck = 0; return;
+      }
+      _wdStuck++;                                       // not advancing
+      if (_wdStuck === 4) {                             // ~8s frozen → soft resync
+        recoverToLiveEdge(500, "Playback not advancing – auto-resync");
+      } else if (_wdStuck >= 9) {                       // ~18s wedged
+        // Soft recovery didn't take. If the BUFFER has drained to ~0, do a full
+        // BROWSER REFRESH — it clears any wedged client state a soft re-init
+        // can't. Guarded two ways so a dead source can't reload-loop: only when
+        // the buffer is actually empty, and at most once per 60s (sessionStorage
+        // survives the reload). Within that cooldown, fall back to the lighter
+        // in-page re-init instead of hammering reload.
+        _wdStuck = 0;
+        const now = Date.now();
+        const last = +(sessionStorage.getItem("__lastReload") || 0);
+        if (fwdBuffer() < 0.5 && now - last > 60000) {
+          sessionStorage.setItem("__lastReload", String(now));
+          log("Buffer empty – refreshing browser", "warn");
+          setBadge("standby", "RECONNECTING…");
+          overlay.classList.remove("hidden");
+          ovText.textContent = "Refreshing…";
+          location.reload();
+        } else {
+          log("Playback wedged – re-initializing channel", "warn");
+          setBadge("standby", "RECONNECTING…");
+          overlay.classList.remove("hidden");
+          ovText.textContent = "Reconnecting…";
+          init();
+        }
+      }
+    }, 2000);
+
+    log(`Connecting to ${STREAM_URL}`, "info");
+  }
+
+  // ── Kick off ─────────────────────────────────────────────
+  init();
+
+  // ── Periodic full refresh — memory hygiene for 24/7 playback ─────────
+  // The freeze you saw after long playback is the CLIENT (browser/PC) running
+  // low on memory, not the server. Over many hours the tab slowly accumulates
+  // MediaSource buffers + hls.js state (and, if DevTools is open, its network
+  // log can balloon to >1 GB on its own). Reload the whole page every few hours
+  // so memory is reclaimed before it can exhaust RAM. autoplay + the no-cache
+  // header make this a ~1-2s seamless blip, and it also clears the DevTools log.
+  setTimeout(() => location.reload(), 4 * 60 * 60 * 1000);  // every 4 hours
+})();
+</script>
+</body>
+</html>
