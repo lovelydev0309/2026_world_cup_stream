@@ -52,7 +52,7 @@ pkill -9 -f "hls/${CHANNEL}/[0-9%]" 2>/dev/null || true
 
 # ── Read config ───────────────────────────────────────────────
 # Scalar fields (standby/bitrate/fps/force_silent_audio) on one line …
-read -r STANDBY_REL BITRATE AUDIO_BR FPS FORCE_SILENT_AUDIO AUDIO_SYNC VIDEO_MODE ENC_RES USE_STANDBY < <(python3 -c "
+read -r STANDBY_REL BITRATE AUDIO_BR FPS FORCE_SILENT_AUDIO AUDIO_SYNC VIDEO_MODE ENC_RES USE_STANDBY SEGMENT_TYPE < <(python3 -c "
 import json, sys
 cfg = json.load(open('$CONFIG'))
 chs = [c for c in cfg['channels'] if c['channel_name'] == '$CHANNEL']
@@ -64,7 +64,8 @@ print(c.get('standby_file','standby/standby.mp4'),
       c.get('audio_sync','regen'),
       c.get('video_mode','encode'),
       c.get('encode_resolution','960x540'),
-      'true' if c.get('use_standby', True) else 'false')")
+      'true' if c.get('use_standby', True) else 'false',
+      c.get('segment_type','mpegts'))")
 # Output resolution for re-encode mode (WxH). Default 960x540. Per-channel so the
 # marquee feeds can run 720p while the heavy 60fps one stays 540p for CPU.
 ENC_W=${ENC_RES%x*}; ENC_H=${ENC_RES#*x}
@@ -85,6 +86,16 @@ SOURCE_URL="${SOURCE_URLS[0]:-}"   # active URL; rotated by the main loop on fai
 
 STANDBY="$PROJECT_DIR/$STANDBY_REL"
 HLS_DIR="$PROJECT_DIR/hls/$CHANNEL"
+
+# HLS segment packaging (used by push_live AND push_standby): mpegts (.ts, default)
+# or fmp4/CMAF (.m4s + init.mp4). fmp4 plays natively in hls.js (no 32-bit TS→MP4
+# remux) → no long-uptime timestamp overflow → no periodic PTS-reset wipe, so the
+# viewer never hits the "buffer→0, video stops after hours" freeze.
+if [ "$SEGMENT_TYPE" = "fmp4" ]; then
+    HLS_SEG=(-hls_segment_type fmp4 -hls_fmp4_init_filename init.mp4 -hls_segment_filename "$HLS_DIR/%d.m4s")
+else
+    HLS_SEG=(-hls_segment_type mpegts -hls_segment_filename "$HLS_DIR/%d.ts")
+fi
 GOP=$((FPS * 2))
 STALE_KILL_SECS=25   # kill ffmpeg after this many seconds of ZERO write progress.
 # Was 45s, but the live3 player rides ~45s behind the edge (liveSyncDuration:45); a
@@ -276,13 +287,22 @@ push_live() {
     local _sess=$(cat "$SESSION_FILE" 2>/dev/null)
     [ -z "$_sess" ] && { _sess=$_now; echo "$_now" > "$SESSION_FILE"; }
     local _age=$(( _now - _sess ))
-    if [ "$_age" -ge "$MAX_SESSION_SECS" ]; then
-        log "  PTS-RESET: fresh manifest (session ${_age}s ≥ ${MAX_SESSION_SECS}s) – avoids hls.js 32-bit timestamp overflow"
-        rm -f "$HLS_DIR"/*.ts "$HLS_DIR"/*.m3u8 2>/dev/null
-        echo "$_now" > "$SESSION_FILE"; _age=0
+    local SESSION_T
+    if [ "$SEGMENT_TYPE" = "fmp4" ]; then
+        # fMP4/CMAF uses 64-bit timestamps and hls.js plays it natively (no 32-bit
+        # TS→MP4 remux), so there is NO overflow — the PTS-reset wipe (and its
+        # viewer-visible stop after long uptime) is ELIMINATED. Just refresh ffmpeg
+        # every 12h via a seamless append_list restart (manifest continues, no wipe).
+        SESSION_T=43200
+    else
+        if [ "$_age" -ge "$MAX_SESSION_SECS" ]; then
+            log "  PTS-RESET: fresh manifest (session ${_age}s ≥ ${MAX_SESSION_SECS}s) – avoids hls.js 32-bit timestamp overflow"
+            rm -f "$HLS_DIR"/*.ts "$HLS_DIR"/*.m3u8 2>/dev/null
+            echo "$_now" > "$SESSION_FILE"; _age=0
+        fi
+        SESSION_T=$(( MAX_SESSION_SECS - _age ))   # ffmpeg exits when the session hits MAX
+        [ "$SESSION_T" -lt 60 ] && SESSION_T=60          # floor; never a 0/negative -t
     fi
-    local SESSION_T=$(( MAX_SESSION_SECS - _age ))   # ffmpeg exits when the session hits MAX
-    [ "$SESSION_T" -lt 60 ] && SESSION_T=60          # floor; never a 0/negative -t
 
     # Pick the audio path. Source audio is used when valid (channel1/3); when the
     # source delivers a broken 0-channel stream (channel2's feed does this and it
@@ -360,8 +380,7 @@ push_live() {
         -flush_packets 1 \
         -f hls -hls_time 4 -hls_list_size 40 \
         -hls_flags delete_segments+append_list+independent_segments \
-        -hls_segment_type mpegts \
-        -hls_segment_filename "$HLS_DIR/%d.ts" \
+        "${HLS_SEG[@]}" \
         "$HLS_DIR/index.m3u8" \
         2>&1 &
 
@@ -389,8 +408,7 @@ push_standby() {
         -t 30 \
         -f hls -hls_time 2 -hls_list_size 20 \
         -hls_flags delete_segments+append_list+independent_segments \
-        -hls_segment_type mpegts \
-        -hls_segment_filename "$HLS_DIR/%d.ts" \
+        "${HLS_SEG[@]}" \
         "$HLS_DIR/index.m3u8" \
         2>&1 &
     local FPID=$!
