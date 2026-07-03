@@ -13,7 +13,7 @@ import json, os
 PROJECT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CFG = os.path.join(PROJECT, 'config', 'channels.json')
 OUT = os.path.join(PROJECT, 'player', 'channels.json')
-BASE = 'https://live3.mzolotv.com'
+BASE = 'https://stream.tv247on.com'
 
 cfg = json.load(open(CFG))
 out = []
