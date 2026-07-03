@@ -18,6 +18,7 @@ MIN_FRAMES=60         # expect ~180 for 6s@30fps; well below = frozen/broken vid
 ts(){ date -u '+%Y-%m-%dT%H:%M:%SZ'; }
 log(){ echo "[$(ts)] $*" >> "$LOG"; }
 channels(){ python3 -c "import json;[print(c['channel_name']) for c in json.load(open('$CONFIG'))['channels'] if c.get('enabled',True)]" 2>/dev/null; }
+dispname(){ python3 -c "import json,sys;m={c['channel_name']:c.get('display_name',c['channel_name']) for c in json.load(open('$CONFIG'))['channels']};print(m.get(sys.argv[1],sys.argv[1]))" "$1" 2>/dev/null; }
 
 flagged=0; total=0
 for ch in $(channels); do
@@ -41,7 +42,7 @@ for ch in $(channels); do
   else
     log "FLAG $ch $flags  res=${res} frames=${frames} audio=${mean}dB"
     flagged=$((flagged+1))
-    "$PROJECT_DIR/scripts/send_alert.sh" "QUALITY issue on $ch:$flags" \
+    "$PROJECT_DIR/scripts/send_alert.sh" "QUALITY issue on $ch - $(dispname "$ch") -$flags" \
       "Quality probe flagged $ch at $(ts):$flags (res=${res} frames=${frames} audio=${mean}dB). Check this channel's stream." >/dev/null 2>&1 &
   fi
 done

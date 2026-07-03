@@ -20,6 +20,7 @@ mkdir -p "$PROJECT_DIR/logs"
 ts(){ date -u '+%Y-%m-%dT%H:%M:%SZ'; }
 log(){ echo "[$(ts)] $*" >> "$LOG"; }
 channels(){ python3 -c "import json;[print(c['channel_name']) for c in json.load(open('$CONFIG'))['channels'] if c.get('enabled',True)]" 2>/dev/null; }
+dispname(){ python3 -c "import json,sys;m={c['channel_name']:c.get('display_name',c['channel_name']) for c in json.load(open('$CONFIG'))['channels']};print(m.get(sys.argv[1],sys.argv[1]))" "$1" 2>/dev/null; }
 
 declare -A since        # stall-start epoch per channel
 declare -A maxage       # max segment age reached during the current stall
@@ -50,7 +51,7 @@ while true; do
           note="(buffer-absorbed, no viewer freeze)"
         else
           note="(VIEWER-VISIBLE FREEZE)"; vis[$ch]=$(( ${vis[$ch]:-0} + 1 ))
-          "$PROJECT_DIR/scripts/send_alert.sh" "FREEZE on $ch (${gap}s)" \
+          "$PROJECT_DIR/scripts/send_alert.sh" "FREEZE on $ch - $(dispname "$ch") - (${gap}s)" \
             "Channel $ch had a viewer-visible freeze of ${gap}s ending $(ts) — it exceeded the ~${BUFFER_SECS}s player buffer, so viewers saw it. The channel has since recovered. Worth checking $ch's source feed / failover." >/dev/null 2>&1 &
         fi
         log "RECOVER $ch  max-gap ${gap}s $note"
