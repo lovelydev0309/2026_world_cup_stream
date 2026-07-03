@@ -46,8 +46,13 @@ while true; do
     else
       if [ -n "${since[$ch]:-}" ]; then
         gap=${maxage[$ch]}
-        if [ "$gap" -lt "$BUFFER_SECS" ]; then note="(buffer-absorbed, no viewer freeze)"
-        else note="(VIEWER-VISIBLE FREEZE)"; vis[$ch]=$(( ${vis[$ch]:-0} + 1 )); fi
+        if [ "$gap" -lt "$BUFFER_SECS" ]; then
+          note="(buffer-absorbed, no viewer freeze)"
+        else
+          note="(VIEWER-VISIBLE FREEZE)"; vis[$ch]=$(( ${vis[$ch]:-0} + 1 ))
+          "$PROJECT_DIR/scripts/send_alert.sh" "FREEZE on $ch (${gap}s)" \
+            "Channel $ch had a viewer-visible freeze of ${gap}s ending $(ts) — it exceeded the ~${BUFFER_SECS}s player buffer, so viewers saw it. The channel has since recovered. Worth checking $ch's source feed / failover." >/dev/null 2>&1 &
+        fi
         log "RECOVER $ch  max-gap ${gap}s $note"
         cnt[$ch]=$(( ${cnt[$ch]:-0} + 1 )); secs[$ch]=$(( ${secs[$ch]:-0} + gap ))
         unset since[$ch]; unset maxage[$ch]

@@ -41,6 +41,8 @@ for ch in $(channels); do
   else
     log "FLAG $ch $flags  res=${res} frames=${frames} audio=${mean}dB"
     flagged=$((flagged+1))
+    "$PROJECT_DIR/scripts/send_alert.sh" "QUALITY issue on $ch:$flags" \
+      "Quality probe flagged $ch at $(ts):$flags (res=${res} frames=${frames} audio=${mean}dB). Check this channel's stream." >/dev/null 2>&1 &
   fi
 done
 log "RUN done: $((total-flagged))/${total} channels OK, ${flagged} flagged"

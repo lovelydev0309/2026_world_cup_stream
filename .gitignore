@@ -27,3 +27,4 @@ exporting/
 resolve/
 transferring/
 srs/
+config/alert.env
