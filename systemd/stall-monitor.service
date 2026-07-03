@@ -1,0 +1,12 @@
+[Unit]
+Description=HLS per-channel stall/freeze recorder
+After=streaming-rpa.service
+
+[Service]
+Type=simple
+ExecStart=/opt/streaming-stack/scripts/stall_monitor.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
