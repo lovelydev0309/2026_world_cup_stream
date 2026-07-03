@@ -10,7 +10,9 @@ CFG="/opt/streaming-stack/config/alert.env"
 source "$CFG"
 [ -n "${SMTP_USER:-}" ] && [ -n "${SMTP_PASS:-}" ] && [ -n "${ALERT_TO:-}" ] || exit 0
 
-subject="${1:-Stream alert}"; body="${2:-}"
+subject="${1:-Stream alert}"; body="${2:-}"; status="${3:-error}"
+# status icon shown in the email content: green check = no error, red X = error
+if [ "$status" = "ok" ]; then emoji="🟢✔"; else emoji="🔴❌"; fi
 COOLDOWN=${ALERT_COOLDOWN:-900}      # min seconds between identical-subject alerts
 HOST=${SMTP_HOST:-smtp.gmail.com}; PORT=${SMTP_PORT:-465}
 
@@ -27,16 +29,22 @@ tmp=$(mktemp)
 {
   echo "From: Stream Monitor <$SMTP_USER>"
   echo "To: $ALERT_TO"
-  echo "Subject: [live3] $subject"
+  echo "Subject: [live3] $emoji $subject"
+  echo "Content-Type: text/plain; charset=UTF-8"
   echo "Date: $(date -R)"
   echo
-  printf '%s\n' "$body"
+  printf '%s  %s\n' "$emoji" "$body"
   echo
   echo "-- automated alert from the stream-quality monitor (live3.mzolotv.com / 15 channels)"
 } > "$tmp"
 
-curl -s --url "smtps://$HOST:$PORT" --ssl-reqd \
+# port 465 = implicit SSL (Gmail); 587 = STARTTLS (Outlook/Office365)
+scheme="smtps"; [ "$PORT" = "587" ] && scheme="smtp"
+err=$(curl -s --url "$scheme://$HOST:$PORT" --ssl-reqd \
      --user "$SMTP_USER:$SMTP_PASS" \
      --mail-from "$SMTP_USER" --mail-rcpt "$ALERT_TO" \
-     --upload-file "$tmp" >/dev/null 2>&1
+     --upload-file "$tmp" 2>&1)
+rc=$?
+[ "$rc" -ne 0 ] && echo "[$(date -u +%FT%TZ)] alert send FAILED rc=$rc: $err" >> /opt/streaming-stack/logs/alert_send.log
 rm -f "$tmp"
+exit "$rc"
