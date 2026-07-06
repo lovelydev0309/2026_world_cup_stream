@@ -13,8 +13,10 @@ CONFIG="$PROJECT_DIR/config/channels.json"
 LOG="$PROJECT_DIR/logs/stall_monitor.log"
 STALL_SECS=15          # no new segment for this long = a stall
 INTERVAL=5             # sample cadence
-BUFFER_SECS=45         # player live buffer; gaps under this are absorbed (no viewer freeze)
-SUMMARY_EVERY=3600     # hourly rollup
+BUFFER_SECS=60         # player live buffer (hls.js maxBufferLength=60); gaps under this are
+                       # absorbed by the viewer's buffer → NOT a visible freeze. Was 45, which
+                       # miscounted 45-58s flap gaps that the real 60s buffer rides out.
+SUMMARY_EVERY=1800     # 30-min rollup + ONE digest email (was hourly, log-only)
 
 mkdir -p "$PROJECT_DIR/logs"
 ts(){ date -u '+%Y-%m-%dT%H:%M:%SZ'; }
@@ -34,7 +36,7 @@ log "=== stall-monitor started (stall>${STALL_SECS}s, sample ${INTERVAL}s, buffe
 while true; do
   now=$(date +%s)
   for ch in $(channels); do
-    f=$(ls -t "$HLS_DIR/$ch"/*.ts 2>/dev/null | head -1)
+    f=$(ls -t "$HLS_DIR/$ch"/*.ts "$HLS_DIR/$ch"/*.m4s 2>/dev/null | head -1)
     if [ -n "$f" ]; then age=$(( now - $(stat -c %Y "$f" 2>/dev/null || echo "$now") )); else age=999; fi
     if [ "$age" -gt "$STALL_SECS" ]; then
       if [ -z "${since[$ch]:-}" ]; then
@@ -50,9 +52,10 @@ while true; do
         if [ "$gap" -lt "$BUFFER_SECS" ]; then
           note="(buffer-absorbed, no viewer freeze)"
         else
+          # Count for the periodic DIGEST instead of emailing on every freeze: a provider-wide
+          # bad window flaps many channels and per-freeze mail floods the inbox (the "continuous
+          # error email" problem). One digest per SUMMARY_EVERY covers them all.
           note="(VIEWER-VISIBLE FREEZE)"; vis[$ch]=$(( ${vis[$ch]:-0} + 1 ))
-          "$PROJECT_DIR/scripts/send_alert.sh" "FREEZE on $ch - $(dispname "$ch") - (${gap}s)" \
-            "Channel $ch had a viewer-visible freeze of ${gap}s ending $(ts) — it exceeded the ~${BUFFER_SECS}s player buffer, so viewers saw it. The channel has since recovered. Worth checking $ch's source feed / failover." >/dev/null 2>&1 &
         fi
         log "RECOVER $ch  max-gap ${gap}s $note"
         cnt[$ch]=$(( ${cnt[$ch]:-0} + 1 )); secs[$ch]=$(( ${secs[$ch]:-0} + gap ))
@@ -62,16 +65,28 @@ while true; do
   done
 
   if [ $(( now - last_summary )) -ge "$SUMMARY_EVERY" ]; then
-    line=""; any=0
+    line=""; any=0; digest=""; vis_any=0
     for ch in $(channels); do
       if [ -n "${cnt[$ch]:-}" ]; then
         line="$line  $ch=${cnt[$ch]}stall/${secs[$ch]:-0}s"
-        [ -n "${vis[$ch]:-}" ] && line="$line(${vis[$ch]}visible)"
+        if [ -n "${vis[$ch]:-}" ]; then
+          line="$line(${vis[$ch]}visible)"
+          digest="$digest  - $ch ($(dispname "$ch")): ${vis[$ch]} visible freeze(s)"$'\n'
+          vis_any=1
+        fi
         any=1
       fi
     done
     [ "$any" = 0 ] && line="  all channels 100% smooth — zero stalls"
-    log "SUMMARY(1h):$line"
+    log "SUMMARY(30m):$line"
+    # ONE digest email per window, and ONLY if there were viewer-visible freezes. Stable
+    # subject so the send_alert cooldown can't be defeated by varying content.
+    if [ "$vis_any" = 1 ]; then
+      "$PROJECT_DIR/scripts/send_alert.sh" "Stream health digest - viewer-visible freezes" \
+"In the last $(( SUMMARY_EVERY/60 )) min these channels had viewer-visible freezes (all auto-recovered to standby/live):
+$digest
+Recurring freezes across several channels = upstream provider (tvon247) feed degradation and/or connection-slot pressure (15 channels sharing 16 provider connection slots). Per-event detail in logs/stall_monitor.log." >/dev/null 2>&1 &
+    fi
     unset cnt secs vis; declare -A cnt secs vis
     last_summary=$now
   fi

@@ -25,14 +25,15 @@ ts(){ date -u '+%Y-%m-%dT%H:%M:%SZ'; }
 log(){ echo "[$(ts)] $*" >> "$LOG"; }
 channels(){ python3 -c "import json;[print(c['channel_name']) for c in json.load(open('$CONFIG'))['channels'] if c.get('enabled',True)]" 2>/dev/null; }
 dispname(){ python3 -c "import json,sys;m={c['channel_name']:c.get('display_name',c['channel_name']) for c in json.load(open('$CONFIG'))['channels']};print(m.get(sys.argv[1],sys.argv[1]))" "$1" 2>/dev/null; }
-seg_age(){ local f; f=$(ls -t "$HLS_DIR/$1"/*.ts 2>/dev/null | head -1); [ -n "$f" ] && echo $(( $(date +%s) - $(stat -c %Y "$f") )) || echo 999; }
+seg_age(){ local f; f=$(ls -t "$HLS_DIR/$1"/*.ts "$HLS_DIR/$1"/*.m4s 2>/dev/null | head -1); [ -n "$f" ] && echo $(( $(date +%s) - $(stat -c %Y "$f") )) || echo 999; }
 
 # probe_channel <ch> -> sets R_FLAGS R_RES R_FRAMES R_MEAN
 probe_channel(){
   local url="$BASE/$1/index.m3u8" dec errs has_audio
   R_RES=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "$url" 2>/dev/null)
   has_audio=$(ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "$url" 2>/dev/null | grep -c .)
-  dec=$(ffmpeg -hide_banner -i "$url" -t "$PROBE_SECS" -map 0:a:0 -af volumedetect -f null - 2>&1)
+  # map BOTH streams: video so frame= counts it, audio so volumedetect measures it
+  dec=$(ffmpeg -hide_banner -i "$url" -t "$PROBE_SECS" -map 0:v:0 -map 0:a:0 -af volumedetect -f null - 2>&1)
   R_FRAMES=$(echo "$dec" | grep -oE 'frame= *[0-9]+' | tail -1 | grep -oE '[0-9]+$')
   R_MEAN=$(echo "$dec" | grep -oE 'mean_volume: *\-?[0-9.]+' | grep -oE '\-?[0-9.]+$' | head -1)
   errs=$(echo "$dec" | grep -icE 'error|corrupt|concealing|invalid data|non-monoton')

@@ -91,20 +91,39 @@ HLS_DIR="$PROJECT_DIR/hls/$CHANNEL"
 # or fmp4/CMAF (.m4s + init.mp4). fmp4 plays natively in hls.js (no 32-bit TS→MP4
 # remux) → no long-uptime timestamp overflow → no periodic PTS-reset wipe, so the
 # viewer never hits the "buffer→0, video stops after hours" freeze.
+# omit_endlist (BOTH segment types): these tokenized sources restart every ~90-285s
+# (and drop to standby when a feed degrades). Without omit_endlist, ffmpeg writes
+# #EXT-X-ENDLIST every time it EXITS — during any restart gap or live→standby gap the
+# live manifest briefly reads "stream ended", and a player that polls in that window
+# STOPS and will not resume without a manual reload (this is the client-reported "It
+# has stopped" on a flaky channel). With omit_endlist the manifest stays open, so the
+# player keeps polling and AUTO-RESUMES the instant fresh segments reappear — a source
+# outage becomes a recoverable "buffering" instead of a dead "stopped". append_list
+# re-opens the manifest on the next start regardless, so a 24/7 channel never needs an
+# ENDLIST. (Was only on the fmp4 branch; the production mpegts path was missing it.)
 if [ "$SEGMENT_TYPE" = "fmp4" ]; then
     HLS_SEG=(-hls_segment_type fmp4 -hls_fmp4_init_filename init.mp4 -hls_segment_filename "$HLS_DIR/%d.m4s")
+    # Re-encoding with fixed libx264 params makes init.mp4 byte-identical across restarts
+    # (verified), so overwriting it each restart is harmless and old segments stay decodable.
+    HLS_FLAGS="delete_segments+append_list+independent_segments+omit_endlist"
 else
     HLS_SEG=(-hls_segment_type mpegts -hls_segment_filename "$HLS_DIR/%d.ts")
+    HLS_FLAGS="delete_segments+append_list+independent_segments+omit_endlist"
 fi
 GOP=$((FPS * 2))
-STALE_KILL_SECS=25   # kill ffmpeg after this many seconds of ZERO write progress.
-# Was 45s, but the live3 player rides ~45s behind the edge (liveSyncDuration:45); a
-# 45s stall-detect drains that whole cushion BEFORE we even kill+reconnect, so the
-# viewer sees a freeze. 25s of zero byte-growth (≈6 missed 4s segments) is still a
-# definitively-dead feed — ffmpeg's own -reconnect recovers real hiccups within
-# ~5-8s and resumes byte-growth (resetting the counter), so this only ever fires on
-# a genuinely frozen source. 25s detect + ~10s reconnect ≈ 35s gap < 45s cushion →
-# failover completes while the player is still playing buffered content (no freeze).
+STALE_KILL_SECS=15   # kill ffmpeg after this many seconds of ZERO write progress.
+# Root cause of the "buffer→0 on some channels" reports: the tvon247 sources are
+# 302-redirect tokenized feeds whose token expires every ~90-285s. On expiry the
+# upstream keeps the TCP socket OPEN but stops sending data (no EOF, no error), so
+# ffmpeg's -reconnect/-reconnect_at_eof never fire — the ONLY recovery is this
+# watchdog killing ffmpeg, which forces a process restart that re-resolves the 302
+# and gets a FRESH token. So the watchdog gap IS the viewer-visible gap. Was 25s
+# (→ ~30s gap, enough to drain a modest player buffer to 0). Lowered to 15s: every
+# channel is encode-mode with 4s segments, so 15s of zero byte-growth = ~4 missed
+# segments = a definitively stalled feed (ffmpeg's -reconnect recovers real network
+# hiccups within 5-8s and resumes byte-growth, resetting this counter, so 15s never
+# false-kills a live feed). 15s detect + ~5s restart ≈ 20s gap — absorbed by a
+# player buffered ≥30s behind the edge (see client player-config note).
 # Periodic PTS reset: append_list carries the output PTS across failover restarts,
 # so on a long-lived channel it climbs without bound. hls.js remuxes TS→MP4 with a
 # 32-bit baseMediaDecodeTime; at 90kHz that overflows at 2^32/90000 ≈ 47,700s ≈
@@ -161,7 +180,10 @@ stale_watchdog() {
     local RACE_HITS=3     # ~15s sustained before acting
     while kill -0 "$ffpid" 2>/dev/null; do
         sleep "$interval"
-        current_seg=$(ls -t "$HLS_DIR"/*.ts 2>/dev/null | head -1)
+        # Match BOTH mpegts (.ts) and fmp4/CMAF (.m4s) so this watchdog tracks write
+        # progress regardless of segment_type (a .ts-only check would see no growth on
+        # an fmp4 channel and kill ffmpeg every cycle).
+        current_seg=$(ls -t "$HLS_DIR"/*.ts "$HLS_DIR"/*.m4s 2>/dev/null | head -1)
         current_size=0
         [ -n "$current_seg" ] && current_size=$(stat -c %s "$current_seg" 2>/dev/null || echo 0)
         if [ -n "$current_seg" ] && { [ "$current_seg" != "$last_seg" ] || [ "$current_size" -gt "$last_size" ]; }; then
@@ -179,7 +201,7 @@ stale_watchdog() {
             break
         fi
         # ── racing detection ──
-        current_num=$(basename "${current_seg:-x}" .ts 2>/dev/null)
+        current_num=$(basename "${current_seg:-x}" 2>/dev/null); current_num=${current_num%.*}
         case "$current_num" in ''|*[!0-9]*) current_num=-1 ;; esac
         if [ "$last_num" -ge 0 ] && [ "$current_num" -ge 0 ] && [ $(( current_num - last_num )) -gt $RACE_SEGS ]; then
             race_count=$((race_count + 1))
@@ -278,26 +300,51 @@ detect_audio_ok() {
 push_live() {
     ensure_hls_dir
 
-    # ── Periodic PTS reset (see MAX_SESSION_SECS note above) ─────────────
-    # When the manifest "session" exceeds MAX_SESSION_SECS, wipe the HLS dir so
-    # the next ffmpeg starts a fresh, zero-based timeline (keeps the PTS far below
-    # hls.js's 13.2h 32-bit ceiling). -t SESSION_T below caps each ffmpeg so even
-    # a perfectly stable feed gets reset on schedule, not just on a failover.
+    # ── Periodic PTS reset (SEAMLESS – see MAX_SESSION_SECS note above) ──
+    # hls.js remuxes TS→fMP4 and accumulates a 32-bit baseMediaDecodeTime that
+    # overflows near 13.2h of uptime. We bound it every MAX_SESSION_SECS, but the OLD
+    # way (rm the whole HLS dir) deleted the segments a live player had ALREADY buffered
+    # → an instant buffer→0 / rebuffer on EVERY channel every 6h, which no player buffer
+    # depth can absorb (the bytes are gone). The new way KEEPS the segments and emits a
+    # single #EXT-X-DISCONTINUITY at the boundary (discont_start): hls.js re-anchors its
+    # remux timeline to ~0 (same overflow protection) while the player plays STRAIGHT
+    # THROUGH the tag with no rebuffer. -t SESSION_T caps each ffmpeg so even a perfectly
+    # stable feed hits the boundary on schedule.
     local _now=$(date +%s)
     local _sess=$(cat "$SESSION_FILE" 2>/dev/null)
     [ -z "$_sess" ] && { _sess=$_now; echo "$_now" > "$SESSION_FILE"; }
     local _age=$(( _now - _sess ))
     local SESSION_T
+    local PTS_RESET_FLAGS=""    # gets "+discont_start" for the one boundary-crossing run
     if [ "$SEGMENT_TYPE" = "fmp4" ]; then
         # fMP4/CMAF uses 64-bit timestamps and hls.js plays it natively (no 32-bit
         # TS→MP4 remux), so there is NO overflow — the PTS-reset wipe (and its
         # viewer-visible stop after long uptime) is ELIMINATED. Just refresh ffmpeg
         # every 12h via a seamless append_list restart (manifest continues, no wipe).
+        # Switch guard: if stale mpegts .ts + an mpegts manifest are present (channel
+        # was just flipped mpegts→fmp4), append_list would try to mix .ts and .m4s in
+        # ONE playlist → ffmpeg exits immediately in a restart loop (this is what bit
+        # the first channel3 attempt). Wipe ONCE for a clean CMAF start; steady-state
+        # fmp4 restarts (only .m4s present) skip this and append_list continues.
+        if ls "$HLS_DIR"/*.ts >/dev/null 2>&1; then
+            log "  fmp4: clearing stale mpegts segments for a clean CMAF manifest"
+            rm -f "$HLS_DIR"/*.ts "$HLS_DIR"/*.m3u8 "$HLS_DIR"/init.mp4 2>/dev/null
+        fi
         SESSION_T=43200
     else
+        # Symmetric switch guard: if stale fmp4 .m4s/init are present (channel was
+        # just flipped fmp4→mpegts), wipe so append_list doesn't mix .m4s + .ts in
+        # one playlist (→ immediate-exit loop, the reverse of the fmp4 switch case).
+        if ls "$HLS_DIR"/*.m4s >/dev/null 2>&1; then
+            log "  mpegts: clearing stale fmp4 segments for a clean mpegts manifest"
+            rm -f "$HLS_DIR"/*.m4s "$HLS_DIR"/init.mp4 "$HLS_DIR"/*.m3u8 2>/dev/null
+        fi
         if [ "$_age" -ge "$MAX_SESSION_SECS" ]; then
-            log "  PTS-RESET: fresh manifest (session ${_age}s ≥ ${MAX_SESSION_SECS}s) – avoids hls.js 32-bit timestamp overflow"
-            rm -f "$HLS_DIR"/*.ts "$HLS_DIR"/*.m3u8 2>/dev/null
+            # SEAMLESS: keep the segments, just flag an #EXT-X-DISCONTINUITY on this run
+            # (append_list preserves the buffered .ts; delete_segments + hls_list_size
+            # roll the old ones off within ~160s, so no disk bloat and no 404).
+            log "  PTS-RESET (seamless): #EXT-X-DISCONTINUITY at session ${_age}s ≥ ${MAX_SESSION_SECS}s – re-anchors hls.js, no viewer rebuffer"
+            PTS_RESET_FLAGS="+discont_start"
             echo "$_now" > "$SESSION_FILE"; _age=0
         fi
         SESSION_T=$(( MAX_SESSION_SECS - _age ))   # ffmpeg exits when the session hits MAX
@@ -333,7 +380,7 @@ push_live() {
         aud_tail=(-af "asetpts=N/SR/TB")
     else
         log "→ LIVE (source audio broken – silent stereo)"
-        aud_in=(-f lavfi -i "anullsrc=channel_layout=stereo:sample_rate=44100")
+        aud_in=(-f lavfi -i "anullsrc=channel_layout=stereo:sample_rate=48000")
         aud_map=(-map 0:v:0 -map 1:a:0)
         aud_tail=(-shortest)
     fi
@@ -361,25 +408,31 @@ push_live() {
                   -force_key_frames "expr:gte(t,n_forced*4)")
     fi
 
+    # Audio is encoded at 48kHz (-ar 48000, below) to MATCH the source: tvon247
+    # feeds are AAC 48000. Was 44100 → forced a double resample (source 48k→our
+    # 44.1k, then the browser's 48kHz pipeline resamples 44.1k→48k on playback);
+    # two independent-clock resamples accumulate artifacts → audible stutter after
+    # a few minutes on EVERY channel. 48k in = 48k out = no resample anywhere.
     ffmpeg -hide_banner -loglevel warning \
         -re \
         -fflags +igndts+discardcorrupt+genpts \
         -err_detect ignore_err \
         -user_agent "IPTV Smarters/1.0 Dalvik/2.1.0" \
         -reconnect 1 -reconnect_at_eof 1 \
-        -reconnect_streamed 1 -reconnect_delay_max 5 \
-        -timeout 10000000 \
+        -reconnect_streamed 1 -reconnect_on_network_error 1 \
+        -reconnect_delay_max 2 \
+        -rw_timeout 8000000 \
         -i "$SOURCE_URL" \
         "${aud_in[@]}" \
         "${aud_map[@]}" \
         "${vid_args[@]}" \
-        -c:a aac -b:a "${AUDIO_BR}k" -ar 44100 \
+        -c:a aac -b:a "${AUDIO_BR}k" -ar 48000 \
         "${aud_tail[@]}" \
         -avoid_negative_ts make_zero -muxpreload 0 -muxdelay 0 \
         -t "$SESSION_T" \
         -flush_packets 1 \
         -f hls -hls_time 4 -hls_list_size 40 \
-        -hls_flags delete_segments+append_list+independent_segments \
+        -hls_flags "${HLS_FLAGS}${PTS_RESET_FLAGS}" \
         "${HLS_SEG[@]}" \
         "$HLS_DIR/index.m3u8" \
         2>&1 &
@@ -399,15 +452,21 @@ push_live() {
 push_standby() {
     ensure_hls_dir
     log "→ STANDBY"
+    # Scale standby to the channel's live output resolution (${ENC_W}x${ENC_H}).
+    # standby.mp4 is 1080p; without this the standby segments differ in resolution
+    # from the live re-encode. For mpegts that's just a cosmetic resolution change,
+    # but for fmp4 it would emit a MISMATCHED init.mp4 (SPS/PPS) and break playback
+    # across a live↔standby transition — so match the live encode here.
     ffmpeg -hide_banner -loglevel warning \
         -re -stream_loop -1 -i "$STANDBY" \
+        -vf "scale=${ENC_W}:${ENC_H}:force_original_aspect_ratio=decrease,pad=${ENC_W}:${ENC_H}:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS" \
         -c:v libx264 -preset ultrafast -crf 26 \
         -r "$FPS" -g "$GOP" \
         -force_key_frames "expr:gte(t,n_forced*2)" \
-        -c:a aac -b:a "${AUDIO_BR}k" -ar 44100 \
+        -c:a aac -b:a "${AUDIO_BR}k" -ar 48000 \
         -t 30 \
         -f hls -hls_time 2 -hls_list_size 20 \
-        -hls_flags delete_segments+append_list+independent_segments \
+        -hls_flags "$HLS_FLAGS" \
         "${HLS_SEG[@]}" \
         "$HLS_DIR/index.m3u8" \
         2>&1 &
@@ -430,10 +489,21 @@ LIVE_FAIL=0
 MAX_FAILS=3
 HEALTHY_RUN_SECS=45   # a run at least this long = healthy, resets the fail counter
 URL_IDX=0             # index into SOURCE_URLS of the currently-active source
+LAST_MODE=""          # "live"|"standby" — for fmp4, wipe on live↔standby transitions
+                      # (their init.mp4 differ; a fixed-name init would mismatch)
 
 while true; do
     SOURCE_URL="${SOURCE_URLS[$URL_IDX]:-}"
     if [[ -n "$SOURCE_URL" ]] && [[ $LIVE_FAIL -lt $MAX_FAILS ]]; then
+        # fmp4 standby→live transition: standby's init.mp4 differs from the live
+        # encode's, so wipe for a clean manifest+init. live→live token restarts keep
+        # LAST_MODE=live and skip this (their init is byte-identical → append_list
+        # continues seamlessly).
+        if [ "$SEGMENT_TYPE" = "fmp4" ] && [ "$LAST_MODE" = "standby" ]; then
+            log "  fmp4: standby→live – clearing dir for a clean init"
+            rm -f "$HLS_DIR"/*.m4s "$HLS_DIR"/init.mp4 "$HLS_DIR"/*.m3u8 2>/dev/null
+        fi
+        LAST_MODE="live"
         T_START=$(date +%s)
         push_live
         EXIT=$?
@@ -463,6 +533,11 @@ while true; do
             log "Live unavailable – no-standby (copy) mode; brief hold, retrying live"
             sleep 5
         else
+            if [ "$SEGMENT_TYPE" = "fmp4" ] && [ "$LAST_MODE" != "standby" ]; then
+                log "  fmp4: live→standby – clearing dir for a clean init"
+                rm -f "$HLS_DIR"/*.m4s "$HLS_DIR"/init.mp4 "$HLS_DIR"/*.m3u8 2>/dev/null
+            fi
+            LAST_MODE="standby"
             push_standby || true
             log "Standby ended – resetting to primary, retrying live"
         fi

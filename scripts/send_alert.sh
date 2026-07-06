@@ -17,7 +17,13 @@ COOLDOWN=${ALERT_COOLDOWN:-900}      # min seconds between identical-subject ale
 HOST=${SMTP_HOST:-smtp.gmail.com}; PORT=${SMTP_PORT:-465}
 
 mkdir -p /tmp/alert_state
-key=$(printf '%s' "$subject" | md5sum | cut -c1-16)
+# Dedup key = alert TYPE (first word) + channel id, NOT the full subject. The monitors put
+# variable content in the subject (the freeze gap "(52s)", the quality "-flags"), which made
+# every subject unique → the md5 cooldown never matched → an email per event (the "continuous
+# error email" flood). Keying on type+channel makes the cooldown actually suppress repeats.
+_prefix=$(printf '%s' "$subject" | awk '{print $1}')
+_chan=$(printf '%s' "$subject" | grep -oE 'channel[0-9]+' | head -1)
+key=$(printf '%s_%s' "$_prefix" "${_chan:-$subject}" | md5sum | cut -c1-16)
 stamp="/tmp/alert_state/$key"
 now=$(date +%s)
 if [ -f "$stamp" ] && [ $(( now - $(cat "$stamp" 2>/dev/null || echo 0) )) -lt "$COOLDOWN" ]; then

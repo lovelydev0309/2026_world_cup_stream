@@ -317,7 +317,11 @@
     function startPlayback() {
       if (Date.now() - _playAt < 700) return;
       _playAt = Date.now();
-      video.muted = true;
+      // Mute ONLY for the initial autoplay (browsers block unmuted autoplay). Once the
+      // viewer has unmuted, NEVER re-mute on a recovery reconnect — re-muting an unmuted
+      // viewer after every stall is the "sound disappeared / stuck" complaint (and a page
+      // refresh doesn't fix it because reload re-mutes again).
+      if (!window.__userAudioChoice) video.muted = true;
       if (hls && isFinite(hls.liveSyncPosition) && fwdBuffer() < 1) {
         try { video.currentTime = hls.liveSyncPosition; } catch (e) {}
       }
@@ -335,6 +339,10 @@
         window.__playRetry = setTimeout(startPlayback, 1000);
       });
     }
+
+    // Respect the viewer's audio choice: once they unmute, latch it so no recovery path
+    // re-mutes them (fixes the recurring "sound gone after a reconnect" reports).
+    video.addEventListener("volumechange", () => { if (!video.muted) window.__userAudioChoice = true; });
 
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
       log("Manifest loaded – starting playback", "info");
