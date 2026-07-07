@@ -150,37 +150,42 @@ def main():
     except Exception as e:
         log("status write failed: %s" % e)
 
-    # Confirmed-issue alerting: only page for channels unhealthy >=CONFIRM_N runs in a row.
-    state = load_state()
-    bad_now, confirmed = [], []
+    # Per-channel email alerting. A channel that has been unhealthy for >=CONFIRM_N consecutive
+    # checks triggers an email; when it comes back it triggers a recovery email. The subject
+    # carries the "channelN" token so send_alert.sh keys its cooldown PER CHANNEL — so a NEW
+    # channel breaking pages promptly (never blocked by another channel's cooldown) while an
+    # ONGOING outage re-pages at most once an hour (no spam). Recovery uses a different subject
+    # prefix so it's never suppressed by the outage's cooldown.
+    prev = load_state()
+    newstate, confirmed, recovered = {}, [], []
     for r in results:
-        key = str(r["ch"])
+        k = str(r["ch"])
+        was_confirmed = prev.get(k, 0) >= CONFIRM_N
         if r["status"] == "OK":
-            state[key] = 0
+            newstate[k] = 0
+            if was_confirmed: recovered.append(r)
         else:
-            state[key] = state.get(key, 0) + 1
-            bad_now.append(r)
-            if state[key] >= CONFIRM_N:
-                confirmed.append(r)
-    try: json.dump(state, open(STATE, "w"))
+            newstate[k] = prev.get(k, 0) + 1
+            if newstate[k] >= CONFIRM_N: confirmed.append(r)
+    try: json.dump(newstate, open(STATE, "w"))
     except Exception: pass
 
-    if confirmed:
-        lines = "\n".join("  - channel%d (%s): %s [%s]" %
-                          (r["ch"], r["name"], r["status"], r["detail"]) for r in confirmed)
-        body = ("Synthetic viewer monitor found these channels unhealthy for >=%d consecutive "
-                "checks (verified through the CDN, as a real viewer sees them):\n\n%s\n\n"
-                "Detail in logs/synthetic_monitor.log; live status at /player/status.html." %
-                (CONFIRM_N, lines))
-        # Stable subject -> send_alert.sh cooldown caps this at ~1/hour no matter how many break.
-        try:
-            subprocess.run([ALERT_SH, "Synthetic monitor: channel issues", body],
-                           timeout=30, capture_output=True)
-        except Exception as e:
-            log("alert send failed: %s" % e)
+    def email(subject, body):
+        try: subprocess.run([ALERT_SH, subject, body], timeout=30, capture_output=True)
+        except Exception as e: log("alert send failed: %s" % e)
 
-    log("RUN done: %d/%d OK  bad=%d confirmed=%d" %
-        (ok, len(results), len(bad_now), len(confirmed)))
+    for r in confirmed:
+        email("UNHEALTHY channel%d - %s (%s)" % (r["ch"], r["name"], r["status"]),
+              "Channel %d (%s) is %s.\n%s\n\nVerified through the CDN by the synthetic viewer "
+              "monitor (unhealthy for >=%d consecutive checks, as a real viewer sees it).\n"
+              "Live status: https://stream.tv247on.com/player/status.html"
+              % (r["ch"], r["name"], r["status"], r["detail"], CONFIRM_N))
+    for r in recovered:
+        email("RECOVERED channel%d - %s" % (r["ch"], r["name"]),
+              "Channel %d (%s) is back to normal (%s)." % (r["ch"], r["name"], r["detail"]))
+
+    log("RUN done: %d/%d OK  confirmed_bad=%d recovered=%d" %
+        (ok, len(results), len(confirmed), len(recovered)))
 
 if __name__ == "__main__":
     main()
