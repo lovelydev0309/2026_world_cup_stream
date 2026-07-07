@@ -430,6 +430,15 @@ push_live() {
     # 44.1k, then the browser's 48kHz pipeline resamples 44.1k→48k on playback);
     # two independent-clock resamples accumulate artifacts → audible stutter after
     # a few minutes on EVERY channel. 48k in = 48k out = no resample anywhere.
+    #
+    # -ac 2 pins the output to CONSTANT stereo. Without it the encoded channel
+    # count just follows the source, so a failover from a stereo primary to a mono
+    # or 5.1 backup feed flips the output audio config (channels) MID-PLAYLIST.
+    # hls.js initialises its MSE audio SourceBuffer once from the first segment and
+    # cannot re-negotiate channel count → audio silently dies while video keeps
+    # playing, and only switching channels (fresh MSE) brings it back — the "many
+    # channels lose audio" report. Forcing stereo (48k AAC-LC) makes the audio
+    # config identical across every source, failover, and the live↔standby swap.
     ffmpeg -hide_banner -loglevel warning \
         -re \
         -fflags +igndts+discardcorrupt+genpts \
@@ -443,7 +452,7 @@ push_live() {
         "${aud_in[@]}" \
         "${aud_map[@]}" \
         "${vid_args[@]}" \
-        -c:a aac -b:a "${AUDIO_BR}k" -ar 48000 \
+        -c:a aac -b:a "${AUDIO_BR}k" -ar 48000 -ac 2 \
         "${aud_tail[@]}" \
         -avoid_negative_ts make_zero -muxpreload 0 -muxdelay 0 \
         -t "$SESSION_T" \
@@ -480,7 +489,7 @@ push_standby() {
         -c:v libx264 -preset ultrafast -crf 26 \
         -r "$FPS" -g "$GOP" \
         -force_key_frames "expr:gte(t,n_forced*2)" \
-        -c:a aac -b:a "${AUDIO_BR}k" -ar 48000 \
+        -c:a aac -b:a "${AUDIO_BR}k" -ar 48000 -ac 2 \
         -t 30 \
         -f hls -hls_time 2 -hls_list_size 20 \
         -hls_flags "$HLS_FLAGS" \
