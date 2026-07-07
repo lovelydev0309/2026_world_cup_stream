@@ -493,7 +493,12 @@ push_standby() {
 # drop (e.g. HTTP 509 from the IPTV provider) is NOT a crash-loop; it should
 # reconnect immediately with no standby blackout.
 LIVE_FAIL=0
-MAX_FAILS=3
+# Try EVERY source once before dropping to standby. Was a fixed 3 (set when channels had
+# ~3 sources); with the 6-account expansion a channel now has 6+ sources, and a hard-coded 3
+# meant the failover gave up after only the first 3 accounts — never trying the other 3
+# (incl. the 2 new accounts), even if one of them had a working feed. Scaling to NUM_URLS
+# means a degraded feed on some accounts fails over across ALL of them before showing slate.
+MAX_FAILS=$NUM_URLS
 HEALTHY_RUN_SECS=45   # a run at least this long = healthy, resets the fail counter
 URL_IDX=0             # index into SOURCE_URLS of the currently-active source
 LAST_MODE=""          # "live"|"standby" — for fmp4, wipe on live↔standby transitions
