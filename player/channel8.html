@@ -265,11 +265,7 @@
       liveSyncDuration: 45,
       // Only force a snap-to-live on GENUINE excess drift (>90s behind), well
       // past the 45s resting point, so normal operation is never yanked.
-      liveMaxLatencyDuration: 180,
-      // Drift back toward live by gently speeding up (<=1.05x, browser pitch-corrected)
-      // instead of a hard snap-SEEK that flushes the decoder -> dropped frames + A/V
-      // desync. This is why external players look smooth and ours dropped frames.
-      maxLiveSyncPlaybackRate: 1.05,
+      liveMaxLatencyDuration: 90,
       liveDurationInfinity: true,
       // CRITICAL for 24/7: cap the BACK buffer. hls.js otherwise keeps growing
       // the MediaSource with already-played content; over a multi-hour session
@@ -380,7 +376,6 @@
 
     hls.on(Hls.Events.FRAG_BUFFERED, () => {
       _recoverCount = 0;
-      _mediaRecovers = 0;
       clearBuffering();
       // Resume if the video stalled waiting for this segment to arrive
       if (video.paused) startPlayback();
@@ -389,7 +384,6 @@
     let _recoverTimer = null;
     let _stallTimer   = null;
     let _recoverCount = 0;
-    let _mediaRecovers = 0;
     let _badgeTimer   = null;
     const REINIT_AFTER = 6;
 
@@ -468,24 +462,8 @@
       }, delay);
     }
 
-    // hls.js media recovery: flush + re-append to RE-ALIGN audio and video after a
-    // desync (the client's "frame drops in both audio and video, can't realign audio,
-    // only a refresh fixes it"). Far gentler than a reload; escalates only if it fails.
-    function mediaRecover(label) {
-      log(label, "warn");
-      showBufferingSoon();
-      if (_mediaRecovers < 3) { _mediaRecovers++; try { hls.recoverMediaError(); } catch (e) {} }
-      else { _mediaRecovers = 0; recoverToLiveEdge(500, label + " - escalating to reload"); }
-    }
-
     hls.on(Hls.Events.ERROR, (_, data) => {
       if (data.fatal) {
-        if (data.type === Hls.ErrorTypes.MEDIA_ERROR && _mediaRecovers < 3) {
-          _mediaRecovers++;
-          log(`Fatal media error – recoverMediaError (${_mediaRecovers}/3)`, "warn");
-          try { hls.recoverMediaError(); } catch (e) {}
-          return;
-        }
         log(`Fatal: ${data.type}/${data.details} – reinit`, "error");
         setBadge("standby", "RECONNECTING…");
         overlay.classList.remove("hidden");
@@ -496,9 +474,6 @@
         setTimeout(init, RETRY_DELAY);
       } else {
         switch (data.details) {
-          case Hls.ErrorDetails.BUFFER_APPEND_ERROR:
-            mediaRecover(`Buffer append error (A/V) – media re-align`);
-            break;
           case Hls.ErrorDetails.BUFFER_STALLED_ERROR:
           case Hls.ErrorDetails.BUFFER_NUDGE_ON_STALL:
             handleBufferStall(`Stall (${data.details}) – waiting for next segment`);
@@ -536,7 +511,7 @@
     // live, it escalates on its own — soft live-edge resync (~8s), then a full
     // channel re-init (~18s). This is the in-page "RPA" that re-refreshes the
     // channel automatically, so no one ever has to reload the browser by hand.
-    let _wdLast = -1, _wdStuck = 0, _wdStarted = false, _latHits = 0, _wdAudioBytes = -1, _wdAudioStuck = 0;
+    let _wdLast = -1, _wdStuck = 0, _wdStarted = false, _latHits = 0;
     window.__playbackWatchdog = setInterval(() => {
       // Hidden/ended/no-hls → leave alone (browser pauses background tabs).
       if (!hls || document.hidden || video.ended) {
@@ -563,7 +538,7 @@
       // Sustained excessive latency (genuine drift, not a one-off spike) → snap
       // back to live. Require several consecutive readings so a transient never
       // triggers it. (Backstop to hls.js's own liveMaxLatencyDuration resync.)
-      if (hls.latency > 180 && hls.liveSyncPosition != null) {
+      if (hls.latency > 90 && hls.liveSyncPosition != null) {
         if (++_latHits >= 3) {                          // ~6s sustained
           _latHits = 0;
           log(`Latency ${hls.latency.toFixed(0)}s – snapping to live`, "warn");
@@ -572,17 +547,6 @@
           _wdLast = video.currentTime; _wdStuck = 0; return;
         }
       } else { _latHits = 0; }
-      // Audio-progress guard: the VIDEO clock can keep advancing while the AUDIO decoder
-      // is frozen (the "sound stuck / audio frame-drops" desync the video-only check below
-      // misses). webkitAudioDecodedByteCount (Chrome/Safari/most viewers) exposes audio
-      // progress; if video advances ~8s while decoded audio bytes stop growing, re-align.
-      const _adb = video.webkitAudioDecodedByteCount;
-      if (typeof _adb === "number") {
-        if (video.currentTime > _wdLast + 0.1 && _adb === _wdAudioBytes) {
-          if (++_wdAudioStuck >= 4) { _wdAudioStuck = 0; mediaRecover("Audio frozen while video plays – re-aligning"); }
-        } else { _wdAudioStuck = 0; }
-        _wdAudioBytes = _adb;
-      }
       if (video.currentTime > _wdLast + 0.1) {          // advancing → healthy
         _wdLast = video.currentTime; _wdStuck = 0; return;
       }
