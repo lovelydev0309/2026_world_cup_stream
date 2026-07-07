@@ -24,6 +24,13 @@ log() {
 # exit immediately. flock -n = non-blocking (don't wait).
 LOCKFILE="/tmp/stream_lock_${CHANNEL}"
 exec 9>"$LOCKFILE"
+# CRITICAL: every child spawned below (ffmpeg, the watchdog subshell) MUST close fd 9
+# (they run with `9>&-`). A child otherwise inherits this locked fd, and if the script is
+# SIGKILL'd (RPA hard-restart / crash — the EXIT trap can't run), the orphaned child KEEPS
+# the flock forever. Every new instance then fails the flock below, logs "Already running",
+# and exits WITHOUT reaching the orphan-reap → the channel is stuck dead and never
+# auto-recovers (root cause of "channel X won't come back"). Closing fd 9 in the children
+# lets a fresh instance take the lock and reap the orphan.
 if ! flock -n 9; then
     log "Already running (lock held). Exiting."
     exit 0
@@ -435,12 +442,12 @@ push_live() {
         -hls_flags "${HLS_FLAGS}${PTS_RESET_FLAGS}" \
         "${HLS_SEG[@]}" \
         "$HLS_DIR/index.m3u8" \
-        2>&1 &
+        2>&1 9>&- &
 
     local FPID=$!
     echo $FPID > "$FFMPEG_PID_FILE"
     # Fresh watchdog per FFmpeg run — no stale state from old segments
-    stale_watchdog "$FPID" &
+    stale_watchdog "$FPID" 9>&- &
     WATCHDOG_PID=$!
     wait $FPID
     kill $WATCHDOG_PID 2>/dev/null; wait $WATCHDOG_PID 2>/dev/null
@@ -469,10 +476,10 @@ push_standby() {
         -hls_flags "$HLS_FLAGS" \
         "${HLS_SEG[@]}" \
         "$HLS_DIR/index.m3u8" \
-        2>&1 &
+        2>&1 9>&- &
     local FPID=$!
     echo $FPID > "$FFMPEG_PID_FILE"
-    stale_watchdog "$FPID" &
+    stale_watchdog "$FPID" 9>&- &
     WATCHDOG_PID=$!
     wait $FPID
     kill $WATCHDOG_PID 2>/dev/null; wait $WATCHDOG_PID 2>/dev/null
