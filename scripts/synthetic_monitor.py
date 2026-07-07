@@ -16,7 +16,8 @@ slots. Writes:
 and sends ONE consolidated alert (via send_alert.sh, which is cooldown-throttled) listing any
 channel that has been unhealthy for >=2 consecutive runs (so a one-off blip never pages).
 
-Run from cron every 5 min:  */5 * * * * /opt/streaming-stack/scripts/synthetic_monitor.py
+Run from cron every 60s (flock-guarded so runs never overlap):
+  * * * * * flock -n /tmp/synmon.lock /opt/streaming-stack/scripts/synthetic_monitor.py
 """
 import json, subprocess, urllib.request, time, os, re
 

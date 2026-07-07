@@ -56,7 +56,7 @@
       pill.textContent = d.ok + ' / ' + d.total + ' healthy';
       pill.className = 'pill ' + (okAll ? 'ok' : 'bad');
       const age = Math.round((Date.now() - new Date(d.updated).getTime())/1000);
-      const stale = age > 420;
+      const stale = age > 180;   // monitor runs every 60s; >3 missed checks = likely stalled
       document.getElementById('updated').innerHTML = 'updated ' + esc(d.updated) +
         (stale ? ' <span class="stale-warn">(monitor may be stalled — ' + age + 's ago)</span>'
                : ' (' + age + 's ago)');
