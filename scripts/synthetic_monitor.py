@@ -144,19 +144,12 @@ def main():
     for r in results:
         log("channel%-2d %-15s %-9s %s" % (r["ch"], r["name"], r["status"], r["detail"]))
 
-    ok = sum(1 for r in results if r["status"] == "OK")
-    payload = {"updated": now(), "ok": ok, "total": len(results), "channels": results}
-    try:
-        tmp = STATUS + ".tmp"; open(tmp, "w").write(json.dumps(payload)); os.replace(tmp, STATUS)
-    except Exception as e:
-        log("status write failed: %s" % e)
-
-    # Per-channel email alerting. A channel that has been unhealthy for >=CONFIRM_N consecutive
-    # checks triggers an email; when it comes back it triggers a recovery email. The subject
-    # carries the "channelN" token so send_alert.sh keys its cooldown PER CHANNEL — so a NEW
-    # channel breaking pages promptly (never blocked by another channel's cooldown) while an
-    # ONGOING outage re-pages at most once an hour (no spam). Recovery uses a different subject
-    # prefix so it's never suppressed by the outage's cooldown.
+    # ── Consecutive-bad state — drives BOTH the alert emails AND the dashboard display ──
+    # A single bad check on a channel that flaps on an unstable provider feed almost always
+    # recovers by the next 60s check, and the viewer's deep buffer hides it. So show a channel
+    # as a PROBLEM only once it has been unhealthy for >=CONFIRM_N checks IN A ROW — that
+    # eliminates the transient "no audio / stale" errors that used to flash red then recover.
+    # Genuine, persistent outages still surface on the dashboard (and still email).
     prev = load_state()
     newstate, confirmed, recovered = {}, [], []
     for r in results:
@@ -171,6 +164,25 @@ def main():
     try: json.dump(newstate, open(STATE, "w"))
     except Exception: pass
 
+    # Dashboard view: an UNCONFIRMED (transient) bad check is shown as OK so it never flashes red.
+    display = []
+    for r in results:
+        d = dict(r)
+        if r["status"] != "OK" and newstate[str(r["ch"])] < CONFIRM_N:
+            d["raw_status"] = r["status"]                 # keep the real reading for reference
+            d["status"] = "OK"
+            d["detail"] = "recovering (transient %s)" % r["status"]
+        display.append(d)
+    shown_ok = sum(1 for d in display if d["status"] == "OK")
+    payload = {"updated": now(), "ok": shown_ok, "total": len(display), "channels": display}
+    try:
+        tmp = STATUS + ".tmp"; open(tmp, "w").write(json.dumps(payload)); os.replace(tmp, STATUS)
+    except Exception as e:
+        log("status write failed: %s" % e)
+
+    # ── Per-channel email alerting: pages on confirmed unhealthy + on recovery. The "channelN"
+    # token in the subject keys send_alert.sh's cooldown per channel (new issue pages promptly,
+    # ongoing one re-pages <=1/hour); recovery uses a distinct prefix so it is never suppressed.
     def email(subject, body):
         try: subprocess.run([ALERT_SH, subject, body], timeout=30, capture_output=True)
         except Exception as e: log("alert send failed: %s" % e)
@@ -185,8 +197,8 @@ def main():
         email("RECOVERED channel%d - %s" % (r["ch"], r["name"]),
               "Channel %d (%s) is back to normal (%s)." % (r["ch"], r["name"], r["detail"]))
 
-    log("RUN done: %d/%d OK  confirmed_bad=%d recovered=%d" %
-        (ok, len(results), len(confirmed), len(recovered)))
+    log("RUN done: %d/%d shown-OK  confirmed_bad=%d recovered=%d" %
+        (shown_ok, len(results), len(confirmed), len(recovered)))
 
 if __name__ == "__main__":
     main()
