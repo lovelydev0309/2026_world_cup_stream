@@ -412,7 +412,7 @@
     },
     {
       "channel_name": "channel15",
-      "display_name": "Discovery Channel HD",
+      "display_name": "ESPN 3 HD",
       "enabled": true,
       "source_url": "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028342",
       "hls_url": "https://stream.tv247on.com/hls/channel15/index.m3u8",
@@ -429,12 +429,12 @@
       "use_standby": true,
       "encode_resolution": "960x540",
       "source_urls": [
-        "http://tvon247.com/2E3VBEM/QA91PXZ/1028342",
-        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028342",
-        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028342",
-        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028342",
-        "http://tvon247.com/9WZELTN/JTBML46/1028342",
-        "http://tvon247.com/9CX1RZL/GL2E7WE/1028342"
+        "http://tvon247.com/2E3VBEM/QA91PXZ/140259",
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/140259",
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/140259",
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/140259",
+        "http://tvon247.com/9WZELTN/JTBML46/140259",
+        "http://tvon247.com/9CX1RZL/GL2E7WE/140259"
       ]
     }
   ]
