@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Channel Health — live3</title>
+<style>
+  :root{ --bg:#0d1117; --card:#161b22; --line:#30363d; --tx:#e6edf3; --dim:#8b949e;
+         --ok:#2ea043; --warn:#d29922; --bad:#da3633; }
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--tx);
+    font:14px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  header{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;
+    align-items:center;gap:16px;flex-wrap:wrap}
+  h1{font-size:18px;margin:0;font-weight:600}
+  .summary{font-size:13px;color:var(--dim)}
+  .pill{padding:2px 10px;border-radius:20px;font-weight:600;font-size:12px}
+  .pill.ok{background:rgba(46,160,67,.15);color:var(--ok)}
+  .pill.bad{background:rgba(218,54,51,.15);color:var(--bad)}
+  main{padding:20px;display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+  .ch{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--dim);
+    border-radius:10px;padding:12px 14px}
+  .ch.OK{border-left-color:var(--ok)}
+  .ch.SILENT,.ch.NO_AUDIO{border-left-color:var(--warn)}
+  .ch.DOWN,.ch.NO_VIDEO,.ch.STALE,.ch.ENDED,.ch.DEGRADED{border-left-color:var(--bad)}
+  .ch .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .ch .name{font-weight:600}
+  .ch .num{color:var(--dim);font-size:12px}
+  .st{font-size:12px;font-weight:700;letter-spacing:.03em;margin:6px 0 2px}
+  .st.OK{color:var(--ok)} .st.SILENT,.st.NO_AUDIO{color:var(--warn)}
+  .st.DOWN,.st.NO_VIDEO,.st.STALE,.st.ENDED,.st.DEGRADED{color:var(--bad)}
+  .detail{color:var(--dim);font-size:12px}
+  footer{padding:14px 22px;color:var(--dim);font-size:12px;border-top:1px solid var(--line)}
+  .stale-warn{color:var(--warn)}
+</style>
+</head>
+<body>
+  <header>
+    <h1>📺 Channel Health</h1>
+    <span id="pill" class="pill">…</span>
+    <span class="summary" id="updated">loading…</span>
+  </header>
+  <main id="grid"></main>
+  <footer>
+    Synthetic viewer monitor — each channel is fetched through the CDN and its video+audio
+    decoded, exactly as a viewer receives it. Auto-refreshes every 30s.
+  </footer>
+<script>
+  const GRID = document.getElementById('grid');
+  function esc(s){ return (s||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+  async function tick(){
+    try{
+      const r = await fetch('status.json?_=' + Date.now(), {cache:'no-store'});
+      const d = await r.json();
+      const okAll = d.ok === d.total;
+      const pill = document.getElementById('pill');
+      pill.textContent = d.ok + ' / ' + d.total + ' healthy';
+      pill.className = 'pill ' + (okAll ? 'ok' : 'bad');
+      const age = Math.round((Date.now() - new Date(d.updated).getTime())/1000);
+      const stale = age > 420;
+      document.getElementById('updated').innerHTML = 'updated ' + esc(d.updated) +
+        (stale ? ' <span class="stale-warn">(monitor may be stalled — ' + age + 's ago)</span>'
+               : ' (' + age + 's ago)');
+      GRID.innerHTML = d.channels.map(c => {
+        const meanTxt = (c.mean===null||c.mean===undefined) ? '' : (Math.round(c.mean)+' dB');
+        const bits = [c.video, c.sr ? c.sr+' Hz' : '', meanTxt].filter(Boolean).join(' · ');
+        return `<div class="ch ${esc(c.status)}">
+          <div class="top"><span class="name">${esc(c.name)}</span>
+            <span class="num">ch${c.ch}</span></div>
+          <div class="st ${esc(c.status)}">${esc(c.status)}</div>
+          <div class="detail">${esc(c.detail)}</div>
+          ${bits ? '<div class="detail">'+esc(bits)+'</div>' : ''}
+        </div>`;
+      }).join('');
+    }catch(e){
+      document.getElementById('updated').innerHTML =
+        '<span class="stale-warn">status.json unavailable — monitor not yet run?</span>';
+    }
+  }
+  tick(); setInterval(tick, 30000);
+</script>
+</body>
+</html>
