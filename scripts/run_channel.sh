@@ -112,10 +112,20 @@ if [ "$SEGMENT_TYPE" = "fmp4" ]; then
     HLS_SEG=(-hls_segment_type fmp4 -hls_fmp4_init_filename init.mp4 -hls_segment_filename "$HLS_DIR/%d.m4s")
     # Re-encoding with fixed libx264 params makes init.mp4 byte-identical across restarts
     # (verified), so overwriting it each restart is harmless and old segments stay decodable.
-    HLS_FLAGS="delete_segments+append_list+independent_segments+omit_endlist"
+    # temp_file: write each segment + the playlist to a .tmp file and atomically rename it
+    # into place only once fully written. Without it, ffmpeg rewrites index.m3u8 IN PLACE, so
+    # the no-cache CDN can pull it mid-rewrite and serve an EMPTY/partial manifest (observed on
+    # channel2) → the player briefly has no segments → "plays without video" / stalls. Also
+    # stops the CDN ever serving a half-written .ts (decode errors).
+    HLS_FLAGS="delete_segments+append_list+independent_segments+omit_endlist+temp_file"
 else
     HLS_SEG=(-hls_segment_type mpegts -hls_segment_filename "$HLS_DIR/%d.ts")
-    HLS_FLAGS="delete_segments+append_list+independent_segments+omit_endlist"
+    # temp_file: write each segment + the playlist to a .tmp file and atomically rename it
+    # into place only once fully written. Without it, ffmpeg rewrites index.m3u8 IN PLACE, so
+    # the no-cache CDN can pull it mid-rewrite and serve an EMPTY/partial manifest (observed on
+    # channel2) → the player briefly has no segments → "plays without video" / stalls. Also
+    # stops the CDN ever serving a half-written .ts (decode errors).
+    HLS_FLAGS="delete_segments+append_list+independent_segments+omit_endlist+temp_file"
 fi
 GOP=$((FPS * 2))
 STALE_KILL_SECS=15   # kill ffmpeg after this many seconds of ZERO write progress.
