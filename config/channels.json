@@ -196,9 +196,9 @@
     },
     {
       "channel_name": "channel7",
-      "display_name": "ForoTV",
+      "display_name": "Azteca 7 HD",
       "enabled": true,
-      "source_url": "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1279016",
+      "source_url": "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028328",
       "hls_url": "https://stream.tv247on.com/hls/channel7/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -206,19 +206,19 @@
       "fps": 30,
       "audio_bitrate": 128,
       "logo": "/player/logos/channel7.png",
-      "_comment": "tvon247 id 1279016 via account GR4GMBC. Re-encoded 540p (fixes source DTS/1080p issues copy couldn't) + standby, like ch1-3.",
+      "_comment": "tvon247 id 1028328 = MX - AZTECA 7 HD (HEVC 720p30 source; re-encoded to H264 540p so HEVC decode cost stays on the box). REPLACED ForoTV (old id 1028328) on 2026-07-08: ForoTV's feed went dead across all 6 accounts (2-3s clip then EOF, code=0) and stayed down; client chose Azteca 7 as the replacement. Verified clean A/V (AAC 48k stereo). Re-encoded 540p + standby, like ch1-3.",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "video_mode": "encode",
       "use_standby": true,
       "encode_resolution": "960x540",
       "source_urls": [
-        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1279016",
-        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1279016",
-        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1279016",
-        "http://tvon247.com/2E3VBEM/QA91PXZ/1279016",
-        "http://tvon247.com/9CX1RZL/GL2E7WE/1279016",
-        "http://tvon247.com/9WZELTN/JTBML46/1279016"
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028328",
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028328",
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028328",
+        "http://tvon247.com/2E3VBEM/QA91PXZ/1028328",
+        "http://tvon247.com/9CX1RZL/GL2E7WE/1028328",
+        "http://tvon247.com/9WZELTN/JTBML46/1028328"
       ]
     },
     {
