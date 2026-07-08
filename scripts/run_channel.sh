@@ -128,19 +128,24 @@ else
     HLS_FLAGS="delete_segments+append_list+independent_segments+omit_endlist+temp_file"
 fi
 GOP=$((FPS * 2))
-STALE_KILL_SECS=15   # kill ffmpeg after this many seconds of ZERO write progress.
+STALE_KILL_SECS=10   # kill ffmpeg after this many seconds of ZERO write progress.
 # Root cause of the "buffer→0 on some channels" reports: the tvon247 sources are
 # 302-redirect tokenized feeds whose token expires every ~90-285s. On expiry the
 # upstream keeps the TCP socket OPEN but stops sending data (no EOF, no error), so
 # ffmpeg's -reconnect/-reconnect_at_eof never fire — the ONLY recovery is this
 # watchdog killing ffmpeg, which forces a process restart that re-resolves the 302
 # and gets a FRESH token. So the watchdog gap IS the viewer-visible gap. Was 25s
-# (→ ~30s gap, enough to drain a modest player buffer to 0). Lowered to 15s: every
-# channel is encode-mode with 4s segments, so 15s of zero byte-growth = ~4 missed
-# segments = a definitively stalled feed (ffmpeg's -reconnect recovers real network
-# hiccups within 5-8s and resumes byte-growth, resetting this counter, so 15s never
-# false-kills a live feed). 15s detect + ~5s restart ≈ 20s gap — absorbed by a
-# player buffered ≥30s behind the edge (see client player-config note).
+# (→ ~30s gap) then 15s. Lowered to 10s (2026-07-09): some feeds (notably Azteca
+# Uno / ch5, stream 1028329) have an unusually SHORT token TTL (~50-110s on EVERY
+# account, not fixable by failover), so they token-stall every ~1-2 min; each 15s
+# recovery drained the cushion faster than the player's 0.94x maintainCushion could
+# rebuild it → the classic Azteca Uno buffer→0. Every channel is encode-mode with
+# 4s segments and ffmpeg's -reconnect recovers REAL network hiccups within 5-8s
+# (resuming byte-growth, which resets this counter), so 10s keeps a 2s margin above
+# that and still never false-kills a live feed — it only shortens the unrecoverable
+# token-stall gap: 10s detect + ~5s restart ≈ 15s (was ~20s), which meaningfully
+# slows the cushion drain on short-token channels. Absorbed by a player buffered
+# ≥30s behind the edge (see client player-config note).
 # Periodic PTS reset: append_list carries the output PTS across failover restarts,
 # so on a long-lived channel it climbs without bound. hls.js remuxes TS→MP4 with a
 # 32-bit baseMediaDecodeTime; at 90kHz that overflows at 2^32/90000 ≈ 47,700s ≈
