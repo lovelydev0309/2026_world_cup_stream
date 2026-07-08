@@ -41,9 +41,9 @@
       "_comment_failover": "Backups are the same World Cup match on DAZN MUNDIAL FHD/HD2 \u2014 a dropped primary fails over instantly instead of going to a standby gap.",
       "source_urls": [
         "http://tvon247.com/9WZELTN/JTBML46/1027109",
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1027109",
         "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1027109",
         "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1027109",
-        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1027109",
         "http://tvon247.com/2E3VBEM/QA91PXZ/1027109",
         "http://tvon247.com/9CX1RZL/GL2E7WE/1027109",
         "http://tvon247.com/9WZELTN/JTBML46/309042",
@@ -56,7 +56,7 @@
       "channel_name": "channel2",
       "display_name": "MX \u2013 Canal 5 HD",
       "enabled": true,
-      "source_url": "http://tvon247.com/9WZELTN/JTBML46/1349033",
+      "source_url": "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1349033",
       "hls_url": "https://stream.tv247on.com/hls/channel2/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -71,12 +71,12 @@
       "video_mode": "encode",
       "encode_resolution": "960x540",
       "source_urls": [
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1349033",
         "http://tvon247.com/9WZELTN/JTBML46/1349033",
         "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1349033",
-        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1349033",
-        "http://tvon247.com/2E3VBEM/QA91PXZ/1349033",
-        "http://tvon247.com/9CX1RZL/GL2E7WE/1349033",
         "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1349033",
+        "http://tvon247.com/9CX1RZL/GL2E7WE/1349033",
+        "http://tvon247.com/2E3VBEM/QA91PXZ/1349033",
         "http://tvon247.com/9WZELTN/JTBML46/273253"
       ],
       "logo": "/player/logos/channel2.png",
@@ -86,7 +86,7 @@
       "channel_name": "channel3",
       "display_name": "ESPN HD",
       "enabled": true,
-      "source_url": "http://tvon247.com/9WZELTN/JTBML46/1028359",
+      "source_url": "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028359",
       "hls_url": "https://stream.tv247on.com/hls/channel3/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -102,13 +102,13 @@
       "encode_resolution": "960x540",
       "source_urls": [
         "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028359",
-        "http://tvon247.com/9WZELTN/JTBML46/1028359",
-        "http://tvon247.com/9WZELTN/JTBML46/325567",
-        "http://tvon247.com/9WZELTN/JTBML46/71936",
         "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028359",
+        "http://tvon247.com/9WZELTN/JTBML46/1028359",
         "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028359",
         "http://tvon247.com/2E3VBEM/QA91PXZ/1028359",
-        "http://tvon247.com/9CX1RZL/GL2E7WE/1028359"
+        "http://tvon247.com/9CX1RZL/GL2E7WE/1028359",
+        "http://tvon247.com/9WZELTN/JTBML46/325567",
+        "http://tvon247.com/9WZELTN/JTBML46/71936"
       ],
       "logo": "/player/logos/channel3.png",
       "use_standby": true
@@ -117,7 +117,7 @@
       "channel_name": "channel4",
       "display_name": "Las Estrellas HD",
       "enabled": true,
-      "source_url": "http://tvon247.com/9WZELTN/JTBML46/1028334",
+      "source_url": "http://tvon247.com/2E3VBEM/QA91PXZ/1028334",
       "hls_url": "https://stream.tv247on.com/hls/channel4/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -133,18 +133,18 @@
       "encode_resolution": "960x540",
       "source_urls": [
         "http://tvon247.com/2E3VBEM/QA91PXZ/1028334",
-        "http://tvon247.com/9CX1RZL/GL2E7WE/1028334",
-        "http://tvon247.com/9WZELTN/JTBML46/1028334",
         "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028334",
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028334",
+        "http://tvon247.com/9WZELTN/JTBML46/1028334",
         "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028334",
-        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028334"
+        "http://tvon247.com/9CX1RZL/GL2E7WE/1028334"
       ]
     },
     {
       "channel_name": "channel5",
       "display_name": "Azteca Uno HD",
       "enabled": true,
-      "source_url": "http://tvon247.com/9WZELTN/JTBML46/1028329",
+      "source_url": "http://tvon247.com/2E3VBEM/QA91PXZ/1028329",
       "hls_url": "https://stream.tv247on.com/hls/channel5/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -162,9 +162,9 @@
         "http://tvon247.com/2E3VBEM/QA91PXZ/1028329",
         "http://tvon247.com/9CX1RZL/GL2E7WE/1028329",
         "http://tvon247.com/9WZELTN/JTBML46/1028329",
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028329",
         "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028329",
-        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028329",
-        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028329"
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028329"
       ]
     },
     {
@@ -187,11 +187,11 @@
       "encode_resolution": "960x540",
       "source_urls": [
         "http://tvon247.com/9WZELTN/JTBML46/1028364",
-        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028364",
-        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028364",
-        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028364",
         "http://tvon247.com/2E3VBEM/QA91PXZ/1028364",
-        "http://tvon247.com/9CX1RZL/GL2E7WE/1028364"
+        "http://tvon247.com/9CX1RZL/GL2E7WE/1028364",
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028364",
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028364",
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028364"
       ]
     },
     {
@@ -214,18 +214,18 @@
       "encode_resolution": "960x540",
       "source_urls": [
         "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028328",
-        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028328",
-        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028328",
+        "http://tvon247.com/9WZELTN/JTBML46/1028328",
         "http://tvon247.com/2E3VBEM/QA91PXZ/1028328",
         "http://tvon247.com/9CX1RZL/GL2E7WE/1028328",
-        "http://tvon247.com/9WZELTN/JTBML46/1028328"
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028328",
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028328"
       ]
     },
     {
       "channel_name": "channel8",
       "display_name": "Fox Sports 1 HD",
       "enabled": true,
-      "source_url": "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/140278",
+      "source_url": "http://tvon247.com/9CX1RZL/GL2E7WE/140278",
       "hls_url": "https://stream.tv247on.com/hls/channel8/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -241,11 +241,11 @@
       "encode_resolution": "960x540",
       "source_urls": [
         "http://tvon247.com/9CX1RZL/GL2E7WE/140278",
-        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/140278",
         "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/140278",
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/140278",
         "http://tvon247.com/2E3VBEM/QA91PXZ/140278",
         "http://tvon247.com/9WZELTN/JTBML46/140278",
-        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/140278"
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/140278"
       ]
     },
     {
@@ -268,11 +268,11 @@
       "encode_resolution": "960x540",
       "source_urls": [
         "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028360",
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028360",
         "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028360",
-        "http://tvon247.com/2E3VBEM/QA91PXZ/1028360",
-        "http://tvon247.com/9CX1RZL/GL2E7WE/1028360",
         "http://tvon247.com/9WZELTN/JTBML46/1028360",
-        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028360"
+        "http://tvon247.com/9CX1RZL/GL2E7WE/1028360",
+        "http://tvon247.com/2E3VBEM/QA91PXZ/1028360"
       ]
     },
     {
@@ -306,7 +306,7 @@
       "channel_name": "channel11",
       "display_name": "Cartoon Network HD",
       "enabled": true,
-      "source_url": "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028338",
+      "source_url": "http://tvon247.com/9CX1RZL/GL2E7WE/1028338",
       "hls_url": "https://stream.tv247on.com/hls/channel11/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -322,11 +322,11 @@
       "encode_resolution": "960x540",
       "source_urls": [
         "http://tvon247.com/9CX1RZL/GL2E7WE/1028338",
-        "http://tvon247.com/9WZELTN/JTBML46/1028338",
-        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028338",
         "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028338",
+        "http://tvon247.com/2E3VBEM/QA91PXZ/1028338",
         "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028338",
-        "http://tvon247.com/2E3VBEM/QA91PXZ/1028338"
+        "http://tvon247.com/9WZELTN/JTBML46/1028338",
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028338"
       ]
     },
     {
@@ -349,11 +349,11 @@
       "encode_resolution": "960x540",
       "source_urls": [
         "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/140344",
-        "http://tvon247.com/9WZELTN/JTBML46/140344",
-        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/140344",
+        "http://tvon247.com/9CX1RZL/GL2E7WE/140344",
         "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/140344",
         "http://tvon247.com/2E3VBEM/QA91PXZ/140344",
-        "http://tvon247.com/9CX1RZL/GL2E7WE/140344"
+        "http://tvon247.com/9WZELTN/JTBML46/140344",
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/140344"
       ]
     },
     {
@@ -376,11 +376,11 @@
       "encode_resolution": "960x540",
       "source_urls": [
         "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028326",
+        "http://tvon247.com/9WZELTN/JTBML46/1028326",
         "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028326",
         "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028326",
         "http://tvon247.com/2E3VBEM/QA91PXZ/1028326",
-        "http://tvon247.com/9CX1RZL/GL2E7WE/1028326",
-        "http://tvon247.com/9WZELTN/JTBML46/1028326"
+        "http://tvon247.com/9CX1RZL/GL2E7WE/1028326"
       ]
     },
     {
@@ -403,11 +403,11 @@
       "encode_resolution": "960x540",
       "source_urls": [
         "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/140329",
-        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/140329",
-        "http://tvon247.com/2E3VBEM/QA91PXZ/140329",
-        "http://tvon247.com/9CX1RZL/GL2E7WE/140329",
         "http://tvon247.com/9WZELTN/JTBML46/140329",
-        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/140329"
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/140329",
+        "http://tvon247.com/9CX1RZL/GL2E7WE/140329",
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/140329",
+        "http://tvon247.com/2E3VBEM/QA91PXZ/140329"
       ]
     },
     {
@@ -430,8 +430,8 @@
       "encode_resolution": "960x540",
       "source_urls": [
         "http://tvon247.com/9WZELTN/JTBML46/140259",
-        "http://tvon247.com/2E3VBEM/QA91PXZ/140259",
         "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/140259",
+        "http://tvon247.com/2E3VBEM/QA91PXZ/140259",
         "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/140259",
         "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/140259",
         "http://tvon247.com/9CX1RZL/GL2E7WE/140259"
