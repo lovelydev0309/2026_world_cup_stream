@@ -59,7 +59,7 @@ pkill -9 -f "hls/${CHANNEL}/[0-9%]" 2>/dev/null || true
 
 # ── Read config ───────────────────────────────────────────────
 # Scalar fields (standby/bitrate/fps/force_silent_audio) on one line …
-read -r STANDBY_REL BITRATE AUDIO_BR FPS FORCE_SILENT_AUDIO AUDIO_SYNC VIDEO_MODE ENC_RES USE_STANDBY SEGMENT_TYPE < <(python3 -c "
+read -r STANDBY_REL BITRATE AUDIO_BR FPS FORCE_SILENT_AUDIO AUDIO_SYNC VIDEO_MODE ENC_RES USE_STANDBY SEGMENT_TYPE TOKEN_REFRESH_SECS < <(python3 -c "
 import json, sys
 cfg = json.load(open('$CONFIG'))
 chs = [c for c in cfg['channels'] if c['channel_name'] == '$CHANNEL']
@@ -72,7 +72,16 @@ print(c.get('standby_file','standby/standby.mp4'),
       c.get('video_mode','encode'),
       c.get('encode_resolution','960x540'),
       'true' if c.get('use_standby', True) else 'false',
-      c.get('segment_type','mpegts'))")
+      c.get('segment_type','mpegts'),
+      c.get('token_refresh_secs', 85))")
+# Proactive token refresh: tvon247's 302 token silently expires (socket goes quiet, no EOF),
+# and ffmpeg's -reconnect can't recover it — only a process RESTART re-resolves the 302 for a
+# FRESH token. Reactively that costs a ~15s watchdog gap; PROACTIVELY capping each ffmpeg run
+# just under the token's lifetime makes it exit and reconnect CLEANLY (~5s, no silent-socket
+# wait) BEFORE the token dies. 85s default sits at the cushion break-even (a ~5s gap every 85s
+# is fully rebuilt by the player's 0.94x maintainCushion) yet preempts the common 90-285s
+# tokens; short-token feeds (Azteca Uno) override it lower in channels.json. 0 disables it.
+[ -z "$TOKEN_REFRESH_SECS" ] && TOKEN_REFRESH_SECS=85
 # Output resolution for re-encode mode (WxH). Default 960x540. Per-channel so the
 # marquee feeds can run 720p while the heavy 60fps one stays 540p for CPU.
 ENC_W=${ENC_RES%x*}; ENC_H=${ENC_RES#*x}
@@ -384,6 +393,15 @@ push_live() {
         [ "$SESSION_T" -lt 60 ] && SESSION_T=60          # floor; never a 0/negative -t
     fi
 
+    # Cap this ffmpeg run at the SOONER of the session boundary and the proactive token-refresh
+    # interval, so a fresh 302 token is pulled BEFORE the current one silently dies. FFMPEG_CAP
+    # is a GLOBAL (no `local`) read by the main loop to tell a PLANNED exit (token refresh or 6h
+    # reset — reconnect on the SAME url) apart from a real fast-failure (which fails over).
+    FFMPEG_CAP=$SESSION_T
+    if [ "${TOKEN_REFRESH_SECS:-0}" -gt 0 ] && [ "$TOKEN_REFRESH_SECS" -lt "$FFMPEG_CAP" ]; then
+        FFMPEG_CAP=$TOKEN_REFRESH_SECS
+    fi
+
     # Pick the audio path. Source audio is used when valid (channel1/3); when the
     # source delivers a broken 0-channel stream (channel2's feed does this and it
     # both breaks browser audio AND makes -re race at ~22x), discard it and feed
@@ -471,7 +489,7 @@ push_live() {
         -c:a aac -b:a "${AUDIO_BR}k" -ar 48000 -ac 2 \
         "${aud_tail[@]}" \
         -avoid_negative_ts make_zero -muxpreload 0 -muxdelay 0 \
-        -t "$SESSION_T" \
+        -t "$FFMPEG_CAP" \
         -flush_packets 1 \
         -f hls -hls_time 4 -hls_list_size 40 \
         -hls_flags "${HLS_FLAGS}${PTS_RESET_FLAGS}" \
@@ -576,7 +594,15 @@ while true; do
         push_live
         EXIT=$?
         T_RUN=$(( $(date +%s) - T_START ))
-        if [[ $T_RUN -ge $HEALTHY_RUN_SECS ]]; then
+        if [[ ${FFMPEG_CAP:-0} -gt 0 && $T_RUN -ge $((FFMPEG_CAP - 3)) ]]; then
+            # PLANNED exit: ffmpeg reached its -t cap (proactive token refresh, or the 6h
+            # session reset). Reconnect to the SAME url for a FRESH token — this is by design,
+            # NOT a failure, so it never counts toward failover even when the refresh interval
+            # is below HEALTHY_RUN_SECS. This is the whole point: pull a new token cleanly
+            # (~5s gap) BEFORE the old one silently dies (which would cost a ~15s watchdog gap).
+            LIVE_FAIL=0
+            log "Live exited (code=$EXIT) ran=${T_RUN}s on source[$URL_IDX] – planned token refresh, reconnecting"
+        elif [[ $T_RUN -ge $HEALTHY_RUN_SECS ]]; then
             # Healthy stream hit a transient drop – reconnect to the SAME working
             # URL immediately, no penalty and no failover.
             LIVE_FAIL=0

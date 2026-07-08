@@ -165,7 +165,9 @@
         "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028329",
         "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028329",
         "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028329"
-      ]
+      ],
+      "token_refresh_secs": 35,
+      "_comment_token": "Azteca Uno feed (1028329) has an unusually short 302-token TTL (~30-110s) on ALL accounts and no alternate stream ID exists; refresh proactively at 45s to preempt the silent-socket stall (buffer->0 cause). Other channels use the 85s script default."
     },
     {
       "channel_name": "channel6",
