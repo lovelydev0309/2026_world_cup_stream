@@ -524,6 +524,27 @@ LAST_MODE=""          # "live"|"standby" — for fmp4, wipe on live↔standby tr
                       # (their init.mp4 differ; a fixed-name init would mismatch)
 
 while true; do
+    # ── Drift self-correction at the 6h PTS-reset boundary ──────────────────
+    # The "healthy, reconnecting on SAME URL" path below means a channel that
+    # failed over to a backup account and then ran fine STAYS on that backup
+    # indefinitely — it never returns to its primary. Over long uptimes the live
+    # account distribution therefore DRIFTS off the balanced primaries (some
+    # accounts saturate, others idle). The seamless 6h PTS reset (in push_live)
+    # ALREADY re-execs ffmpeg at this boundary with a #EXT-X-DISCONTINUITY, so
+    # returning to the primary here costs NO extra reconnect — we just point the
+    # already-happening restart back at source[0]. Guards: only when steady
+    # (LIVE_FAIL==0, so we don't abort an in-progress failover cascade — a
+    # standby cycle already resets to primary), only when actually drifted
+    # (URL_IDX!=0), mpegts only. If the primary is down at that instant the
+    # normal cascade re-selects a working source, absorbed by the player buffer.
+    if [ "$SEGMENT_TYPE" != "fmp4" ] && [ "$LIVE_FAIL" -eq 0 ] && [ "$URL_IDX" -ne 0 ] && [ "$NUM_URLS" -gt 1 ]; then
+        _drift_now=$(date +%s)
+        _drift_start=$(cat "$SESSION_FILE" 2>/dev/null || echo "$_drift_now")
+        if [ $(( _drift_now - _drift_start )) -ge "$MAX_SESSION_SECS" ]; then
+            log "  DRIFT-RESET: 6h boundary – returning source[$URL_IDX] → primary source[0] (rides the seamless PTS reset; no extra reconnect)"
+            URL_IDX=0
+        fi
+    fi
     SOURCE_URL="${SOURCE_URLS[$URL_IDX]:-}"
     if [[ -n "$SOURCE_URL" ]] && [[ $LIVE_FAIL -lt $MAX_FAILS ]]; then
         # fmp4 standby→live transition: standby's init.mp4 differs from the live
