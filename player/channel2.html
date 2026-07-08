@@ -152,6 +152,7 @@
   const CHANNEL     = "MX - Canal 5 HD";
   const RETRY_DELAY = 5000;   // ms between reconnect attempts
   const MAX_RETRIES = 999;    // effectively infinite
+  const LIVE_SYNC   = 60;     // seconds behind live edge — the forward-cushion target
 
   // ── DOM refs ─────────────────────────────────────────────
   const video    = document.getElementById("video");
@@ -162,6 +163,10 @@
   const logBox   = document.getElementById("log");
 
   let hls, retries = 0, statsTimer, levelTimer;
+  // Recovery timers live at module scope so init()'s teardown can cancel any that
+  // a prior (destroyed) instance left pending — otherwise a stale timer fires
+  // stopLoad/reseek against the fresh player mid-startup and disrupts its rebuild.
+  let _recoverTimer = null, _stallTimer = null, _badgeTimer = null, _recoverCount = 0;
 
   // ── Log ──────────────────────────────────────────────────
   function log(msg, type = "") {
@@ -236,6 +241,10 @@
     if (window.__playbackWatchdog) clearInterval(window.__playbackWatchdog);
     if (window.__playRetry) { clearTimeout(window.__playRetry); window.__playRetry = null; }
     if (window.__resumeTimer) { clearTimeout(window.__resumeTimer); window.__resumeTimer = null; }
+    if (_recoverTimer) { clearTimeout(_recoverTimer); _recoverTimer = null; }
+    if (_stallTimer)   { clearTimeout(_stallTimer);   _stallTimer   = null; }
+    if (_badgeTimer)   { clearTimeout(_badgeTimer);   _badgeTimer   = null; }
+    video.playbackRate = 1;   // never inherit a cushion-rebuild slow-down across reinit
 
     if (!Hls.isSupported()) {
       // Fallback for Safari native HLS
@@ -255,17 +264,20 @@
 
     hls = new Hls({
       lowLatencyMode: false,
-      // Sit ~45s behind the live edge — a DEEP cushion so the buffer doesn't
-      // drain to 0 when the source hiccups. The IPTV feeds intermittently
-      // restart (the in-encoder watchdog kills a stalled pull after 45s, then
-      // reconnects), which leaves a gap of up to ~45-50s; a 30s buffer emptied
-      // during those, stopping the picture. 45s rides almost all of them.
-      // (Trade-off: ~45s latency. The auto-replay below covers the rare gap that
-      // still outlasts the buffer. Dial toward 30 if you want lower latency.)
-      liveSyncDuration: 45,
-      // Only force a snap-to-live on GENUINE excess drift (>90s behind), well
-      // past the 45s resting point, so normal operation is never yanked.
-      liveMaxLatencyDuration: 90,
+      // Sit LIVE_SYNC (~60s) behind the live edge — a DEEP cushion so the buffer
+      // does not drain to 0 when the source hiccups. The IPTV feeds intermittently
+      // restart (a stalled pull is killed + reconnected), leaving a gap of up to
+      // ~45-50s; a shallow buffer empties during those and stops the picture.
+      // CRUCIAL: the cushion is only a one-shot budget unless it is rebuilt — each
+      // gap spends it and plain 1x playback never refills it (the "buffer goes to
+      // 0 after long play" ratchet). maintainCushion() below refills it at 0.94x.
+      // (Trade-off: ~60s latency. Dial LIVE_SYNC toward 45 for less; do not go
+      // below ~30 given the ~20s+ gaps.)
+      liveSyncDuration: LIVE_SYNC,   // raised 45->60; kept full by maintainCushion() (see watchdog)
+      // Only force a snap-to-live on GENUINE excess drift (>120s behind), well
+      // past the ~60s resting point, so normal operation is never yanked. Raised
+      // with LIVE_SYNC so the resting latency stays far below the snap threshold.
+      liveMaxLatencyDuration: 120,   // raised 90->120 to stay ~2x LIVE_SYNC (below the 160s server window)
       liveDurationInfinity: true,
       // CRITICAL for 24/7: cap the BACK buffer. hls.js otherwise keeps growing
       // the MediaSource with already-played content; over a multi-hour session
@@ -296,6 +308,11 @@
 
     hls.loadSource(STREAM_URL);
     hls.attachMedia(video);
+    // Keep audio pitch natural while the cushion-rebuild (see watchdog) plays at
+    // 0.94x. Default true, but set explicitly for cross-browser safety.
+    video.preservesPitch = true;
+    if ("mozPreservesPitch" in video) video.mozPreservesPitch = true;
+    if ("webkitPreservesPitch" in video) video.webkitPreservesPitch = true;
 
     // ── Auto-replay: resume on empty buffer / block, no manual click ─────
     // Seconds of contiguous buffered video ahead of the playhead (0 = stranded).
@@ -305,6 +322,29 @@
         if (t >= b.start(i) - 0.3 && t <= b.end(i)) return b.end(i) - t;
       }
       return 0;
+    }
+
+    // ── Cushion rebuild — the cure for the latency ratchet ────────────────────
+    // Every source-restart gap freezes the live edge while the playhead keeps
+    // moving at 1x, so the forward cushion (playhead→edge distance, target
+    // LIVE_SYNC) is spent by each gap and, in plain 1x playback, is NEVER rebuilt
+    // — it ratchets down over hours until an ordinary gap drains it to 0 and the
+    // picture stops (the "buffer goes to 0 after long play" report). Fix: when
+    // healthy but the cushion has eroded (latency well under LIVE_SYNC), play ~6%
+    // slow so the live edge pulls ahead and the cushion refills; restore 1x once
+    // it is back near LIVE_SYNC. Pitch is preserved, so on a stream already ~60s
+    // behind live this is imperceptible. Hysteresis prevents oscillation.
+    function maintainCushion() {
+      if (!hls || video.paused || video.seeking) return;
+      if (_stallTimer || _recoverTimer) return;      // not while recovering
+      if (fwdBuffer() <= 1) return;                  // need real buffer to spend
+      const lat = hls.latency;
+      if (lat == null || !isFinite(lat)) return;
+      if (lat < LIVE_SYNC - 10) {
+        if (video.playbackRate !== 0.94) video.playbackRate = 0.94;
+      } else if (lat >= LIVE_SYNC - 3) {
+        if (video.playbackRate !== 1) video.playbackRate = 1;
+      }
     }
     // Resume and KEEP trying until playback starts — the in-page auto-replay.
     // A 700ms time gate collapses concurrent resume requests into a single
@@ -324,6 +364,7 @@
       if (!window.__userAudioChoice) video.muted = true;
       if (hls && isFinite(hls.liveSyncPosition) && fwdBuffer() < 1) {
         try { video.currentTime = hls.liveSyncPosition; } catch (e) {}
+        video.playbackRate = 1;   // reseeking to the edge → drop any slow-down
       }
       video.play().then(() => {
         overlay.classList.add("hidden");
@@ -381,10 +422,7 @@
       if (video.paused) startPlayback();
     });
 
-    let _recoverTimer = null;
-    let _stallTimer   = null;
-    let _recoverCount = 0;
-    let _badgeTimer   = null;
+    _recoverCount = 0;   // reset for this instance (timers are module-scoped now)
     const REINIT_AFTER = 6;
 
     // ── Badge debounce ────────────────────────────────────────────────────
@@ -538,7 +576,7 @@
       // Sustained excessive latency (genuine drift, not a one-off spike) → snap
       // back to live. Require several consecutive readings so a transient never
       // triggers it. (Backstop to hls.js's own liveMaxLatencyDuration resync.)
-      if (hls.latency > 90 && hls.liveSyncPosition != null) {
+      if (hls.latency > 120 && hls.liveSyncPosition != null) {   // was 90; tracks liveMaxLatencyDuration
         if (++_latHits >= 3) {                          // ~6s sustained
           _latHits = 0;
           log(`Latency ${hls.latency.toFixed(0)}s – snapping to live`, "warn");
@@ -547,6 +585,7 @@
           _wdLast = video.currentTime; _wdStuck = 0; return;
         }
       } else { _latHits = 0; }
+      maintainCushion();          // rebuild the forward cushion during healthy play
       if (video.currentTime > _wdLast + 0.1) {          // advancing → healthy
         _wdLast = video.currentTime; _wdStuck = 0; return;
       }
