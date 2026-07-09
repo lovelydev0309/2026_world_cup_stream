@@ -11,8 +11,11 @@ source "$CFG"
 [ -n "${SMTP_USER:-}" ] && [ -n "${SMTP_PASS:-}" ] && [ -n "${ALERT_TO:-}" ] || exit 0
 
 subject="${1:-Stream alert}"; body="${2:-}"; status="${3:-error}"
-# status icon shown in the email content: green check = no error, red X = error
-if [ "$status" = "ok" ]; then emoji="🟢✔"; else emoji="🔴❌"; fi
+# status icon shown in the email content: recovery shows the red->green transition,
+# green check = no error, red X = error
+if printf '%s' "$subject" | grep -qi '^RECOVERED'; then emoji="🔴->🟢"
+elif [ "$status" = "ok" ]; then emoji="🟢✔"
+else emoji="🔴❌"; fi
 COOLDOWN=${ALERT_COOLDOWN:-900}      # min seconds between identical-subject alerts
 HOST=${SMTP_HOST:-smtp.gmail.com}; PORT=${SMTP_PORT:-465}
 
