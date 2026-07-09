@@ -340,11 +340,17 @@
       if (fwdBuffer() <= 1) return;                  // need real buffer to spend
       const lat = hls.latency;
       if (lat == null || !isFinite(lat)) return;
-      if (lat < LIVE_SYNC - 10) {
-        if (video.playbackRate !== 0.94) video.playbackRate = 0.94;
-      } else if (lat >= LIVE_SYNC - 3) {
-        if (video.playbackRate !== 1) video.playbackRate = 1;
-      }
+      // A/V-DESYNC TEST (ch14/Space only, 2026-07-09): the 0.94x pitch-preserved
+      // cushion rebuild is DISABLED here. Space's "audio drifts out of sync, a
+      // refresh fixes it for ~3min" is player-side (the delivered stream is
+      // confirmed A/V-aligned: +12ms start, +28ms after 90s), and the audio
+      // time-stretch DSP that pitch preservation runs at 0.94x is the leading
+      // suspect for that drift. Holding a single 1x clock keeps audio+video locked
+      // together. The proactive token refresh now keeps Space's gaps small, so the
+      // buffer->0 ratchet this guarded against is much reduced. If this fixes the
+      // desync, roll out (and revisit whether cushion-rebuild needs a drift-safe
+      // form); if not, revert this one file and investigate hls.js audio sync.
+      if (video.playbackRate !== 1) video.playbackRate = 1;
     }
     // Resume and KEEP trying until playback starts — the in-page auto-replay.
     // A 700ms time gate collapses concurrent resume requests into a single
