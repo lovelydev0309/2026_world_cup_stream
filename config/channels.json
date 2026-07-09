@@ -389,7 +389,7 @@
       "channel_name": "channel14",
       "display_name": "Space HD",
       "enabled": true,
-      "source_url": "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/140329",
+      "source_url": "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/30619",
       "hls_url": "https://stream.tv247on.com/hls/channel14/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -397,19 +397,19 @@
       "fps": 30,
       "audio_bitrate": 128,
       "logo": "/player/logos/channel14.png",
-      "_comment": "tvon247 id 140329 via account FQXTMAJ. Re-encoded 540p (fixes source DTS/1080p issues copy couldn't) + standby, like ch1-3.",
+      "_comment": "tvon247 id 30619 (Space LATINO alt) via account FQXTMAJ. Swapped from 140329 which went CORRUPT provider-side 2026-07-09 (Invalid data on all accts). 30619 healthy on all 6 accts, 720p re-encoded 540p + standby.",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "video_mode": "encode",
       "use_standby": true,
       "encode_resolution": "960x540",
       "source_urls": [
-        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/140329",
-        "http://tvon247.com/9WZELTN/JTBML46/140329",
-        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/140329",
-        "http://tvon247.com/9CX1RZL/GL2E7WE/140329",
-        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/140329",
-        "http://tvon247.com/2E3VBEM/QA91PXZ/140329"
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/30619",
+        "http://tvon247.com/9WZELTN/JTBML46/30619",
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/30619",
+        "http://tvon247.com/9CX1RZL/GL2E7WE/30619",
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/30619",
+        "http://tvon247.com/2E3VBEM/QA91PXZ/30619"
       ]
     },
     {
