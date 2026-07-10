@@ -235,7 +235,7 @@
       "fps": 30,
       "audio_bitrate": 128,
       "logo": "/player/logos/channel8.png",
-      "_comment": "tvon247 id 140278 via account GR4GMBC. Re-encoded 540p (fixes source DTS/1080p issues copy couldn't) + standby, like ch1-3.",
+      "_comment": "tvon247 id 140278 via account GR4GMBC. Re-encoded 540p (fixes source DTS/1080p issues copy couldn't) + standby, like ch1-3. | LATINO backup id 30580 appended as failover (MX 140278 flaps/MX-outage 2026-07-10).",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "video_mode": "encode",
@@ -247,7 +247,13 @@
         "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/140278",
         "http://tvon247.com/2E3VBEM/QA91PXZ/140278",
         "http://tvon247.com/9WZELTN/JTBML46/140278",
-        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/140278"
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/140278",
+        "http://tvon247.com/9CX1RZL/GL2E7WE/30580",
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/30580",
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/30580",
+        "http://tvon247.com/2E3VBEM/QA91PXZ/30580",
+        "http://tvon247.com/9WZELTN/JTBML46/30580",
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/30580"
       ]
     },
     {
@@ -343,7 +349,7 @@
       "fps": 30,
       "audio_bitrate": 128,
       "logo": "/player/logos/channel12.png",
-      "_comment": "tvon247 id 140344 via account FQXTMAJ. Re-encoded 540p (fixes source DTS/1080p issues copy couldn't) + standby, like ch1-3.",
+      "_comment": "tvon247 id 140344 via account FQXTMAJ. Re-encoded 540p (fixes source DTS/1080p issues copy couldn't) + standby, like ch1-3. | LATINO backup id 30668 appended as failover (MX 140344 flaps/MX-outage 2026-07-10).",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "video_mode": "encode",
@@ -355,7 +361,13 @@
         "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/140344",
         "http://tvon247.com/2E3VBEM/QA91PXZ/140344",
         "http://tvon247.com/9WZELTN/JTBML46/140344",
-        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/140344"
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/140344",
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/30668",
+        "http://tvon247.com/9CX1RZL/GL2E7WE/30668",
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/30668",
+        "http://tvon247.com/2E3VBEM/QA91PXZ/30668",
+        "http://tvon247.com/9WZELTN/JTBML46/30668",
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/30668"
       ]
     },
     {
@@ -424,7 +436,7 @@
       "fps": 30,
       "audio_bitrate": 128,
       "logo": "/player/logos/channel15.png",
-      "_comment": "tvon247 id 140259 (ESPN 3) via account 9WZELTN (primary moved from 2E3VBEM on 2026-07-08 to free a 2E3VBEM connection slot; also corrected a stale 1028342/Discovery source_url leftover from the swap). Re-encoded 540p + standby, like ch1-3.",
+      "_comment": "tvon247 id 140259 (ESPN 3) via account 9WZELTN (primary moved from 2E3VBEM on 2026-07-08 to free a 2E3VBEM connection slot; also corrected a stale 1028342/Discovery source_url leftover from the swap). Re-encoded 540p + standby, like ch1-3. | LATINO backup id 30581 appended as failover (MX 140259 flaps/MX-outage 2026-07-10).",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "video_mode": "encode",
@@ -436,7 +448,13 @@
         "http://tvon247.com/2E3VBEM/QA91PXZ/140259",
         "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/140259",
         "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/140259",
-        "http://tvon247.com/9CX1RZL/GL2E7WE/140259"
+        "http://tvon247.com/9CX1RZL/GL2E7WE/140259",
+        "http://tvon247.com/9WZELTN/JTBML46/30581",
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/30581",
+        "http://tvon247.com/2E3VBEM/QA91PXZ/30581",
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/30581",
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/30581",
+        "http://tvon247.com/9CX1RZL/GL2E7WE/30581"
       ]
     }
   ]
