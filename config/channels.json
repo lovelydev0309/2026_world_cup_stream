@@ -56,7 +56,7 @@
       "channel_name": "channel2",
       "display_name": "MX \u2013 Canal 5 HD",
       "enabled": true,
-      "source_url": "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1349033",
+      "source_url": "http://tvon247.com/9WZELTN/JTBML46/1028333",
       "hls_url": "https://stream.tv247on.com/hls/channel2/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -71,16 +71,22 @@
       "video_mode": "encode",
       "encode_resolution": "960x540",
       "source_urls": [
-        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1349033",
-        "http://tvon247.com/9WZELTN/JTBML46/1349033",
-        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1349033",
-        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1349033",
-        "http://tvon247.com/9CX1RZL/GL2E7WE/1349033",
-        "http://tvon247.com/2E3VBEM/QA91PXZ/1349033",
-        "http://tvon247.com/9WZELTN/JTBML46/273253"
+        "http://tvon247.com/9WZELTN/JTBML46/1028333",
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1028333",
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1028333",
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1028333",
+        "http://tvon247.com/2E3VBEM/QA91PXZ/1028333",
+        "http://tvon247.com/9CX1RZL/GL2E7WE/1028333",
+        "http://tvon247.com/9WZELTN/JTBML46/30634",
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/30634",
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/30634",
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/30634",
+        "http://tvon247.com/2E3VBEM/QA91PXZ/30634",
+        "http://tvon247.com/9CX1RZL/GL2E7WE/30634"
       ],
       "logo": "/player/logos/channel2.png",
-      "use_standby": true
+      "use_standby": true,
+      "_comment": "MX Canal 5 HD id 1028333 (HEVC, re-encoded 540p) primary + LATINO 30634 (H264 1080p) backup. Swapped 2026-07-12: old 1349033 (ES-VIX, mislabeled/dead) + 273253 (UY, dead) both went dead across all accounts."
     },
     {
       "channel_name": "channel3",
