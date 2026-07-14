@@ -340,17 +340,19 @@
       if (fwdBuffer() <= 1) return;                  // need real buffer to spend
       const lat = hls.latency;
       if (lat == null || !isFinite(lat)) return;
-      // A/V-DESYNC TEST (ch14/Space only, 2026-07-09): the 0.94x pitch-preserved
-      // cushion rebuild is DISABLED here. Space's "audio drifts out of sync, a
-      // refresh fixes it for ~3min" is player-side (the delivered stream is
-      // confirmed A/V-aligned: +12ms start, +28ms after 90s), and the audio
-      // time-stretch DSP that pitch preservation runs at 0.94x is the leading
-      // suspect for that drift. Holding a single 1x clock keeps audio+video locked
-      // together. The proactive token refresh now keeps Space's gaps small, so the
-      // buffer->0 ratchet this guarded against is much reduced. If this fixes the
-      // desync, roll out (and revisit whether cushion-rebuild needs a drift-safe
-      // form); if not, revert this one file and investigate hls.js audio sync.
-      if (video.playbackRate !== 1) video.playbackRate = 1;
+      // Rebuild the forward cushion during healthy play: run 0.94x (pitch-preserved)
+      // when we've drifted well ahead of LIVE_SYNC, back to 1x near the target.
+      // RE-ENABLED 2026-07-14: the A/V-desync test that held this at a flat 1x left
+      // ch14 the ONLY channel without cushion-rebuild, so its frequent token-refresh
+      // reconnects + watchdog stalls ratcheted the buffer to 0 -> the ~35min Space
+      // rebuffer a viewer reported (04:59-05:35 UTC 2026-07-13). Restored to match
+      // the working ch7/ch15 form. If A/V-desync resurfaces, fix it with a
+      // seek-based (not playbackRate) cushion rebuild, not by disabling this.
+      if (lat < LIVE_SYNC - 10) {
+        if (video.playbackRate !== 0.94) video.playbackRate = 0.94;
+      } else if (lat >= LIVE_SYNC - 3) {
+        if (video.playbackRate !== 1) video.playbackRate = 1;
+      }
     }
     // Resume and KEEP trying until playback starts — the in-page auto-replay.
     // A 700ms time gate collapses concurrent resume requests into a single
