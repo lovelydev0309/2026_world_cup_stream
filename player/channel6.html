@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live – Imagen Televisión HD</title>
+<title>Live – Discovery Channel HD</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -120,7 +120,7 @@
 <body>
 
 <header>
-  <h1>Imagen Televisión HD</h1>
+  <h1>Discovery Channel HD</h1>
   <span id="badge"><span id="dot"></span><span id="badge-text">Connecting…</span></span>
 </header>
 
@@ -149,7 +149,7 @@
 (function () {
   // ── Config ──────────────────────────────────────────────
   const STREAM_URL  = "https://stream.tv247on.com/hls/channel6/index.m3u8";
-  const CHANNEL     = "Imagen Televisión HD";
+  const CHANNEL     = "Discovery Channel HD";
   const RETRY_DELAY = 5000;   // ms between reconnect attempts
   const MAX_RETRIES = 999;    // effectively infinite
   const LIVE_SYNC   = 60;     // seconds behind live edge — the forward-cushion target

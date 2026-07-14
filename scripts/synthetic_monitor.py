@@ -32,7 +32,7 @@ CONFIRM_N  = 2            # unhealthy for this many consecutive runs before we a
 
 CHANNELS = {
     1:"World Cup", 2:"Canal 5", 3:"ESPN", 4:"Las Estrellas", 5:"Azteca Uno",
-    6:"Imagen", 7:"Azteca 7", 8:"Fox Sports 1", 9:"ESPN 2", 10:"TUDN",
+    6: "Discovery Channel", 7:"Azteca 7", 8:"Fox Sports 1", 9:"ESPN 2", 10:"TUDN",
     11:"Cartoon Network", 12:"TNT Mexico", 13:"AXN", 14:"Space", 15:"ESPN 3",
 }
 
