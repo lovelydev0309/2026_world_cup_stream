@@ -10,7 +10,7 @@ JSONL=DISK+"/_ingest.jsonl"
 LOG=DISK+"/ingest2.log"
 CDN="https://stream.tv247on.com/player/vod"
 TARGET=int(sys.argv[1]) if len(sys.argv)>1 else 30
-MIN_FREE_GB=20   # stop if disk free drops under this
+MIN_FREE_GB=int(sys.argv[2]) if len(sys.argv)>2 else 20   # stop if disk free drops under this
 
 def log(m):
     line=f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {m}"
@@ -45,6 +45,10 @@ def slugify(name):
     n=unicodedata.normalize("NFKD",name).encode("ascii","ignore").decode()
     n=re.sub(r'[^a-zA-Z0-9]+','-',n).strip('-').lower()
     return n[:55] or "movie"
+
+def norm_title(name):
+    n=unicodedata.normalize("NFKD",name or "").encode("ascii","ignore").decode()
+    return re.sub(r'[^a-z0-9]','',n.lower())
 
 def free_gb():
     st=os.statvfs(DISK); return st.f_bavail*st.f_frsize/1e9
@@ -314,10 +318,14 @@ def main():
     data=json.load(open(CATALOG))
     log(f"catalog: {len(data)} vods")
     existing=set(d for d in os.listdir(DISK) if os.path.isdir(os.path.join(DISK,d)) and d!="lost+found")
-    done_ids=set()
+    done_ids=set(); seen_titles=set()
+    op=DISK+"/_original.json"
+    if os.path.exists(op):
+        for m in json.load(open(op)): seen_titles.add(norm_title(m.get("title","")))
     if os.path.exists(JSONL):
         for line in open(JSONL):
-            try: done_ids.add(json.loads(line)["stream_id"])
+            try:
+                r=json.loads(line); done_ids.add(r["stream_id"]); seen_titles.add(norm_title(r.get("title","")))
             except: pass
     def added_key(x):
         try: return int(x.get("added",0))
@@ -337,6 +345,7 @@ def main():
         raw=(c.get("name") or "").strip()
         if not raw: continue
         name=clean_title(raw)
+        if norm_title(name) in seen_titles: continue   # skip title already in catalog
         slug=slugify(name)
         if slug in existing: slug=f"{slug}-{sid}"
         ext=(c.get("container_extension") or "mp4").lower()
@@ -383,8 +392,11 @@ def main():
         try: write_movie_html(outdir,rec,w,h,v)
         except Exception as ex: log(f"  html-fail: {ex}")
         open(JSONL,"a").write(json.dumps(rec,ensure_ascii=False)+"\n")
-        done_ids.add(sid); existing.add(slug); count+=1
+        done_ids.add(sid); existing.add(slug); seen_titles.add(norm_title(name)); count+=1
         log(f"  OK ({time.time()-t0:.0f}s, {os.path.getsize(os.path.join(outdir,'index.m3u8'))}B m3u8) [{count}/{TARGET}] free={free_gb():.0f}GB")
+        if count % 3 == 0:
+            try: regen_movies_json()   # refresh catalog page live during the long fill
+            except Exception as ex: log(f"  regen-warn: {ex}")
         time.sleep(2)
     log(f"=== DONE: {count} new movies (probed {probed}) ===")
     regen_movies_json()
