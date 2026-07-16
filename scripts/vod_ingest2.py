@@ -113,6 +113,23 @@ select option:checked{background-color:var(--accent);color:var(--optbg)}
 .ctitle{font-family:var(--serif);font-size:15.5px;font-weight:600;letter-spacing:.005em;line-height:1.26;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:40px}
 .cmeta{margin-top:8px;color:var(--faint);font-size:10.5px;display:flex;gap:8px;flex-wrap:wrap;font-variant-numeric:tabular-nums;letter-spacing:.06em;text-transform:uppercase}
 .cmeta .dot{width:3px;height:3px;border-radius:50%;background:var(--accent);opacity:.65;align-self:center}
+/* grid flip cards (hover to reveal metadata on the back) */
+.card.flip{background:transparent;border:0;border-radius:2px;overflow:visible;perspective:1300px;transition:box-shadow .3s}
+.card.flip:hover{transform:none;box-shadow:var(--shadow)}
+.flip-inner{position:relative;width:100%;transform-style:preserve-3d;transition:transform .65s cubic-bezier(.2,.75,.25,1)}
+.card.flip:hover .flip-inner{transform:rotateY(180deg)}
+.flip-front,.flip-back{backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid var(--border);border-radius:2px;overflow:hidden;background:var(--surface);transition:border-color .3s}
+.card.flip:hover .flip-front,.card.flip:hover .flip-back{border-color:rgba(201,164,92,.5)}
+.flip-back{position:absolute;inset:0;transform:rotateY(180deg);display:flex;flex-direction:column;padding:16px 15px;background:linear-gradient(165deg,var(--surface2),var(--surface))}
+.card.flip .poster:after{display:none}
+.card.flip:hover .poster img{transform:none}
+.fb-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.fb-title{font-family:var(--serif);font-size:16px;font-weight:600;line-height:1.2;color:var(--text)}
+.fb-rating{color:var(--accent);font-weight:700;font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.fb-meta{margin-top:10px;color:var(--faint);font-size:10px;text-transform:uppercase;letter-spacing:.07em;display:flex;flex-wrap:wrap;gap:7px}
+.fb-meta .dot{width:3px;height:3px;border-radius:50%;background:var(--accent);opacity:.65;align-self:center}
+.fb-plot{margin-top:12px;color:var(--muted);font-size:12px;line-height:1.5;flex:1 1 auto;overflow:hidden;display:-webkit-box;-webkit-line-clamp:8;-webkit-box-orient:vertical}
+.fb-cta{margin-top:10px;color:var(--accent2);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
 .empty{text-align:center;color:var(--muted);padding:70px 0;font-size:14px;font-family:var(--serif);font-style:italic}
 .pager{grid-column:2;display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap}
 .pager button{background:var(--field);border:1px solid var(--border2);color:var(--text);border-radius:2px;min-width:40px;height:40px;padding:0 13px;font-size:13px;font-weight:500;cursor:pointer;font-variant-numeric:tabular-nums;letter-spacing:.02em;transition:border-color .2s,color .2s,background .2s}
@@ -243,8 +260,15 @@ function metaBits(m){
 function joinMeta(bits){ return bits.map((t,i)=>(i?'<span class="dot"></span>':'')+`<span>${t}</span>`).join(''); }
 function cardGrid(m){
   const rt=(m.rating&&m.rating>0)?`<span class="rt">★ ${Number(m.rating).toFixed(1)}</span>`:'';
-  return `<a class="card" href="${esc(m.player_url)}"><div class="poster">${posterImg(m)}${rt}</div>
-    <div class="cbody"><div class="ctitle">${esc(m.title)}</div><div class="cmeta">${joinMeta(metaBits(m).slice(0,2))}</div></div></a>`;
+  const rb=(m.rating&&m.rating>0)?`<span class="fb-rating">★ ${Number(m.rating).toFixed(1)}</span>`:'';
+  const plot=`<div class="fb-plot">${m.plot?esc(m.plot):''}</div>`;
+  return `<a class="card flip" href="${esc(m.player_url)}"><div class="flip-inner">`
+    +`<div class="flip-front"><div class="poster">${posterImg(m)}${rt}</div>`
+    +`<div class="cbody"><div class="ctitle">${esc(m.title)}</div><div class="cmeta">${joinMeta(metaBits(m).slice(0,2))}</div></div></div>`
+    +`<div class="flip-back"><div class="fb-top"><div class="fb-title">${esc(m.title)}</div>${rb}</div>`
+    +`<div class="fb-meta">${joinMeta(metaBits(m))}</div>${plot}`
+    +`<div class="fb-cta">Ver película →</div></div>`
+    +`</div></a>`;
 }
 function cardList(m){
   const rt=(m.rating&&m.rating>0)?`<span class="lrating">★ ${Number(m.rating).toFixed(1)}</span>`:'';
