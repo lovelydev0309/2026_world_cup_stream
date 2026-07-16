@@ -63,7 +63,7 @@ def fmt_hm(sec):
 CSS=r"""
 :root{--bg:#0B0A0D;--bg2:#08070A;--band:#100E14;--raise:#151119;--surface:#17131C;--surface2:#1E1926;--border:#2A2531;--border2:#3A3342;--text:#F3EFE9;--muted:#9C93A3;--faint:#6B6270;--accent:#C9A45C;--accent2:#E6CE93;--good:#49c98a;--serif:"Playfair Display",Didot,"Bodoni MT",Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 *{box-sizing:border-box}
-html,body{margin:0;color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.5}
+html,body{margin:0;color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.5;color-scheme:dark}
 body{min-height:100vh;background:radial-gradient(115% 85% at 100% 100%,rgba(201,164,92,.10),rgba(201,164,92,0) 52%),radial-gradient(90% 60% at 0% 0%,rgba(150,140,170,.05),transparent 48%),var(--bg);background-attachment:fixed}
 img{display:block;max-width:100%}a{color:inherit;text-decoration:none}
 .wrap{max-width:1200px;margin:0 auto;padding:0 26px;position:relative;z-index:1}
@@ -89,6 +89,8 @@ img{display:block;max-width:100%}a{color:inherit;text-decoration:none}
 .sortwrap label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.18em}
 select{background:rgba(255,255,255,.03);border:1px solid var(--border2);color:var(--text);border-radius:0;padding:9px 34px 9px 14px;font-size:13px;font-weight:500;letter-spacing:.03em;cursor:pointer;appearance:none;font-family:var(--sans);background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23C9A45C' stroke-width='2.4'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
 select:focus{border-color:var(--accent);outline:none}
+select option{background-color:#17131C;color:#F3EFE9}
+select option:checked{background-color:#C9A45C;color:#0B0A0D}
 .rule{height:1px;background:linear-gradient(90deg,rgba(201,164,92,.35),rgba(201,164,92,.06) 40%,transparent);margin:16px 0 0}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(166px,1fr));gap:28px 20px;margin:30px 0 8px}
 .card{display:block;background:var(--surface);border:1px solid var(--border);border-radius:2px;overflow:hidden;transition:transform .3s cubic-bezier(.2,.7,.2,1),border-color .3s,box-shadow .3s;position:relative}
