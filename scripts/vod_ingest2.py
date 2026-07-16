@@ -501,8 +501,10 @@ def main():
         outdir=os.path.join(DISK,slug); os.makedirs(outdir,exist_ok=True)
         log(f"INGEST {sid} '{name[:45]}' [{w}x{h} {v}/{a} {fmt_hms(dur)}] -> {slug}")
         t0=time.time()
+        # -bsf:v h264_mp4toannexb embeds SPS/PPS in-band; without it some mkv/mp4
+        # sources remux to TS with no decoder headers -> audio plays but no video.
         cmd=["ffmpeg","-y","-nostdin","-loglevel","error","-user_agent",UA,
-             "-i",url,"-map","0:v:0","-map","0:a:0","-c","copy",
+             "-i",url,"-map","0:v:0","-map","0:a:0","-c","copy","-bsf:v","h264_mp4toannexb",
              "-f","hls","-hls_time","10","-hls_playlist_type","vod",
              "-hls_flags","independent_segments",
              "-hls_segment_filename",os.path.join(outdir,"seg_%04d.ts"),
@@ -513,6 +515,23 @@ def main():
             log("  FAIL ffmpeg timeout"); subprocess.run(["rm","-rf",outdir]); continue
         if r.returncode!=0 or not os.path.exists(os.path.join(outdir,"index.m3u8")):
             log(f"  FAIL ffmpeg rc={r.returncode}: {(r.stderr or '')[-160:]}"); subprocess.run(["rm","-rf",outdir]); continue
+        # verify the remuxed video actually has decoder headers (width>0); transcode fallback if not
+        try:
+            pv=subprocess.run(["ffprobe","-v","error","-select_streams","v:0","-show_entries","stream=width","-of","csv=p=0",os.path.join(outdir,"index.m3u8")],capture_output=True,text=True,timeout=30)
+            vw=(pv.stdout or "").strip().splitlines(); vw=int(vw[0]) if vw and vw[0].strip().isdigit() else 0
+        except Exception: vw=0
+        if vw<=0:
+            log(f"  no video headers after copy -> transcoding {name[:40]}")
+            for sf in os.listdir(outdir):
+                if sf.startswith("seg_") and sf.endswith(".ts"): os.remove(os.path.join(outdir,sf))
+            tcmd=["ffmpeg","-y","-nostdin","-loglevel","error","-user_agent",UA,"-i",url,
+                  "-map","0:v:0","-map","0:a:0","-c:v","libx264","-preset","veryfast","-crf","21","-pix_fmt","yuv420p","-c:a","aac","-b:a","160k","-ac","2",
+                  "-f","hls","-hls_time","10","-hls_playlist_type","vod","-hls_flags","independent_segments",
+                  "-hls_segment_filename",os.path.join(outdir,"seg_%04d.ts"),os.path.join(outdir,"index.m3u8")]
+            try: r=subprocess.run(tcmd,capture_output=True,timeout=9000,text=True)
+            except subprocess.TimeoutExpired: log("  FAIL transcode timeout"); subprocess.run(["rm","-rf",outdir]); continue
+            if r.returncode!=0 or not os.path.exists(os.path.join(outdir,"index.m3u8")):
+                log(f"  FAIL transcode rc={r.returncode}"); subprocess.run(["rm","-rf",outdir]); continue
         # poster
         try:
             req=urllib.request.Request(c["stream_icon"],headers={"User-Agent":UA})
