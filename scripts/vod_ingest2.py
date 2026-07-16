@@ -94,7 +94,7 @@ select:focus{border-color:var(--accent);outline:none}
 .cmeta{margin-top:6px;color:var(--faint);font-size:11.5px;display:flex;gap:7px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
 .cmeta .dot{width:3px;height:3px;border-radius:50%;background:var(--faint);align-self:center}
 .empty{text-align:center;color:var(--muted);padding:60px 0;font-size:14px}
-.pager{display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;margin:26px 0 50px}
+.pager{grid-column:2;display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap}
 .pager button{background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:8px;min-width:38px;height:38px;padding:0 12px;font-size:13.5px;font-weight:600;cursor:pointer;font-variant-numeric:tabular-nums}
 .pager button:hover:not(:disabled){border-color:var(--accent)}
 .pager button.active{background:var(--accent);color:#101010;border-color:var(--accent)}
@@ -113,10 +113,11 @@ select:focus{border-color:var(--accent);outline:none}
 .list .ctitle{font-size:15px;-webkit-line-clamp:1;min-height:0}
 .list .lrating{color:var(--accent);font-weight:700;font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .list .lplot{color:var(--faint);font-size:12.5px;line-height:1.5;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.pagerbar{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin:26px 0 50px}
-.pagesize{display:flex;align-items:center;gap:8px}
+.pagerbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;margin:26px 0 50px}
+.pagesize{grid-column:1;justify-self:start;display:flex;align-items:center;gap:8px}
 .pagesize label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 .pagesize select{height:38px;padding:0 32px 0 13px;font-size:13.5px}
+@media(max-width:560px){.pagerbar{grid-template-columns:1fr;justify-items:center;gap:16px}.pagesize{grid-column:1;justify-self:center}.pager{grid-column:1}}
 """
 
 def build_list_page():
@@ -159,10 +160,10 @@ def build_list_page():
     <div class="pagesize">
       <label for="pageSize">Por página</label>
       <select id="pageSize">
-        <option value="24">24</option>
-        <option value="48">48</option>
-        <option value="96">96</option>
-        <option value="all">Todas</option>
+        <option value="10">10</option>
+        <option value="20" selected>20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
       </select>
     </div>
     <div class="pager" id="pager"></div>
@@ -170,8 +171,8 @@ def build_list_page():
 </main>
 
 <script>
-const PAGE_ALL=100000;
-let ALL=[], view=[], page=1, viewMode='grid', PER_PAGE=24;
+const PAGE_SIZES=['10','20','50','100'];
+let ALL=[], view=[], page=1, viewMode='grid', PER_PAGE=20;
 const grid=document.getElementById('grid'), pager=document.getElementById('pager'),
       countEl=document.getElementById('count'), emptyEl=document.getElementById('empty'),
       qEl=document.getElementById('q'), sortEl=document.getElementById('sort'),
@@ -182,7 +183,7 @@ function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;'
 // restore saved preferences
 try{
   const vm=localStorage.getItem('vodView'); if(vm==='list'||vm==='grid') viewMode=vm;
-  const ps=localStorage.getItem('vodPageSize'); if(ps){ pageSizeEl.value=ps; PER_PAGE=ps==='all'?PAGE_ALL:(parseInt(ps)||24); }
+  const ps=localStorage.getItem('vodPageSize'); if(ps && PAGE_SIZES.includes(ps)){ pageSizeEl.value=ps; PER_PAGE=parseInt(ps); }
 }catch(e){}
 
 function posterImg(m){
@@ -256,7 +257,7 @@ function render(){
 });
 // page-size dropdown
 pageSizeEl.addEventListener('change',()=>{ const v=pageSizeEl.value;
-  PER_PAGE = v==='all'?PAGE_ALL:(parseInt(v)||24); page=1;
+  PER_PAGE = parseInt(v)||20; page=1;
   try{localStorage.setItem('vodPageSize',v);}catch(e){}
   refresh(); });
 qEl.addEventListener('input',()=>{page=1;refresh();});
