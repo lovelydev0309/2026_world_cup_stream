@@ -100,6 +100,23 @@ select:focus{border-color:var(--accent);outline:none}
 .pager button.active{background:var(--accent);color:#101010;border-color:var(--accent)}
 .pager button:disabled{opacity:.35;cursor:default}
 .pager .ell{color:var(--faint);padding:0 2px}
+.viewtoggle{display:flex;gap:2px;background:var(--surface);border:1px solid var(--border2);border-radius:9px;padding:3px}
+.viewtoggle button{background:transparent;border:0;color:var(--muted);width:33px;height:30px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.viewtoggle button:hover{color:var(--text)}
+.viewtoggle button.active{background:var(--accent);color:#101010}
+.list{display:flex;flex-direction:column;gap:10px;margin:22px 0 8px}
+.list .card{display:flex;flex-direction:row;align-items:stretch}
+.list .poster{width:62px;min-width:62px;aspect-ratio:2/3}
+.list .poster .rt{display:none}
+.list .cbody{flex:1;min-width:0;padding:11px 15px;display:flex;flex-direction:column;justify-content:center}
+.list .lhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.list .ctitle{font-size:15px;-webkit-line-clamp:1;min-height:0}
+.list .lrating{color:var(--accent);font-weight:700;font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.list .lplot{color:var(--faint);font-size:12.5px;line-height:1.5;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pagerbar{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin:26px 0 50px}
+.pagesize{display:flex;align-items:center;gap:8px}
+.pagesize label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.pagesize select{padding:8px 30px 8px 12px;font-size:13px}
 """
 
 def build_list_page():
@@ -123,6 +140,10 @@ def build_list_page():
   <div class="controls">
     <h2>Películas</h2><span class="count" id="count"></span>
     <div class="sortwrap">
+      <div class="viewtoggle" id="viewtoggle">
+        <button type="button" data-view="grid" title="Vista cuadrícula" aria-label="Vista cuadrícula"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
+        <button type="button" data-view="list" title="Vista lista" aria-label="Vista lista"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4.5" width="18" height="3" rx="1.5"/><rect x="3" y="10.5" width="18" height="3" rx="1.5"/><rect x="3" y="16.5" width="18" height="3" rx="1.5"/></svg></button>
+      </div>
       <label for="sort">Ordenar</label>
       <select id="sort">
         <option value="recent">Recientes</option>
@@ -134,29 +155,60 @@ def build_list_page():
   </div>
   <div class="grid" id="grid"></div>
   <div class="empty" id="empty" style="display:none">No se encontraron películas.</div>
-  <div class="pager" id="pager"></div>
+  <div class="pagerbar">
+    <div class="pagesize">
+      <label for="pageSize">Por página</label>
+      <select id="pageSize">
+        <option value="24">24</option>
+        <option value="48">48</option>
+        <option value="96">96</option>
+        <option value="all">Todas</option>
+      </select>
+    </div>
+    <div class="pager" id="pager"></div>
+  </div>
 </main>
 
 <script>
-const PER_PAGE=24;
-let ALL=[], view=[], page=1;
+const PAGE_ALL=100000;
+let ALL=[], view=[], page=1, viewMode='grid', PER_PAGE=24;
 const grid=document.getElementById('grid'), pager=document.getElementById('pager'),
       countEl=document.getElementById('count'), emptyEl=document.getElementById('empty'),
-      qEl=document.getElementById('q'), sortEl=document.getElementById('sort');
+      qEl=document.getElementById('q'), sortEl=document.getElementById('sort'),
+      pageSizeEl=document.getElementById('pageSize'), viewtoggle=document.getElementById('viewtoggle');
 
 function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
-function card(m){
-  const rt = (m.rating && m.rating>0) ? `<span class="rt">★ ${Number(m.rating).toFixed(1)}</span>` : '';
-  const meta=[]; if(m.year) meta.push(esc(m.year));
-  if(m.genre) meta.push(esc(String(m.genre).split(',')[0].trim()));
-  const metaHtml=meta.map((t,i)=>(i?'<span class="dot"></span>':'')+`<span>${t}</span>`).join('');
-  return `<a class="card" href="${esc(m.player_url)}">
-    <div class="poster"><img loading="lazy" src="${esc(m.logo_url)}" alt="${esc(m.title)}"
-       onerror="this.style.display='none';this.parentNode.style.background='linear-gradient(135deg,#141a25,#1d2634)'">${rt}</div>
-    <div class="cbody"><div class="ctitle">${esc(m.title)}</div><div class="cmeta">${metaHtml}</div></div></a>`;
-}
+// restore saved preferences
+try{
+  const vm=localStorage.getItem('vodView'); if(vm==='list'||vm==='grid') viewMode=vm;
+  const ps=localStorage.getItem('vodPageSize'); if(ps){ pageSizeEl.value=ps; PER_PAGE=ps==='all'?PAGE_ALL:(parseInt(ps)||24); }
+}catch(e){}
 
+function posterImg(m){
+  return `<img loading="lazy" src="${esc(m.logo_url)}" alt="${esc(m.title)}"
+     onerror="this.style.display='none';this.parentNode.style.background='linear-gradient(135deg,#141a25,#1d2634)'">`;
+}
+function fmtDur(d){ const m=/^(\d+):(\d+):(\d+)/.exec(d||''); if(!m) return esc(d||''); const h=+m[1],mm=+m[2]; return h?`${h}h ${mm}m`:`${mm}m`; }
+function metaBits(m){
+  const b=[]; if(m.year) b.push(esc(m.year));
+  if(m.genre) b.push(esc(String(m.genre).split(',')[0].trim()));
+  if(m.duration && /^\d/.test(m.duration)) b.push(fmtDur(m.duration));
+  return b;
+}
+function joinMeta(bits){ return bits.map((t,i)=>(i?'<span class="dot"></span>':'')+`<span>${t}</span>`).join(''); }
+function cardGrid(m){
+  const rt=(m.rating&&m.rating>0)?`<span class="rt">★ ${Number(m.rating).toFixed(1)}</span>`:'';
+  return `<a class="card" href="${esc(m.player_url)}"><div class="poster">${posterImg(m)}${rt}</div>
+    <div class="cbody"><div class="ctitle">${esc(m.title)}</div><div class="cmeta">${joinMeta(metaBits(m).slice(0,2))}</div></div></a>`;
+}
+function cardList(m){
+  const rt=(m.rating&&m.rating>0)?`<span class="lrating">★ ${Number(m.rating).toFixed(1)}</span>`:'';
+  const plot=m.plot?`<div class="lplot">${esc(m.plot)}</div>`:'';
+  return `<a class="card" href="${esc(m.player_url)}"><div class="poster">${posterImg(m)}</div>
+    <div class="cbody"><div class="lhead"><div class="ctitle">${esc(m.title)}</div>${rt}</div>
+    <div class="cmeta">${joinMeta(metaBits(m))}</div>${plot}</div></a>`;
+}
 function applySort(list){
   const s=sortEl.value, a=list.slice();
   if(s==='az') a.sort((x,y)=>x.title.localeCompare(y.title,'es'));
@@ -174,8 +226,10 @@ function refresh(){
 }
 function render(){
   const total=view.length, pages=Math.max(1,Math.ceil(total/PER_PAGE));
+  if(page>pages) page=pages;
   const start=(page-1)*PER_PAGE, slice=view.slice(start,start+PER_PAGE);
-  grid.innerHTML=slice.map(card).join('');
+  grid.className = viewMode==='list' ? 'list' : 'grid';
+  grid.innerHTML = slice.map(viewMode==='list'?cardList:cardGrid).join('');
   emptyEl.style.display=total?'none':'block';
   countEl.textContent=total?`${total} título${total>1?'s':''}`:'';
   // pager
@@ -185,13 +239,26 @@ function render(){
     if(ell){const s=document.createElement('span');s.className='ell';s.textContent='…';pager.appendChild(s);return;}
     const b=document.createElement('button');b.textContent=label;if(active)b.className='active';
     b.disabled=dis;if(!dis&&!active)b.onclick=()=>{page=pg;window.scrollTo({top:0,behavior:'smooth'});render();};
-    if(active)b.onclick=null;pager.appendChild(b);};
+    pager.appendChild(b);};
   btn('‹',page-1,{dis:page===1});
-  const win=1; const nums=new Set([1,pages,page,page-win,page+win].filter(n=>n>=1&&n<=pages));
+  const nums=new Set([1,pages,page,page-1,page+1].filter(n=>n>=1&&n<=pages));
   let prev=0;
   [...nums].sort((a,b)=>a-b).forEach(n=>{ if(n-prev>1)btn('',0,{ell:true}); btn(String(n),n,{active:n===page}); prev=n; });
   btn('›',page+1,{dis:page===pages});
 }
+// view mode toggle
+[...viewtoggle.querySelectorAll('button')].forEach(b=>{
+  if(b.dataset.view===viewMode) b.classList.add('active');
+  b.onclick=()=>{ viewMode=b.dataset.view;
+    [...viewtoggle.querySelectorAll('button')].forEach(x=>x.classList.toggle('active',x===b));
+    try{localStorage.setItem('vodView',viewMode);}catch(e){}
+    render(); };
+});
+// page-size dropdown
+pageSizeEl.addEventListener('change',()=>{ const v=pageSizeEl.value;
+  PER_PAGE = v==='all'?PAGE_ALL:(parseInt(v)||24); page=1;
+  try{localStorage.setItem('vodPageSize',v);}catch(e){}
+  refresh(); });
 qEl.addEventListener('input',()=>{page=1;refresh();});
 sortEl.addEventListener('change',()=>{page=1;refresh();});
 
