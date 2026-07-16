@@ -94,10 +94,10 @@ select:focus{border-color:var(--accent);outline:none}
     <div class="pagesize">
       <label for="pageSize">Por página</label>
       <select id="pageSize">
-        <option value="10">10</option>
-        <option value="20" selected>20</option>
-        <option value="50">50</option>
-        <option value="100">100</option>
+        <option value="12">12</option>
+        <option value="24" selected>24</option>
+        <option value="48">48</option>
+        <option value="96">96</option>
       </select>
     </div>
     <div class="pager" id="pager"></div>
@@ -105,8 +105,8 @@ select:focus{border-color:var(--accent);outline:none}
 </main>
 
 <script>
-const PAGE_SIZES=['10','20','50','100'];
-let ALL=[], view=[], page=1, viewMode='grid', PER_PAGE=20;
+const PAGE_SIZES=['12','24','48','96'];
+let ALL=[], view=[], page=1, viewMode='grid', PER_PAGE=24;
 const grid=document.getElementById('grid'), pager=document.getElementById('pager'),
       countEl=document.getElementById('count'), emptyEl=document.getElementById('empty'),
       qEl=document.getElementById('q'), sortEl=document.getElementById('sort'),
@@ -191,7 +191,7 @@ function render(){
 });
 // page-size dropdown
 pageSizeEl.addEventListener('change',()=>{ const v=pageSizeEl.value;
-  PER_PAGE = parseInt(v)||20; page=1;
+  PER_PAGE = parseInt(v)||24; page=1;
   try{localStorage.setItem('vodPageSize',v);}catch(e){}
   refresh(); });
 qEl.addEventListener('input',()=>{page=1;refresh();});
