@@ -21,7 +21,7 @@ Run from cron every 60s (flock-guarded so runs never overlap):
 """
 import json, subprocess, urllib.request, time, os, re
 
-CDN        = "https://stream.tv247on.com/hls"
+CDN        = os.environ.get("SYNMON_CDN", "https://stream.tv247on.com/hls")
 STATUS     = "/opt/streaming-stack/player/status.json"
 LOG        = "/opt/streaming-stack/logs/synthetic_monitor.log"
 STATE      = "/opt/streaming-stack/cache/synthetic_state.json"   # consecutive-bad counters

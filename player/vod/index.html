@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catálogo VOD — tv247on</title>
+<style>
+:root{--bg:#080A0F;--band:#0b0f17;--raise:#10151f;--surface:#141a25;--border:#232c3a;--border2:#313d4f;--text:#EEF1F6;--muted:#8f99ab;--faint:#616b7d;--accent:#F5C451;--good:#49c98a;}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5}
+img{display:block;max-width:100%}a{color:inherit;text-decoration:none}
+.wrap{max-width:1200px;margin:0 auto;padding:0 22px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.topbar{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#0b1019,#080A0F);border-bottom:1px solid var(--border)}
+.topbar .wrap{display:flex;align-items:center;gap:20px;height:60px}
+.mark{font-weight:800;letter-spacing:-.03em;font-size:20px;white-space:nowrap}.mark b{color:var(--accent)}
+.seg{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);border-left:1px solid var(--border2);padding-left:20px;font-weight:600}.seg b{color:var(--text)}
+.search{margin-left:auto;position:relative}
+.search input{background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:999px;padding:9px 16px 9px 38px;font-size:13px;width:230px;transition:width .2s,border-color .2s}
+.search input:focus{width:280px;border-color:var(--accent);outline:none}
+.search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);opacity:.5}
+.search input::placeholder{color:var(--faint)}
+.controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:26px 0 4px}
+.controls h2{font-size:19px;margin:0;font-weight:800;letter-spacing:-.01em}
+.controls .count{color:var(--faint);font-size:13px;font-variant-numeric:tabular-nums}
+.sortwrap{margin-left:auto;display:flex;align-items:center;gap:9px}
+.sortwrap label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+select{background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:9px;padding:8px 34px 8px 13px;font-size:13.5px;font-weight:600;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238f99ab' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
+select:focus{border-color:var(--accent);outline:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:20px 18px;margin:22px 0 8px}
+.card{display:block;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:transform .16s,border-color .16s,box-shadow .16s}
+.card:hover{transform:translateY(-4px);border-color:var(--border2);box-shadow:0 12px 30px rgba(0,0,0,.45)}
+.poster{position:relative;aspect-ratio:2/3;background:var(--raise)}
+.poster img{width:100%;height:100%;object-fit:cover}
+.poster .rt{position:absolute;top:8px;right:8px;background:rgba(8,10,15,.82);color:var(--accent);font-weight:700;font-size:12px;padding:3px 8px;border-radius:999px;backdrop-filter:blur(4px);font-variant-numeric:tabular-nums}
+.cbody{padding:11px 12px 13px}
+.ctitle{font-size:13.5px;font-weight:700;letter-spacing:-.01em;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:35px}
+.cmeta{margin-top:6px;color:var(--faint);font-size:11.5px;display:flex;gap:7px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.cmeta .dot{width:3px;height:3px;border-radius:50%;background:var(--faint);align-self:center}
+.empty{text-align:center;color:var(--muted);padding:60px 0;font-size:14px}
+.pager{display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;margin:26px 0 50px}
+.pager button{background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:8px;min-width:38px;height:38px;padding:0 12px;font-size:13.5px;font-weight:600;cursor:pointer;font-variant-numeric:tabular-nums}
+.pager button:hover:not(:disabled){border-color:var(--accent)}
+.pager button.active{background:var(--accent);color:#101010;border-color:var(--accent)}
+.pager button:disabled{opacity:.35;cursor:default}
+.pager .ell{color:var(--faint);padding:0 2px}
+</style>
+</head><body>
+<header class="topbar"><div class="wrap">
+  <span class="mark">tv247<b>on</b></span>
+  <span class="seg">Catálogo <b>VOD</b></span>
+  <div class="search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input id="q" type="search" placeholder="Buscar películas…" autocomplete="off">
+  </div>
+</div></header>
+
+<main class="wrap">
+  <div class="controls">
+    <h2>Películas</h2><span class="count" id="count"></span>
+    <div class="sortwrap">
+      <label for="sort">Ordenar</label>
+      <select id="sort">
+        <option value="recent">Recientes</option>
+        <option value="rating">Mejor valoradas</option>
+        <option value="az">A - Z</option>
+        <option value="year">Año</option>
+      </select>
+    </div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">No se encontraron películas.</div>
+  <div class="pager" id="pager"></div>
+</main>
+
+<script>
+const PER_PAGE=24;
+let ALL=[], view=[], page=1;
+const grid=document.getElementById('grid'), pager=document.getElementById('pager'),
+      countEl=document.getElementById('count'), emptyEl=document.getElementById('empty'),
+      qEl=document.getElementById('q'), sortEl=document.getElementById('sort');
+
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function card(m){
+  const rt = (m.rating && m.rating>0) ? `<span class="rt">★ ${Number(m.rating).toFixed(1)}</span>` : '';
+  const meta=[]; if(m.year) meta.push(esc(m.year));
+  if(m.genre) meta.push(esc(String(m.genre).split(',')[0].trim()));
+  const metaHtml=meta.map((t,i)=>(i?'<span class="dot"></span>':'')+`<span>${t}</span>`).join('');
+  return `<a class="card" href="${esc(m.player_url)}">
+    <div class="poster"><img loading="lazy" src="${esc(m.logo_url)}" alt="${esc(m.title)}"
+       onerror="this.style.display='none';this.parentNode.style.background='linear-gradient(135deg,#141a25,#1d2634)'">${rt}</div>
+    <div class="cbody"><div class="ctitle">${esc(m.title)}</div><div class="cmeta">${metaHtml}</div></div></a>`;
+}
+
+function applySort(list){
+  const s=sortEl.value, a=list.slice();
+  if(s==='az') a.sort((x,y)=>x.title.localeCompare(y.title,'es'));
+  else if(s==='rating') a.sort((x,y)=>(y.rating||0)-(x.rating||0));
+  else if(s==='year') a.sort((x,y)=>(parseInt(y.year)||0)-(parseInt(x.year)||0));
+  else a.sort((x,y)=>(y._added||0)-(x._added||0)); // recent
+  return a;
+}
+function refresh(){
+  const q=qEl.value.trim().toLowerCase();
+  let list=ALL.filter(m=>!q || m.title.toLowerCase().includes(q) || (m.genre||'').toLowerCase().includes(q));
+  view=applySort(list);
+  page=Math.min(page, Math.max(1,Math.ceil(view.length/PER_PAGE)));
+  render();
+}
+function render(){
+  const total=view.length, pages=Math.max(1,Math.ceil(total/PER_PAGE));
+  const start=(page-1)*PER_PAGE, slice=view.slice(start,start+PER_PAGE);
+  grid.innerHTML=slice.map(card).join('');
+  emptyEl.style.display=total?'none':'block';
+  countEl.textContent=total?`${total} título${total>1?'s':''}`:'';
+  // pager
+  pager.innerHTML='';
+  if(pages<=1) return;
+  const btn=(label,pg,{active=false,dis=false,ell=false}={})=>{
+    if(ell){const s=document.createElement('span');s.className='ell';s.textContent='…';pager.appendChild(s);return;}
+    const b=document.createElement('button');b.textContent=label;if(active)b.className='active';
+    b.disabled=dis;if(!dis&&!active)b.onclick=()=>{page=pg;window.scrollTo({top:0,behavior:'smooth'});render();};
+    if(active)b.onclick=null;pager.appendChild(b);};
+  btn('‹',page-1,{dis:page===1});
+  const win=1; const nums=new Set([1,pages,page,page-win,page+win].filter(n=>n>=1&&n<=pages));
+  let prev=0;
+  [...nums].sort((a,b)=>a-b).forEach(n=>{ if(n-prev>1)btn('',0,{ell:true}); btn(String(n),n,{active:n===page}); prev=n; });
+  btn('›',page+1,{dis:page===pages});
+}
+qEl.addEventListener('input',()=>{page=1;refresh();});
+sortEl.addEventListener('change',()=>{page=1;refresh();});
+
+fetch('movies.json?_='+Date.now()).then(r=>r.json()).then(d=>{
+  ALL=(Array.isArray(d)?d:(d.movies||[])).map((m,i)=>({...m,_added:(m.added?parseInt(m.added):(1e9-i))}));
+  refresh();
+}).catch(e=>{emptyEl.textContent='No se pudo cargar el catálogo.';emptyEl.style.display='block';});
+</script>
+</body></html>
