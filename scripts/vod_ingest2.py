@@ -365,6 +365,10 @@ h1{font-size:clamp(21px,3.2vw,29px);margin:0;letter-spacing:-.02em;font-weight:8
 .credits{margin-top:16px;display:grid;gap:5px}.credit{font-size:12.5px;color:var(--faint)}.credit .k{display:inline-block;min-width:74px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-size:10.5px}
 .foot{border-top:1px solid var(--border);margin-top:30px;background:var(--band)}.foot .wrap{padding:18px 22px 40px;max-width:900px}.foot p{margin:0;font-size:12px;color:var(--faint);line-height:1.6}.foot .vg{color:var(--good)}
 .pwrap{max-width:900px;margin:0 auto;padding:0}
+.playbtn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;width:84px;height:84px;border-radius:50%;border:1px solid rgba(245,196,81,.55);background:rgba(8,10,15,.5);backdrop-filter:blur(6px);color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .25s,transform .2s,background .2s,box-shadow .2s}
+.playbtn svg{width:34px;height:34px;fill:currentColor}.playbtn .i-play{margin-left:5px}
+.playbtn:hover{background:rgba(245,196,81,.16);box-shadow:0 8px 30px rgba(0,0,0,.5);transform:translate(-50%,-50%) scale(1.06)}
+.playbtn.hide{opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.82)}
 </style></head><body>
 <header class="topbar"><div class="wrap">
   <span class="mark">tv247<b>on</b></span>
@@ -373,7 +377,8 @@ h1{font-size:clamp(21px,3.2vw,29px);margin:0;letter-spacing:-.02em;font-weight:8
 </div></header>
 <div class="player"><div class="pwrap"><div class="stage">
   <video id="v" controls playsinline poster="poster.jpg" preload="metadata"></video>
-  <div class="loading" id="load">Cargando…</div>
+  <button class="playbtn" id="playbtn" type="button" aria-label="Reproducir"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+  <div class="loading hide" id="load">Cargando…</div>
 </div></div></div>
 <main class="wrap"><section class="meta">
   <div class="titlerow"><h1>%%TITLE%%</h1>%%RATING%%</div>
@@ -394,7 +399,8 @@ hls.loadSource(SRC);hls.attachMedia(video);hls.on(Hls.Events.MANIFEST_PARSED,hid
 hls.on(Hls.Events.ERROR,function(e,d){if(d.fatal){load.classList.remove('hide');load.textContent='Error de reproducción — reintentando…';
 if(d.type===Hls.ErrorTypes.NETWORK_ERROR)hls.startLoad();else if(d.type===Hls.ErrorTypes.MEDIA_ERROR)hls.recoverMediaError();}});
 }else if(video.canPlayType('application/vnd.apple.mpegurl')){video.src=SRC;video.addEventListener('loadedmetadata',hide);}
-else{load.textContent='HLS no soportado en este navegador.';}})();
+else{load.textContent='HLS no soportado en este navegador.';}
+var playbtn=document.getElementById('playbtn');function syncBtn(){playbtn.classList.toggle('hide',!video.paused);}if(playbtn){playbtn.addEventListener('click',function(){video.paused?video.play():video.pause();});video.addEventListener('play',syncBtn);video.addEventListener('pause',syncBtn);video.addEventListener('ended',syncBtn);video.addEventListener('waiting',function(){if(!video.paused)load.classList.remove('hide');});syncBtn();}})();
 </script></body></html>"""
 
 def write_movie_html(outdir, rec, w, h, vcodec):
