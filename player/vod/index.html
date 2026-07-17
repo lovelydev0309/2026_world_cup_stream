@@ -101,6 +101,23 @@ select option:checked{background-color:var(--accent);color:var(--optbg)}
 .pagesize label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.16em}
 .pagesize select{height:40px;padding:0 32px 0 14px;font-size:13px}
 @media(max-width:560px){.pagerbar{grid-template-columns:1fr;justify-items:center;gap:16px}.pagesize{grid-column:1;justify-self:center}.pager{grid-column:1}}
+/* left hover-reveal category drawer */
+.catwrap{position:fixed;left:0;top:74px;bottom:0;z-index:9}
+.cattab{display:flex;flex-direction:column;align-items:center;gap:14px;width:44px;padding:18px 0;margin-top:16px;background:linear-gradient(180deg,var(--surface),var(--band));border:1px solid var(--border);border-left:0;border-radius:0 10px 10px 0;color:var(--muted);cursor:pointer;transition:color .2s,opacity .25s;box-shadow:3px 5px 22px rgba(0,0,0,.22)}
+.cattab:hover{color:var(--accent2)}
+.cattab .lbl{writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;font-weight:600}
+.cattab svg{width:18px;height:18px}
+.catpanel{position:absolute;left:0;top:0;bottom:0;width:264px;transform:translateX(-101%);transition:transform .4s cubic-bezier(.2,.7,.2,1);background:linear-gradient(175deg,var(--band),var(--bg));border-right:1px solid var(--border2);box-shadow:10px 0 44px rgba(0,0,0,.4);overflow-y:auto;padding:24px 0 34px}
+.catwrap:hover .catpanel,.catwrap.open .catpanel{transform:translateX(0)}
+.catwrap:hover .cattab,.catwrap.open .cattab{opacity:0;pointer-events:none}
+.catpanel h3{font-family:var(--serif);font-size:20px;margin:0;padding:0 24px;font-weight:600}
+.catpanel .csub{font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--accent);padding:0 24px;margin:5px 0 16px;font-weight:600}
+.catitem{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;background:transparent;border:0;border-left:2px solid transparent;color:var(--muted);text-align:left;padding:9px 24px;font-size:13.5px;cursor:pointer;font-family:var(--sans);transition:color .15s,background .15s}
+.catitem:hover{color:var(--text);background:rgba(201,164,92,.06)}
+.catitem.active{color:var(--accent2);border-left-color:var(--accent);background:rgba(201,164,92,.09)}
+.catitem .n{font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
+.catitem.active .n{color:var(--accent)}
+@media(max-width:700px){.catwrap{top:64px}}
 </style>
 </head><body>
 <div class="lux-deco" aria-hidden="true"><svg viewBox="0 0 540 540" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMaxYMax meet">
@@ -128,6 +145,17 @@ select option:checked{background-color:var(--accent);color:var(--optbg)}
     <svg class="ic-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
   </button>
 </div></header>
+
+<aside class="catwrap" id="catwrap">
+  <div class="cattab" id="cattab">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+    <span class="lbl">Categorías</span>
+  </div>
+  <nav class="catpanel" id="catpanel">
+    <h3>Categorías</h3><div class="csub">Explorar por género</div>
+    <div id="catlist"></div>
+  </nav>
+</aside>
 
 <main class="wrap">
   <div class="controls">
@@ -166,7 +194,7 @@ select option:checked{background-color:var(--accent);color:var(--optbg)}
 
 <script>
 const PAGE_SIZES=['12','24','48','96'];
-let ALL=[], view=[], page=1, viewMode='grid', PER_PAGE=24;
+let ALL=[], view=[], page=1, viewMode='grid', PER_PAGE=24, selectedCat='';
 const grid=document.getElementById('grid'), pager=document.getElementById('pager'),
       countEl=document.getElementById('count'), emptyEl=document.getElementById('empty'),
       qEl=document.getElementById('q'), sortEl=document.getElementById('sort'),
@@ -221,7 +249,10 @@ function applySort(list){
 }
 function refresh(){
   const q=qEl.value.trim().toLowerCase();
-  let list=ALL.filter(m=>!q || m.title.toLowerCase().includes(q) || (m.genre||'').toLowerCase().includes(q));
+  let list=ALL.filter(m=>{
+    if(selectedCat && !String(m.genre||'').toLowerCase().split(',').map(s=>s.trim()).includes(selectedCat)) return false;
+    return !q || m.title.toLowerCase().includes(q) || (m.genre||'').toLowerCase().includes(q);
+  });
   view=applySort(list);
   page=Math.min(page, Math.max(1,Math.ceil(view.length/PER_PAGE)));
   render();
@@ -264,9 +295,27 @@ pageSizeEl.addEventListener('change',()=>{ const v=pageSizeEl.value;
 qEl.addEventListener('input',()=>{page=1;refresh();});
 sortEl.addEventListener('change',()=>{page=1;refresh();});
 document.getElementById('themeBtn').addEventListener('click',()=>{var n=document.documentElement.getAttribute('data-theme')==='light'?'dark':'light';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem('vodTheme',n);}catch(e){}});
+// category drawer (derived from genres)
+const catwrap=document.getElementById('catwrap'), cattab=document.getElementById('cattab'), catlist=document.getElementById('catlist');
+function buildCats(){
+  const map={};
+  ALL.forEach(m=>String(m.genre||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(g=>{
+    const k=g.toLowerCase(); (map[k]=map[k]||{name:g,count:0}).count++;
+  }));
+  const cats=Object.keys(map).map(k=>({key:k,name:map[k].name,count:map[k].count})).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'es'));
+  const item=(key,name,n,act)=>`<button class="catitem${act?' active':''}" data-cat="${esc(key)}"><span>${esc(name)}</span><span class="n">${n}</span></button>`;
+  catlist.innerHTML=item('','Todas',ALL.length,selectedCat==='')+cats.map(c=>item(c.key,c.name,c.count,selectedCat===c.key)).join('');
+  [...catlist.querySelectorAll('.catitem')].forEach(b=>b.onclick=()=>{
+    selectedCat=b.dataset.cat;
+    [...catlist.querySelectorAll('.catitem')].forEach(x=>x.classList.toggle('active',x===b));
+    catwrap.classList.remove('open'); page=1; refresh();
+  });
+}
+if(cattab) cattab.addEventListener('click',()=>catwrap.classList.toggle('open'));
 
 fetch('movies.json?_='+Date.now()).then(r=>r.json()).then(d=>{
   ALL=(Array.isArray(d)?d:(d.movies||[])).map((m,i)=>({...m,_added:(m.added?parseInt(m.added):(1e9-i))}));
+  buildCats();
   refresh();
 }).catch(e=>{emptyEl.textContent='No se pudo cargar el catálogo.';emptyEl.style.display='block';});
 </script>
