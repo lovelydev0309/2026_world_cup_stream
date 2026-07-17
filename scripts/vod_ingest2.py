@@ -627,6 +627,19 @@ def main():
     log(f"=== DONE: {count} new movies (probed {probed}) ===")
     regen_movies_json()
 
+SUBLABELS={"es":"Español","en":"English","pt":"Português","fr":"Français","it":"Italiano",
+ "de":"Deutsch","ar":"العربية","pl":"Polski","ru":"Русский","ja":"日本語","zh":"中文","ko":"한국어",
+ "nl":"Nederlands","sv":"Svenska","cs":"Čeština","el":"Ελληνικά","hr":"Hrvatski","tr":"Türkçe","hi":"हिन्दी"}
+def subs_for(slug):
+    # list WebVTT subtitle tracks present on disk for this movie
+    d=os.path.join(DISK,slug); out=[]
+    try: files=sorted(f for f in os.listdir(d) if f.startswith("sub_") and f.endswith(".vtt"))
+    except Exception: files=[]
+    for f in files:
+        code=f[4:-4]
+        out.append({"lang":code,"label":SUBLABELS.get(code,code.upper()),"url":f"{CDN}/{slug}/{f}"})
+    return out
+
 def regen_movies_json():
     # movies.json = original 10 (preserved verbatim) + all ingested records
     orig_path=DISK+"/_original.json"
@@ -644,6 +657,8 @@ def regen_movies_json():
                 if r.get("slug") not in orig_slugs: ingested.append(r)
             except: pass
     merged=orig+ingested
+    for m in merged:
+        m["subtitles"]=subs_for(m.get("slug",""))
     json.dump(merged, open(DISK+"/movies.json","w"), ensure_ascii=False, indent=1)
     log(f"movies.json regenerated: {len(orig)} original + {len(ingested)} ingested = {len(merged)}")
 
