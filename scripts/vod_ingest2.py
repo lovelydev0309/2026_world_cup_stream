@@ -391,9 +391,13 @@ MOVIE_TPL=r"""<!doctype html>
 <html lang="es"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>%%TITLE%% — tv247on VOD</title>
+<script>(function(){try{var t=localStorage.getItem('vodTheme');if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
 <style>
-:root{--bg:#080A0F;--band:#0b0f17;--raise:#10151f;--surface:#141a25;--border:#232c3a;--border2:#313d4f;--text:#EEF1F6;--muted:#8f99ab;--faint:#616b7d;--accent:#F5C451;--good:#49c98a;}
+:root{--bg:#080A0F;--band:#0b0f17;--raise:#10151f;--surface:#141a25;--border:#232c3a;--border2:#313d4f;--text:#EEF1F6;--muted:#8f99ab;--faint:#616b7d;--accent:#F5C451;--good:#49c98a;color-scheme:dark}
+:root[data-theme="light"]{--bg:#F6F1E8;--band:#FBF8F2;--raise:#EDE6D8;--surface:#FFFFFF;--border:#E5DCCB;--border2:#D8CDB8;--text:#211C15;--muted:#6E6353;--faint:#9A8E7B;--accent:#98742A;color-scheme:light}
+:root[data-theme="light"] .topbar{background:linear-gradient(180deg,#FBF8F2,#F6F1E8)}
+:root[data-theme="light"] .plot{color:#3A352C}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5}
 img{display:block;max-width:100%}a{color:inherit;text-decoration:none}.wrap{max-width:1200px;margin:0 auto;padding:0 22px}
 .topbar{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#0b1019,#080A0F);border-bottom:1px solid var(--border)}
