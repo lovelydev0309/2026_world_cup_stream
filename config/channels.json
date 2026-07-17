@@ -1,5 +1,5 @@
 {
-  "_comment": "Channel configuration. source_url = single IPTV stream URL; source_urls = ordered list of primary + backup URLs tried on failover. Set enabled=false to skip. PROVIDER NOTE (tvon247.com): Xtream panel that (a) FILTERS user-agents \u2014 only an app/browser UA passes, the IPTV Smarters UA in run_channel.sh works; (b) serves live via a no-extension URL that 302-redirects to a tokenized segment host; ffmpeg follows it automatically. Account 9WZELTN, 5 max connections.",
+  "_comment": "Channel configuration. source_url = single IPTV stream URL; source_urls = ordered list of primary + backup URLs tried on failover. Set enabled=false to skip. PROVIDER NOTE (tvon247.com): Xtream panel that (a) FILTERS user-agents — only an app/browser UA passes, the IPTV Smarters UA in run_channel.sh works; (b) serves live via a no-extension URL that 302-redirects to a tokenized segment host; ffmpeg follows it automatically. Account 9WZELTN, 5 max connections.",
   "server": {
     "rtmp_host": "127.0.0.1",
     "rtmp_port": 1935,
@@ -22,7 +22,7 @@
   "channels": [
     {
       "channel_name": "channel1",
-      "display_name": "FIFA World Cup 2026 \u2013 Match Feed",
+      "display_name": "FIFA World Cup 2026 – Match Feed",
       "enabled": true,
       "source_url": "http://tvon247.com/9WZELTN/JTBML46/1027109",
       "hls_url": "https://stream.tv247on.com/hls/channel1/index.m3u8",
@@ -31,14 +31,14 @@
       "resolution": "1280x720",
       "fps": 30,
       "audio_bitrate": 128,
-      "_comment_source": "tvon247 id 1027109 = DAZN MUNDIAL HD (the live World Cup / Mundial feed; H264 1080p25, MP2 stereo). No channel is literally named 'FIFA World Cup 2026' on this provider \u2014 DAZN Mundial is the live match carrier for the MX/LatAm package.",
+      "_comment_source": "tvon247 id 1027109 = DAZN MUNDIAL HD (the live World Cup / Mundial feed; H264 1080p25, MP2 stereo). No channel is literally named 'FIFA World Cup 2026' on this provider — DAZN Mundial is the live match carrier for the MX/LatAm package.",
       "_comment_audio": "audio_sync=preserve (2026-06-25): the default regen (asetpts=N/SR/TB) raced channel1's audio PTS ~70,000s ahead of video -> browser couldn't align -> infinite-load / lag. All 3 failover feeds are A/V-aligned at source (gap 0.02-0.39s, mp2 or AAC-LC), so preserve (asetpts=PTS-STARTPTS) keeps them aligned. Same fix as channel2.",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "_comment_video": "encode @ 540p, CRF24 (sharper than the old crf28). 720p was tried 2026-06-24 but 720p re-encode on 2 vCPU overran the box (load 3.2+); 540p is this box's re-encode ceiling. Native HD needs either a bigger server or the copy-standby fix. Copy was reverted (bufferAppendError at live<->standby codec boundary).",
       "video_mode": "encode",
       "encode_resolution": "960x540",
-      "_comment_failover": "Backups are the same World Cup match on DAZN MUNDIAL FHD/HD2 \u2014 a dropped primary fails over instantly instead of going to a standby gap.",
+      "_comment_failover": "Backups are the same World Cup match on DAZN MUNDIAL FHD/HD2 — a dropped primary fails over instantly instead of going to a standby gap.",
       "source_urls": [
         "http://tvon247.com/9WZELTN/JTBML46/1027109",
         "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1027109",
@@ -54,7 +54,7 @@
     },
     {
       "channel_name": "channel2",
-      "display_name": "MX \u2013 Canal 5 HD",
+      "display_name": "MX – Canal 5 HD",
       "enabled": true,
       "source_url": "http://tvon247.com/9WZELTN/JTBML46/1028333",
       "hls_url": "https://stream.tv247on.com/hls/channel2/index.m3u8",
@@ -103,7 +103,7 @@
       "_comment_audio": "audio_sync=preserve (2026-06-26): the default regen raced channel3's audio PTS ~95,000s ahead of video -> browser infinite-load (same bug that hit channel1/channel2). All 3 ESPN feeds are A/V-aligned at source (gap <0.05s, AAC-LC), so preserve (asetpts=PTS-STARTPTS) keeps them aligned.",
       "audio_sync": "preserve",
       "force_silent_audio": false,
-      "_comment_video": "encode @ 540p CRF24 (kept 540p \u2014 60fps source re-encode is the heaviest; 720p for all 3 overruns 2 vCPU). Primary 1028359 was DOWN 2026-06-24, so failover to LAT/US ESPN feeds keeps it alive.",
+      "_comment_video": "encode @ 540p CRF24 (kept 540p — 60fps source re-encode is the heaviest; 720p for all 3 overruns 2 vCPU). Primary 1028359 was DOWN 2026-06-24, so failover to LAT/US ESPN feeds keeps it alive.",
       "video_mode": "encode",
       "encode_resolution": "960x540",
       "source_urls": [
@@ -187,7 +187,7 @@
       "fps": 30,
       "audio_bitrate": 128,
       "logo": "/player/logos/channel6.png",
-      "_comment": "Discovery Channel: MX 1028342 (H264 1080p, re-encoded 540p) primary + LATINO 30606 backup. Replaced Imagen (1028364) 2026-07-14 per client \u2014 Imagen was the flakiest feed (both its IDs 1028364/645999 went fully dead at provider).",
+      "_comment": "Discovery Channel: MX 1028342 (H264 1080p, re-encoded 540p) primary + LATINO 30606 backup. Replaced Imagen (1028364) 2026-07-14 per client — Imagen was the flakiest feed (both its IDs 1028364/645999 went fully dead at provider).",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "video_mode": "encode",
@@ -351,9 +351,9 @@
     },
     {
       "channel_name": "channel12",
-      "display_name": "TNT M\u00e9xico HD",
+      "display_name": "TNT México HD",
       "enabled": true,
-      "source_url": "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/140344",
+      "source_url": "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/30723",
       "hls_url": "https://stream.tv247on.com/hls/channel12/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -368,18 +368,18 @@
       "use_standby": true,
       "encode_resolution": "960x540",
       "source_urls": [
-        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/140344",
-        "http://tvon247.com/9CX1RZL/GL2E7WE/140344",
-        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/140344",
-        "http://tvon247.com/2E3VBEM/QA91PXZ/140344",
-        "http://tvon247.com/9WZELTN/JTBML46/140344",
-        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/140344",
-        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/30668",
-        "http://tvon247.com/9CX1RZL/GL2E7WE/30668",
-        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/30668",
-        "http://tvon247.com/2E3VBEM/QA91PXZ/30668",
-        "http://tvon247.com/9WZELTN/JTBML46/30668",
-        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/30668"
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/30723",
+        "http://tvon247.com/9CX1RZL/GL2E7WE/30723",
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/30723",
+        "http://tvon247.com/2E3VBEM/QA91PXZ/30723",
+        "http://tvon247.com/9WZELTN/JTBML46/30723",
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/30723",
+        "http://bywwr.tvon247.com/FQXTMAJ/7N963QS/1088968",
+        "http://tvon247.com/9CX1RZL/GL2E7WE/1088968",
+        "http://mqvty.tvon247.com/3U5M6YY/ALRZS3K/1088968",
+        "http://tvon247.com/2E3VBEM/QA91PXZ/1088968",
+        "http://tvon247.com/9WZELTN/JTBML46/1088968",
+        "http://vwvtru.tvon247.com/GR4GMBC/PF1HBDU/1088968"
       ]
     },
     {
