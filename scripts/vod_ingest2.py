@@ -633,11 +633,15 @@ SUBLABELS={"es":"Español","en":"English","pt":"Português","fr":"Français","it
 def subs_for(slug):
     # list WebVTT subtitle tracks present on disk for this movie
     d=os.path.join(DISK,slug); out=[]
+    ai=set()
+    try: ai=set(open(os.path.join(d,".ai_langs")).read().split())  # AI-generated language codes
+    except Exception: pass
     try: files=sorted(f for f in os.listdir(d) if f.startswith("sub_") and f.endswith(".vtt"))
     except Exception: files=[]
     for f in files:
-        code=f[4:-4]
-        out.append({"lang":code,"label":SUBLABELS.get(code,code.upper()),"url":f"{CDN}/{slug}/{f}"})
+        code=f[4:-4]; isai=code in ai
+        lbl=SUBLABELS.get(code,code.upper())+(" (IA)" if isai else "")
+        out.append({"lang":code,"label":lbl,"url":f"{CDN}/{slug}/{f}","ai":isai})
     return out
 
 def regen_movies_json():
