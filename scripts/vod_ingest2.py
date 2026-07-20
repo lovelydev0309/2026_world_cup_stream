@@ -160,6 +160,10 @@ select option:checked{background-color:var(--accent);color:var(--optbg)}
 .pagesize{grid-column:1;justify-self:end;display:flex;align-items:center;gap:9px}
 .pagesize label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.16em}
 .pagesize select{height:40px;padding:0 32px 0 14px;font-size:13px}
+.tagrow{display:flex;flex-wrap:wrap;gap:9px;margin:20px 0 2px}
+.tag{background:var(--field);border:1px solid var(--border2);color:var(--muted);border-radius:999px;padding:7px 15px;font-size:12.5px;font-weight:600;letter-spacing:.02em;cursor:pointer;font-family:var(--sans);transition:color .18s,border-color .18s,background .18s;white-space:nowrap}
+.tag:hover{color:var(--text);border-color:var(--accent)}
+.tag.active{background:var(--accent);color:#0B0A0D;border-color:var(--accent)}
 @media(max-width:560px){.pagerbar{grid-template-columns:1fr;justify-items:center;gap:16px}.pagesize{grid-column:1;justify-self:center}.pager{grid-column:1}}
 /* left hover-reveal category drawer */
 .catwrap{position:fixed;left:0;top:74px;bottom:0;z-index:9}
@@ -248,6 +252,12 @@ def build_list_page():
     </div>
   </div>
   <div class="rule"></div>
+  <div class="tagrow" id="tagrow">
+    <button class="tag" data-tag="populares" type="button">Populares</button>
+    <button class="tag" data-tag="rating" type="button">Alta puntuación</button>
+    <button class="tag" data-tag="estrenos" type="button">Estrenos</button>
+    <button class="tag" data-tag="vistas" type="button">Más vistas</button>
+  </div>
   <div class="grid" id="grid"></div>
   <div class="empty" id="empty" style="display:none">No se encontraron películas.</div>
   <div class="pagerbar">
@@ -266,7 +276,15 @@ def build_list_page():
 
 <script>
 const PAGE_SIZES=['12','24','48','96'];
-let ALL=[], view=[], page=1, viewMode='grid', PER_PAGE=24, selectedCat='';
+let ALL=[], view=[], page=1, viewMode='grid', PER_PAGE=24, selectedCat='', activeTag='';
+// keyword-tag quick views. rating/estrenos use real data; populares/vistas are proxies (no view tracking yet)
+function popScore(m){return (m.rating||0)+Math.max(0,((parseInt(m.year)||0)-2018))*0.25;}
+const TAGS={
+  populares:{f:m=>(m.rating||0)>0, s:(x,y)=>popScore(y)-popScore(x)},
+  rating:{f:m=>(m.rating||0)>=7, s:(x,y)=>(y.rating||0)-(x.rating||0)},
+  estrenos:{f:null, s:(x,y)=>((parseInt(y.year)||0)-(parseInt(x.year)||0))||((y._added||0)-(x._added||0))},
+  vistas:{f:m=>(m.rating||0)>0, s:(x,y)=>((y.rating||0)-(x.rating||0))||((y._added||0)-(x._added||0))}
+};
 const grid=document.getElementById('grid'), pager=document.getElementById('pager'),
       countEl=document.getElementById('count'), emptyEl=document.getElementById('empty'),
       qEl=document.getElementById('q'), sortEl=document.getElementById('sort'),
@@ -321,11 +339,13 @@ function applySort(list){
 }
 function refresh(){
   const q=qEl.value.trim().toLowerCase();
+  const tag=activeTag?TAGS[activeTag]:null;
   let list=ALL.filter(m=>{
     if(selectedCat && !String(m.genre||'').toLowerCase().split(',').map(s=>s.trim()).includes(selectedCat)) return false;
+    if(tag && tag.f && !tag.f(m)) return false;
     return !q || m.title.toLowerCase().includes(q) || (m.genre||'').toLowerCase().includes(q);
   });
-  view=applySort(list);
+  view = tag ? list.slice().sort(tag.s) : applySort(list);
   page=Math.min(page, Math.max(1,Math.ceil(view.length/PER_PAGE)));
   render();
 }
@@ -365,7 +385,13 @@ pageSizeEl.addEventListener('change',()=>{ const v=pageSizeEl.value;
   try{localStorage.setItem('vodPageSize',v);}catch(e){}
   refresh(); });
 qEl.addEventListener('input',()=>{page=1;refresh();});
-sortEl.addEventListener('change',()=>{page=1;refresh();});
+const tagrow=document.getElementById('tagrow');
+if(tagrow) [...tagrow.querySelectorAll('.tag')].forEach(b=>b.onclick=()=>{
+  activeTag=(activeTag===b.dataset.tag)?'':b.dataset.tag;
+  [...tagrow.querySelectorAll('.tag')].forEach(x=>x.classList.toggle('active',x.dataset.tag===activeTag));
+  page=1; refresh();
+});
+sortEl.addEventListener('change',()=>{ activeTag=''; if(tagrow)[...tagrow.querySelectorAll('.tag')].forEach(x=>x.classList.remove('active')); page=1; refresh(); });
 document.getElementById('themeBtn').addEventListener('click',()=>{var n=document.documentElement.getAttribute('data-theme')==='light'?'dark':'light';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem('vodTheme',n);}catch(e){}});
 // category drawer (derived from genres)
 const catwrap=document.getElementById('catwrap'), cattab=document.getElementById('cattab'), catlist=document.getElementById('catlist');
