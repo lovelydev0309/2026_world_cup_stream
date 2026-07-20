@@ -594,8 +594,11 @@ def main():
         t0=time.time()
         # -bsf:v h264_mp4toannexb embeds SPS/PPS in-band; without it some mkv/mp4
         # sources remux to TS with no decoder headers -> audio plays but no video.
+        # video copied; audio re-encoded to STEREO AAC — some sources are 5.1/6ch AAC
+        # which many browsers can't play through HLS/MSE (no sound). -ac 2 fixes it.
         cmd=["ffmpeg","-y","-nostdin","-loglevel","error","-user_agent",UA,
-             "-i",url,"-map","0:v:0","-map","0:a:0","-c","copy","-bsf:v","h264_mp4toannexb",
+             "-i",url,"-map","0:v:0","-map","0:a:0","-c:v","copy","-bsf:v","h264_mp4toannexb",
+             "-c:a","aac","-ac","2","-b:a","192k","-ar","48000",
              "-f","hls","-hls_time","10","-hls_playlist_type","vod",
              "-hls_flags","independent_segments",
              "-hls_segment_filename",os.path.join(outdir,"seg_%04d.ts"),
