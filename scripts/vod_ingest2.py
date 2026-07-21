@@ -500,7 +500,9 @@ if(d.type===Hls.ErrorTypes.NETWORK_ERROR)hls.startLoad();else if(d.type===Hls.Er
 }else if(video.canPlayType('application/vnd.apple.mpegurl')){video.src=SRC;video.addEventListener('loadedmetadata',hide);}
 else{load.textContent='HLS no soportado en este navegador.';}
 var playbtn=document.getElementById('playbtn');function syncBtn(){playbtn.classList.toggle('hide',!video.paused);}if(playbtn){playbtn.addEventListener('click',function(){video.paused?video.play():video.pause();});video.addEventListener('play',syncBtn);video.addEventListener('pause',syncBtn);video.addEventListener('ended',syncBtn);video.addEventListener('waiting',function(){if(!video.paused)load.classList.remove('hide');});syncBtn();}})();
-</script></body></html>"""
+</script>
+<script>/*view-beacon*/(function(){try{var s=location.pathname.replace(/\/+$/,'').split('/').pop();var v=document.getElementById('v');if(!s||!v)return;v.addEventListener('play',function(){try{if(sessionStorage.getItem('vc_'+s))return;sessionStorage.setItem('vc_'+s,'1');var u='/vc?m='+encodeURIComponent(s);if(navigator.sendBeacon)navigator.sendBeacon(u);else{new Image().src=u;}}catch(e){}});}catch(e){}})();</script>
+</body></html>"""
 
 def write_movie_html(outdir, rec, w, h, vcodec):
     e=html.escape
@@ -689,18 +691,19 @@ def subs_for(slug):
         out.append({"lang":code,"label":lbl,"url":f"{CDN}/{slug}/{f}","ai":isai})
     return out
 
-def tags_for(m):
-    # keyword tags for the feed. high-rating + recent-release use real data;
-    # popular + most-viewed are rating-based PROXIES (no view tracking yet).
+def tags_for(m, most_viewed=False):
+    # feed keyword tags. high-rating + recent-release from real rating/date;
+    # most-viewed from real view counts (top-ranked); popular = well-rated OR well-watched.
     try: r=float(str(m.get("rating") or 0).replace(",","."))
     except Exception: r=0.0
     try: y=int(str(m.get("year") or "0")[:4])
     except Exception: y=0
+    v=int(m.get("views") or 0)
     t=[]
     if r>=8: t.append("high-rating")
     if y>=2025: t.append("recent-release")
-    if r>=7: t.append("popular")        # proxy
-    if r>=7.5: t.append("most-viewed")  # proxy
+    if r>=7 or v>=5: t.append("popular")
+    if most_viewed: t.append("most-viewed")
     return t
 
 def regen_movies_json():
@@ -720,9 +723,16 @@ def regen_movies_json():
                 if r.get("slug") not in orig_slugs: ingested.append(r)
             except: pass
     merged=orig+ingested
+    views={}
+    try: views=json.load(open(DISK+"/_views.json"))
+    except Exception: pass
     for m in merged:
         m["subtitles"]=subs_for(m.get("slug",""))
-        m["tags"]=tags_for(m)
+        m["views"]=int(views.get(m.get("slug",""),0) or 0)
+    top=sorted([m for m in merged if m.get("views",0)>0], key=lambda x:-x["views"])[:40]
+    mvset=set(m.get("slug") for m in top)
+    for m in merged:
+        m["tags"]=tags_for(m, m.get("slug") in mvset)
     json.dump(merged, open(DISK+"/movies.json","w"), ensure_ascii=False, indent=1)
     log(f"movies.json regenerated: {len(orig)} original + {len(ingested)} ingested = {len(merged)}")
 
