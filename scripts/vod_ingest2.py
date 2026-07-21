@@ -733,7 +733,9 @@ def regen_movies_json():
     mvset=set(m.get("slug") for m in top)
     for m in merged:
         m["tags"]=tags_for(m, m.get("slug") in mvset)
-    json.dump(merged, open(DISK+"/movies.json","w"), ensure_ascii=False, indent=1)
+    tmp=DISK+"/.movies.json.tmp"   # atomic write (concurrent workers + CDN reads)
+    json.dump(merged, open(tmp,"w"), ensure_ascii=False, indent=1)
+    os.replace(tmp, DISK+"/movies.json")
     log(f"movies.json regenerated: {len(orig)} original + {len(ingested)} ingested = {len(merged)}")
 
 if __name__=="__main__":
