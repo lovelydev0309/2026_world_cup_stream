@@ -689,6 +689,20 @@ def subs_for(slug):
         out.append({"lang":code,"label":lbl,"url":f"{CDN}/{slug}/{f}","ai":isai})
     return out
 
+def tags_for(m):
+    # keyword tags for the feed. high-rating + recent-release use real data;
+    # popular + most-viewed are rating-based PROXIES (no view tracking yet).
+    try: r=float(str(m.get("rating") or 0).replace(",","."))
+    except Exception: r=0.0
+    try: y=int(str(m.get("year") or "0")[:4])
+    except Exception: y=0
+    t=[]
+    if r>=8: t.append("high-rating")
+    if y>=2025: t.append("recent-release")
+    if r>=7: t.append("popular")        # proxy
+    if r>=7.5: t.append("most-viewed")  # proxy
+    return t
+
 def regen_movies_json():
     # movies.json = original 10 (preserved verbatim) + all ingested records
     orig_path=DISK+"/_original.json"
@@ -708,6 +722,7 @@ def regen_movies_json():
     merged=orig+ingested
     for m in merged:
         m["subtitles"]=subs_for(m.get("slug",""))
+        m["tags"]=tags_for(m)
     json.dump(merged, open(DISK+"/movies.json","w"), ensure_ascii=False, indent=1)
     log(f"movies.json regenerated: {len(orig)} original + {len(ingested)} ingested = {len(merged)}")
 
