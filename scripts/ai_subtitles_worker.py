@@ -55,8 +55,10 @@ while True:
     slug,d,page=claim; t0=time.time()
     try:
         wav="/tmp/w%s.wav"%WK
-        subprocess.run(["ffmpeg","-y","-nostdin","-loglevel","error","-i",d+"/index.m3u8",
-            "-vn","-ac","1","-ar","16000","-c:a","pcm_s16le",wav],timeout=1800,check=True)
+        # error-tolerant: skip corrupt packets/segments so one bad segment doesn't fail the whole movie
+        subprocess.run(["ffmpeg","-y","-nostdin","-loglevel","error","-err_detect","ignore_err","-fflags","+discardcorrupt",
+            "-i",d+"/index.m3u8","-vn","-ac","1","-ar","16000","-c:a","pcm_s16le",wav],timeout=2400)
+        if not os.path.exists(wav) or os.path.getsize(wav)<100000: raise RuntimeError("audio extract empty")
         segs,info=model.transcribe(wav,vad_filter=True,beam_size=5)   # AUTO-DETECT language
         src=(info.language or "es").lower()
         open(d+"/sub_%s.vtt"%src,"w",encoding="utf-8").write(to_vtt(segs))
