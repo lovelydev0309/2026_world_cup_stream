@@ -98,6 +98,31 @@ for u in urls:
     if u: print(u)")
 
 NUM_URLS=${#SOURCE_URLS[@]}
+
+# ── Resolve provider-account placeholders (@@ALIAS@@ → host/user/pass) ─────────
+# Credentials are NOT stored in channels.json (that file is committed to a public
+# repo). Each source URL carries an @@ALIAS@@ token; the real host/user/pass lives
+# ONLY in the untracked config/accounts.env (gitignored, deployed out-of-band).
+# We substitute here so ffmpeg receives a real URL while git only ever sees the alias.
+ACCOUNTS_ENV="$PROJECT_DIR/config/accounts.env"
+if [ -f "$ACCOUNTS_ENV" ]; then
+    declare -A ACCT
+    while IFS='=' read -r _k _v; do
+        [[ "$_k" =~ ^[A-Za-z0-9_]+$ ]] || continue   # skip comments / blank lines
+        ACCT["$_k"]="$_v"
+    done < "$ACCOUNTS_ENV"
+    for _i in "${!SOURCE_URLS[@]}"; do
+        _u="${SOURCE_URLS[$_i]}"
+        for _k in "${!ACCT[@]}"; do
+            _u="${_u//@@${_k}@@/${ACCT[$_k]}}"
+        done
+        SOURCE_URLS[$_i]="$_u"
+    done
+    unset ACCT
+else
+    log "  [FATAL] $ACCOUNTS_ENV missing — cannot resolve provider credentials for $CHANNEL"
+fi
+
 SOURCE_URL="${SOURCE_URLS[0]:-}"   # active URL; rotated by the main loop on failover
 
 STANDBY="$PROJECT_DIR/$STANDBY_REL"

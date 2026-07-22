@@ -2,7 +2,18 @@
 # Sequential VOD ingest -> HLS on the 200GB movie disk. H.264+AAC copy only.
 import json, os, re, subprocess, sys, time, urllib.request, unicodedata, html
 
-HOST="tvon247.com"; USER="2E3VBEM"; PW="QA91PXZ"
+# Provider credentials live in the untracked config/accounts.env (gitignored), NOT here.
+def _acct(k, d=""):
+    p=os.path.join(os.path.dirname(os.path.abspath(__file__)),"..","config","accounts.env")
+    try:
+        for line in open(p):
+            line=line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                kk,vv=line.split("=",1)
+                if kk.strip()==k: return vv.strip()
+    except FileNotFoundError: pass
+    return os.environ.get(k, d)
+HOST=_acct("VOD_HOST","tvon247.com"); USER=_acct("VOD_USER"); PW=_acct("VOD_PW")
 UA="okhttp/4.9.3"
 DISK="/opt/streaming-stack/vod-disk"
 CATALOG=DISK+"/_catalog.json"

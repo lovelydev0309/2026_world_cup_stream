@@ -1,0 +1,170 @@
+[
+  {
+    "name": "channel1",
+    "title": "FIFA World Cup 2026 – Match Feed",
+    "logo": "/player/logos/channel1.png",
+    "hls": "https://stream.tv247on.com/hls/channel1/index.m3u8",
+    "page": "/player/channel1.html"
+  },
+  {
+    "name": "channel2",
+    "title": "MX – Canal 5 HD",
+    "logo": "/player/logos/channel2.png",
+    "hls": "https://stream.tv247on.com/hls/channel2/index.m3u8",
+    "page": "/player/channel2.html"
+  },
+  {
+    "name": "channel3",
+    "title": "ESPN HD",
+    "logo": "/player/logos/channel3.png",
+    "hls": "https://stream.tv247on.com/hls/channel3/index.m3u8",
+    "page": "/player/channel3.html"
+  },
+  {
+    "name": "channel4",
+    "title": "Las Estrellas HD",
+    "logo": "/player/logos/channel4.png",
+    "hls": "https://stream.tv247on.com/hls/channel4/index.m3u8",
+    "page": "/player/channel4.html"
+  },
+  {
+    "name": "channel5",
+    "title": "Azteca Uno HD",
+    "logo": "/player/logos/channel5.png",
+    "hls": "https://stream.tv247on.com/hls/channel5/index.m3u8",
+    "page": "/player/channel5.html"
+  },
+  {
+    "name": "channel6",
+    "title": "Discovery Channel HD",
+    "logo": "/player/logos/channel6.png",
+    "hls": "https://stream.tv247on.com/hls/channel6/index.m3u8",
+    "page": "/player/channel6.html"
+  },
+  {
+    "name": "channel7",
+    "title": "Azteca 7 HD",
+    "logo": "/player/logos/channel7.png",
+    "hls": "https://stream.tv247on.com/hls/channel7/index.m3u8",
+    "page": "/player/channel7.html"
+  },
+  {
+    "name": "channel8",
+    "title": "Fox Sports 1 HD",
+    "logo": "/player/logos/channel8.png",
+    "hls": "https://stream.tv247on.com/hls/channel8/index.m3u8",
+    "page": "/player/channel8.html"
+  },
+  {
+    "name": "channel9",
+    "title": "ESPN 2 HD",
+    "logo": "/player/logos/channel9.png",
+    "hls": "https://stream.tv247on.com/hls/channel9/index.m3u8",
+    "page": "/player/channel9.html"
+  },
+  {
+    "name": "channel10",
+    "title": "TUDN",
+    "logo": "/player/logos/channel10.png",
+    "hls": "https://stream.tv247on.com/hls/channel10/index.m3u8",
+    "page": "/player/channel10.html"
+  },
+  {
+    "name": "channel11",
+    "title": "Cartoon Network HD",
+    "logo": "/player/logos/channel11.png",
+    "hls": "https://stream.tv247on.com/hls/channel11/index.m3u8",
+    "page": "/player/channel11.html"
+  },
+  {
+    "name": "channel12",
+    "title": "TNT México HD",
+    "logo": "/player/logos/channel12.png",
+    "hls": "https://stream.tv247on.com/hls/channel12/index.m3u8",
+    "page": "/player/channel12.html"
+  },
+  {
+    "name": "channel13",
+    "title": "AXN HD",
+    "logo": "/player/logos/channel13.png",
+    "hls": "https://stream.tv247on.com/hls/channel13/index.m3u8",
+    "page": "/player/channel13.html"
+  },
+  {
+    "name": "channel14",
+    "title": "Space HD",
+    "logo": "/player/logos/channel14.png",
+    "hls": "https://stream.tv247on.com/hls/channel14/index.m3u8",
+    "page": "/player/channel14.html"
+  },
+  {
+    "name": "channel15",
+    "title": "ESPN 3 HD",
+    "logo": "/player/logos/channel15.png",
+    "hls": "https://stream.tv247on.com/hls/channel15/index.m3u8",
+    "page": "/player/channel15.html"
+  },
+  {
+    "name": "channel16",
+    "title": "Canal N HD (Perú)",
+    "logo": "/player/logos/channel16.png",
+    "hls": "https://stream.tv247on.com/hls/channel16/index.m3u8",
+    "page": "/player/channel16.html"
+  },
+  {
+    "name": "channel17",
+    "title": "Latina HD (Perú)",
+    "logo": "/player/logos/channel17.png",
+    "hls": "https://stream.tv247on.com/hls/channel17/index.m3u8",
+    "page": "/player/channel17.html"
+  },
+  {
+    "name": "channel18",
+    "title": "Movistar Deportes (Perú)",
+    "logo": "/player/logos/channel18.png",
+    "hls": "https://stream.tv247on.com/hls/channel18/index.m3u8",
+    "page": "/player/channel18.html"
+  },
+  {
+    "name": "channel19",
+    "title": "DTV Sports Plus (Perú)",
+    "logo": "/player/logos/channel19.png",
+    "hls": "https://stream.tv247on.com/hls/channel19/index.m3u8",
+    "page": "/player/channel19.html"
+  },
+  {
+    "name": "channel20",
+    "title": "ESPN Extra HD (Perú)",
+    "logo": "/player/logos/channel20.png",
+    "hls": "https://stream.tv247on.com/hls/channel20/index.m3u8",
+    "page": "/player/channel20.html"
+  },
+  {
+    "name": "channel21",
+    "title": "ESPN HD (Perú)",
+    "logo": "/player/logos/channel21.png",
+    "hls": "https://stream.tv247on.com/hls/channel21/index.m3u8",
+    "page": "/player/channel21.html"
+  },
+  {
+    "name": "channel22",
+    "title": "América TV HD (Perú)",
+    "logo": "/player/logos/channel22.png",
+    "hls": "https://stream.tv247on.com/hls/channel22/index.m3u8",
+    "page": "/player/channel22.html"
+  },
+  {
+    "name": "channel23",
+    "title": "Perú Mágico",
+    "logo": "/player/logos/channel23.png",
+    "hls": "https://stream.tv247on.com/hls/channel23/index.m3u8",
+    "page": "/player/channel23.html"
+  },
+  {
+    "name": "channel24",
+    "title": "ATV+ (Perú)",
+    "logo": "/player/logos/channel24.png",
+    "hls": "https://stream.tv247on.com/hls/channel24/index.m3u8",
+    "page": "/player/channel24.html"
+  }
+]

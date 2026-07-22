@@ -1,6 +1,17 @@
 import os, re, json, glob, subprocess, time, unicodedata, sys
 DISK="/opt/streaming-stack/vod-disk"
-HOST="tvon247.com"; USER="2E3VBEM"; PW="QA91PXZ"; UA="okhttp/4.9.3"
+# Provider credentials live in the untracked config/accounts.env (gitignored), NOT here.
+def _acct(k, d=""):
+    p=os.path.join(os.path.dirname(os.path.abspath(__file__)),"..","config","accounts.env")
+    try:
+        for line in open(p):
+            line=line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                kk,vv=line.split("=",1)
+                if kk.strip()==k: return vv.strip()
+    except FileNotFoundError: pass
+    return os.environ.get(k, d)
+HOST=_acct("VOD_HOST","tvon247.com"); USER=_acct("VOD_USER"); PW=_acct("VOD_PW"); UA="okhttp/4.9.3"
 LOG=DISK+"/subs.log"
 ONLY=set(sys.argv[1:])  # optional slug filter for testing
 TEXT={"subrip","srt","ass","ssa","mov_text","webvtt","text","microdvd"}
