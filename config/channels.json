@@ -704,6 +704,81 @@
       ],
       "logo": "/player/logos/channel24.png",
       "use_standby": true
+    },
+    {
+      "channel_name": "channel25",
+      "display_name": "DTV Sports 1 (Per\u00fa)",
+      "enabled": true,
+      "source_url": "http://@@ACCT_PE1@@/197711",
+      "hls_url": "https://stream.tv247on.com/hls/channel25/index.m3u8",
+      "standby_file": "standby/standby.mp4",
+      "bitrate": 2500,
+      "resolution": "1280x720",
+      "fps": 30,
+      "audio_bitrate": 128,
+      "_comment_source": "Peru package (accounts in config/accounts.env). 197711 = PER - DTV SPORTS 1 HD (H264 1080p, AAC 48k stereo). Added 2026-07-23.",
+      "audio_sync": "preserve",
+      "force_silent_audio": false,
+      "video_mode": "encode",
+      "encode_resolution": "960x540",
+      "_comment_failover": "Same stream ID across all 3 Peru accounts; primary rotated to balance ~4 primaries/account. Only one URL active at a time.",
+      "source_urls": [
+        "http://@@ACCT_PE1@@/197711",
+        "http://@@ACCT_PE2@@/197711",
+        "http://@@ACCT_PE3@@/197711"
+      ],
+      "logo": "/player/logos/channel25.png",
+      "use_standby": true
+    },
+    {
+      "channel_name": "channel26",
+      "display_name": "DTV Sports 2 (Per\u00fa)",
+      "enabled": true,
+      "source_url": "http://@@ACCT_PE2@@/197712",
+      "hls_url": "https://stream.tv247on.com/hls/channel26/index.m3u8",
+      "standby_file": "standby/standby.mp4",
+      "bitrate": 2500,
+      "resolution": "1280x720",
+      "fps": 30,
+      "audio_bitrate": 128,
+      "_comment_source": "Peru package (accounts in config/accounts.env). 197712 = PER - DTV SPORTS 2 HD (H264 1080p, AAC 48k stereo). Added 2026-07-23.",
+      "audio_sync": "preserve",
+      "force_silent_audio": false,
+      "video_mode": "encode",
+      "encode_resolution": "960x540",
+      "_comment_failover": "Same stream ID across all 3 Peru accounts; primary rotated to balance ~4 primaries/account. Only one URL active at a time.",
+      "source_urls": [
+        "http://@@ACCT_PE2@@/197712",
+        "http://@@ACCT_PE3@@/197712",
+        "http://@@ACCT_PE1@@/197712"
+      ],
+      "logo": "/player/logos/channel26.png",
+      "use_standby": true
+    },
+    {
+      "channel_name": "channel27",
+      "display_name": "ESPN 2 HD (Per\u00fa)",
+      "enabled": true,
+      "source_url": "http://@@ACCT_PE3@@/312516",
+      "hls_url": "https://stream.tv247on.com/hls/channel27/index.m3u8",
+      "standby_file": "standby/standby.mp4",
+      "bitrate": 2500,
+      "resolution": "1280x720",
+      "fps": 30,
+      "audio_bitrate": 128,
+      "_comment_source": "Peru package (accounts in config/accounts.env). 312516 = PER - ESPN 2 HD (H264 720p60, AAC 48k stereo). Added 2026-07-23.",
+      "audio_sync": "preserve",
+      "force_silent_audio": false,
+      "video_mode": "encode",
+      "encode_resolution": "960x540",
+      "_comment_failover": "Same stream ID across all 3 Peru accounts; primary rotated to balance ~4 primaries/account. Only one URL active at a time.",
+      "source_urls": [
+        "http://@@ACCT_PE3@@/312516",
+        "http://@@ACCT_PE1@@/312516",
+        "http://@@ACCT_PE2@@/312516"
+      ],
+      "logo": "/player/logos/channel27.png",
+      "use_standby": true
     }
   ]
 }

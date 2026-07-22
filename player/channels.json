@@ -166,5 +166,26 @@
     "logo": "/player/logos/channel24.png",
     "hls": "https://stream.tv247on.com/hls/channel24/index.m3u8",
     "page": "/player/channel24.html"
+  },
+  {
+    "name": "channel25",
+    "title": "DTV Sports 1 (Perú)",
+    "logo": "/player/logos/channel25.png",
+    "hls": "https://stream.tv247on.com/hls/channel25/index.m3u8",
+    "page": "/player/channel25.html"
+  },
+  {
+    "name": "channel26",
+    "title": "DTV Sports 2 (Perú)",
+    "logo": "/player/logos/channel26.png",
+    "hls": "https://stream.tv247on.com/hls/channel26/index.m3u8",
+    "page": "/player/channel26.html"
+  },
+  {
+    "name": "channel27",
+    "title": "ESPN 2 HD (Perú)",
+    "logo": "/player/logos/channel27.png",
+    "hls": "https://stream.tv247on.com/hls/channel27/index.m3u8",
+    "page": "/player/channel27.html"
   }
 ]
