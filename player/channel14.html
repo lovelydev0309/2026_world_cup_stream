@@ -167,6 +167,9 @@
   // a prior (destroyed) instance left pending — otherwise a stale timer fires
   // stopLoad/reseek against the fresh player mid-startup and disrupts its rebuild.
   let _recoverTimer = null, _stallTimer = null, _badgeTimer = null, _recoverCount = 0;
+  // A/V-desync re-lock state (desktop-MSE audio-out-of-sync fix): timestamps of the
+  // last hiccup that risks leaving audio offset, and of the last re-lock performed.
+  let _desyncRiskAt = 0, _lastResyncAt = 0;
 
   // ── Log ──────────────────────────────────────────────────
   function log(msg, type = "") {
@@ -354,6 +357,36 @@
         if (video.playbackRate !== 1) video.playbackRate = 1;
       }
     }
+
+    // ── Audio/Video re-lock — the cure for "audio desync until manual reload" ──
+    // On desktop, hls.js buffers audio and video in SEPARATE MSE SourceBuffers.
+    // When the network stalls and hls.js jumps the VIDEO across a gap (a nudge or
+    // seek-over-hole), the AUDIO track can be left offset — and because the video
+    // keeps advancing and no error fires, nothing else here corrects it, so the
+    // sound plays out-of-sync INDEFINITELY (the client's "only a manual reload
+    // fixes it"). A short FORWARD SEEK makes the browser flush its decode pipeline
+    // and re-decode BOTH tracks from the same instant, re-locking them in place —
+    // the automatic equivalent of the reload, with no page refresh. (Mobile Safari
+    // uses native HLS, one A/V-locked pipeline, which is why it self-recovers.)
+    function resyncAudioVideo(reason) {
+      const now = Date.now();
+      if (now - _lastResyncAt < 15000) return;       // cooldown — never thrash/loop
+      if (!hls || video.paused || video.seeking) return;
+      const b = video.buffered;
+      if (!b.length) return;                          // empties handled by stall path
+      const end = b.end(b.length - 1);
+      let target = Math.max(
+        (isFinite(hls.liveSyncPosition) ? hls.liveSyncPosition : 0),
+        video.currentTime + 1.0                       // guarantee a real re-decode
+      );
+      target = Math.min(target, end - 0.5);           // stay safely inside the buffer
+      if (target <= video.currentTime + 0.2) return;  // nothing meaningful to seek
+      _lastResyncAt = now;
+      log(`Re-locking audio/video sync (${reason})`, "warn");
+      video.playbackRate = 1;
+      try { video.currentTime = target; } catch (e) {}
+      video.play().catch(() => {});
+    }
     // Resume and KEEP trying until playback starts — the in-page auto-replay.
     // A 700ms time gate collapses concurrent resume requests into a single
     // play() WITHOUT latching: a stalled live stream can leave play()'s promise
@@ -459,6 +492,7 @@
     function handleBufferStall(label) {
       log(label, "warn");
       showBufferingSoon();
+      _desyncRiskAt = Date.now();   // a stall that needs a nudge can leave A/V offset
       if (_stallTimer || _recoverTimer) return;
       _stallTimer = setTimeout(() => {
         _stallTimer = null;
@@ -525,8 +559,10 @@
             handleBufferStall(`Stall (${data.details}) – waiting for next segment`);
             break;
           case Hls.ErrorDetails.BUFFER_SEEK_OVER_HOLE:
-            // hls.js already seeked past the gap; just resume
+            // hls.js seeked the VIDEO past the gap → the audio can be left offset;
+            // flag a desync risk so the watchdog re-locks A/V once steady.
             log(`Seek over hole – resuming`, "warn");
+            _desyncRiskAt = Date.now();
             video.play().catch(() => {});
             break;
           case Hls.ErrorDetails.FRAG_LOAD_ERROR:
@@ -595,6 +631,13 @@
       } else { _latHits = 0; }
       maintainCushion();          // rebuild the forward cushion during healthy play
       if (video.currentTime > _wdLast + 0.1) {          // advancing → healthy
+        // A recent hiccup jumped the video? Re-lock audio/video now that playback
+        // is steady again — fixes the desktop-MSE audio desync that fires no error
+        // and would otherwise persist until a manual reload (rate-limited inside).
+        if (_desyncRiskAt && Date.now() - _desyncRiskAt > 3000) {
+          _desyncRiskAt = 0;
+          resyncAudioVideo("post-hiccup");
+        }
         _wdLast = video.currentTime; _wdStuck = 0; return;
       }
       _wdStuck++;                                       // not advancing
