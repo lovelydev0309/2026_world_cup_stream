@@ -109,20 +109,21 @@
       "encode_resolution": "960x540",
       "source_urls": [
         "http://@@ACCT3@@/1028359",
-        "http://@@ACCT4@@/1028359",
-        "http://@@ACCT1@@/1028359",
-        "http://@@ACCT2@@/1028359",
         "http://@@ACCT5@@/1028359",
         "http://@@ACCT6@@/1028359",
+        "http://@@ACCT2@@/1028359",
+        "http://@@ACCT4@@/1028359",
+        "http://@@ACCT1@@/1028359",
         "http://@@ACCT3@@/30583",
-        "http://@@ACCT4@@/30583",
-        "http://@@ACCT1@@/30583",
-        "http://@@ACCT2@@/30583",
         "http://@@ACCT5@@/30583",
-        "http://@@ACCT6@@/30583"
+        "http://@@ACCT6@@/30583",
+        "http://@@ACCT2@@/30583",
+        "http://@@ACCT4@@/30583",
+        "http://@@ACCT1@@/30583"
       ],
       "logo": "/player/logos/channel3.png",
-      "use_standby": true
+      "use_standby": true,
+      "_comment": "tvon247 MX ESPN 1028359 + LATINO 30583 backup. Failover order reordered 2026-07-25 to lead with connection-HEADROOM accounts (ACCT3/5/6/2) and push the over-subscribed ACCT1 (6/5) and at-cap ACCT4 LAST \u2014 ESPN was churning failovers onto contended accounts = 'slight buffering'. Re-encoded 540p."
     },
     {
       "channel_name": "channel4",
