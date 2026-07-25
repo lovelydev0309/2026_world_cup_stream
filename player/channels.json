@@ -71,7 +71,7 @@
   },
   {
     "name": "channel11",
-    "title": "Cartoon Network HD",
+    "title": "Fox Sports 2 HD",
     "logo": "/player/logos/channel11.png",
     "hls": "https://stream.tv247on.com/hls/channel11/index.m3u8",
     "page": "/player/channel11.html"

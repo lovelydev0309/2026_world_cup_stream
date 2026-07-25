@@ -329,9 +329,9 @@
     },
     {
       "channel_name": "channel11",
-      "display_name": "Cartoon Network HD",
+      "display_name": "Fox Sports 2 HD",
       "enabled": true,
-      "source_url": "http://@@ACCT6@@/30614",
+      "source_url": "http://@@ACCT6@@/1028353",
       "hls_url": "https://stream.tv247on.com/hls/channel11/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -339,22 +339,21 @@
       "fps": 30,
       "audio_bitrate": 128,
       "logo": "/player/logos/channel11.png",
-      "_comment": "tvon247 CARTOON NETWORK. Swapped 2026-07-25: MX 1028338 died across ALL 6 accounts (~10s then EOF + broken/silent audio) -> switched to LATINO 30614 (h264 1080p, AAC stereo, sustained-healthy) re-encoded 540p. ARG 1091093 appended as deep backup so a single provider-wide feed death can't take the channel down again.",
+      "_comment": "tvon247 MX FOX SPORTS 2 (1028353, h264 1080p, AAC). REPLACED Cartoon Network 2026-07-25 (client request; MX Cartoon feed 1028338 had died provider-side). Re-encoded 540p. PER 312520 appended as cross-package deep backup.",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "video_mode": "encode",
       "use_standby": true,
       "encode_resolution": "960x540",
       "source_urls": [
-        "http://@@ACCT6@@/30614",
-        "http://@@ACCT4@@/30614",
-        "http://@@ACCT5@@/30614",
-        "http://@@ACCT2@@/30614",
-        "http://@@ACCT3@@/30614",
-        "http://@@ACCT1@@/30614",
-        "http://@@ACCT4@@/1091093",
-        "http://@@ACCT2@@/1091093",
-        "http://@@ACCT6@@/1091093"
+        "http://@@ACCT6@@/1028353",
+        "http://@@ACCT4@@/1028353",
+        "http://@@ACCT5@@/1028353",
+        "http://@@ACCT2@@/1028353",
+        "http://@@ACCT3@@/1028353",
+        "http://@@ACCT1@@/1028353",
+        "http://@@ACCT_PE1@@/312520",
+        "http://@@ACCT_PE2@@/312520"
       ]
     },
     {
