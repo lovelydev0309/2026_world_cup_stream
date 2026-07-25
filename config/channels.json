@@ -331,7 +331,7 @@
       "channel_name": "channel11",
       "display_name": "Cartoon Network HD",
       "enabled": true,
-      "source_url": "http://@@ACCT6@@/1028338",
+      "source_url": "http://@@ACCT6@@/30614",
       "hls_url": "https://stream.tv247on.com/hls/channel11/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -339,19 +339,22 @@
       "fps": 30,
       "audio_bitrate": 128,
       "logo": "/player/logos/channel11.png",
-      "_comment": "tvon247 id 1028338 via account ACCT4. Re-encoded 540p (fixes source DTS/1080p issues copy couldn't) + standby, like ch1-3.",
+      "_comment": "tvon247 CARTOON NETWORK. Swapped 2026-07-25: MX 1028338 died across ALL 6 accounts (~10s then EOF + broken/silent audio) -> switched to LATINO 30614 (h264 1080p, AAC stereo, sustained-healthy) re-encoded 540p. ARG 1091093 appended as deep backup so a single provider-wide feed death can't take the channel down again.",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "video_mode": "encode",
       "use_standby": true,
       "encode_resolution": "960x540",
       "source_urls": [
-        "http://@@ACCT6@@/1028338",
-        "http://@@ACCT4@@/1028338",
-        "http://@@ACCT5@@/1028338",
-        "http://@@ACCT2@@/1028338",
-        "http://@@ACCT1@@/1028338",
-        "http://@@ACCT3@@/1028338"
+        "http://@@ACCT6@@/30614",
+        "http://@@ACCT4@@/30614",
+        "http://@@ACCT5@@/30614",
+        "http://@@ACCT2@@/30614",
+        "http://@@ACCT3@@/30614",
+        "http://@@ACCT1@@/30614",
+        "http://@@ACCT4@@/1091093",
+        "http://@@ACCT2@@/1091093",
+        "http://@@ACCT6@@/1091093"
       ]
     },
     {
