@@ -156,7 +156,7 @@
       "channel_name": "channel5",
       "display_name": "Azteca Uno HD",
       "enabled": true,
-      "source_url": "http://@@ACCT5@@/1028329",
+      "source_url": "http://@@ACCT3@@/1028329",
       "hls_url": "https://stream.tv247on.com/hls/channel5/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -164,22 +164,25 @@
       "fps": 30,
       "audio_bitrate": 128,
       "logo": "/player/logos/channel5.png",
-      "_comment": "tvon247 id 1028329 via account ACCT1. Re-encoded 540p (fixes source DTS/1080p issues copy couldn't) + standby, like ch1-3.",
+      "_comment": "tvon247 MX AZTECA UNO 1028329 (only Azteca Uno feed on provider). Re-encoded 540p. token_refresh_secs=35: this feed's 302 token stalls early (~15-45s) under real load (an isolated pull misleadingly survived >120s), so the aggressive 35s proactive refresh is REQUIRED to preempt silent stalls (raising it to 85s on 2026-07-26 caused early watchdog-kill cascades \u2014 reverted). Kept 9-account failover depth incl the 3 Peru accounts (free slots) + headroom ordering so cascades land on healthy accounts.",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "video_mode": "encode",
       "use_standby": true,
       "encode_resolution": "960x540",
       "source_urls": [
+        "http://@@ACCT3@@/1028329",
         "http://@@ACCT5@@/1028329",
         "http://@@ACCT6@@/1028329",
-        "http://@@ACCT1@@/1028329",
+        "http://@@ACCT_PE1@@/1028329",
+        "http://@@ACCT_PE2@@/1028329",
+        "http://@@ACCT_PE3@@/1028329",
         "http://@@ACCT2@@/1028329",
-        "http://@@ACCT3@@/1028329",
-        "http://@@ACCT4@@/1028329"
+        "http://@@ACCT4@@/1028329",
+        "http://@@ACCT1@@/1028329"
       ],
-      "token_refresh_secs": 35,
-      "_comment_token": "Azteca Uno feed (1028329) has an unusually short 302-token TTL (~30-110s) on ALL accounts and no alternate stream ID exists; refresh proactively at 45s to preempt the silent-socket stall (buffer->0 cause). Other channels use the 85s script default."
+      "_comment_token": "Azteca Uno feed (1028329) has an unusually short 302-token TTL (~30-110s) on ALL accounts and no alternate stream ID exists; refresh proactively at 45s to preempt the silent-socket stall (buffer->0 cause). Other channels use the 85s script default.",
+      "token_refresh_secs": 35
     },
     {
       "channel_name": "channel6",
