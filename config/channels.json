@@ -656,10 +656,14 @@
       "source_urls": [
         "http://@@ACCT_PE1@@/187630",
         "http://@@ACCT_PE2@@/187630",
-        "http://@@ACCT_PE3@@/187630"
+        "http://@@ACCT_PE3@@/187630",
+        "http://@@ACCT_PE1@@/30574",
+        "http://@@ACCT_PE2@@/30574",
+        "http://@@ACCT_PE3@@/30574"
       ],
       "logo": "/player/logos/channel22.png",
-      "use_standby": true
+      "use_standby": true,
+      "_comment": "tvon247 PER AMERICA TV: 187630 (VIP) primary + 30574 (base Am\u00e9rica Televisi\u00f3n) as 2nd feed variant across the 3 Peru accounts. 2026-07-27: BOTH feeds degrading provider-side (Connection reset by peer / ~10s bursts + broken audio) = source outage, auto-recovers when provider restores. Encode 540p."
     },
     {
       "channel_name": "channel23",
