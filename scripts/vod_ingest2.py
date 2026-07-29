@@ -630,7 +630,12 @@ def main():
         pr=probe(url)
         if not pr: log(f"skip {sid} {name[:42]}: probe-fail"); continue
         v,a,w,h,dur=pr
-        if v!="h264" or a!="aac": log(f"skip {sid} {name[:42]}: {v}/{a}"); continue
+        if US:
+            if v not in ("h264","hevc"): log(f"skip {sid} {name[:42]}: video {v}"); continue
+            transcode_v=(v=="hevc")   # hevc->h264 (cap 1080p); any audio ->aac
+        else:
+            if v!="h264" or a!="aac": log(f"skip {sid} {name[:42]}: {v}/{a}"); continue
+            transcode_v=False
         if dur<600: log(f"skip {sid} {name[:42]}: short {int(dur)}s"); continue
         outdir=os.path.join(DISK,slug); os.makedirs(outdir,exist_ok=True)
         log(f"INGEST {sid} '{name[:45]}' [{w}x{h} {v}/{a} {fmt_hms(dur)}] -> {slug}")
@@ -639,17 +644,20 @@ def main():
         # sources remux to TS with no decoder headers -> audio plays but no video.
         # video copied; audio re-encoded to STEREO AAC — some sources are 5.1/6ch AAC
         # which many browsers can't play through HLS/MSE (no sound). -ac 2 fixes it.
+        vopts=(["-c:v","libx264","-preset","veryfast","-crf","21","-pix_fmt","yuv420p",
+                "-vf","scale='min(1920,iw)':-2","-threads","6"] if transcode_v
+               else ["-c:v","copy","-bsf:v","h264_mp4toannexb"])
         cmd=["ffmpeg","-y","-nostdin","-loglevel","error","-user_agent",UA,
-             "-i",url,"-map","0:v:0","-map","0:a:0","-c:v","copy","-bsf:v","h264_mp4toannexb",
+             "-rw_timeout","60000000","-i",url,"-map","0:v:0","-map","0:a:0"]+vopts+[
              "-c:a","aac","-ac","2","-b:a","192k","-ar","48000",
              "-f","hls","-hls_time","10","-hls_playlist_type","vod",
              "-hls_flags","independent_segments",
              "-hls_segment_filename",os.path.join(outdir,"seg_%04d.ts"),
              os.path.join(outdir,"index.m3u8")]
         try:
-            r=subprocess.run(cmd,capture_output=True,timeout=2400,text=True)
+            r=subprocess.run(cmd,capture_output=True,timeout=(9000 if transcode_v else 2400),text=True)
         except subprocess.TimeoutExpired:
-            log("  FAIL ffmpeg timeout"); subprocess.run(["rm","-rf",outdir]); continue
+            log(f"  FAIL ffmpeg timeout ({'transcode' if transcode_v else 'copy'})"); subprocess.run(["rm","-rf",outdir]); continue
         if r.returncode!=0 or not os.path.exists(os.path.join(outdir,"index.m3u8")):
             log(f"  FAIL ffmpeg rc={r.returncode}: {(r.stderr or '')[-160:]}"); subprocess.run(["rm","-rf",outdir]); continue
         # verify the remuxed video actually has decoder headers (width>0); transcode fallback if not
