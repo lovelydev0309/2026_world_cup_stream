@@ -15,16 +15,17 @@ def _acct(k, d=""):
     return os.environ.get(k, d)
 HOST=_acct("VOD_HOST","tvon247.com"); USER=_acct("VOD_USER"); PW=_acct("VOD_PW")
 UA="okhttp/4.9.3"
-DISK="/opt/streaming-stack/vod-disk"
+DISK=os.environ.get("VOD_DISK","/opt/streaming-stack/vod-disk")
 CATALOG=DISK+"/_catalog.json"
 JSONL=DISK+"/_ingest.jsonl"
 LOG=DISK+"/ingest2.log"
-CDN="https://stream.tv247on.com/player/vod"
+CDN=os.environ.get("VOD_CDN","https://stream.tv247on.com/player/vod")
 TARGET=int(sys.argv[1]) if len(sys.argv)>1 else 30
 MIN_FREE_GB=int(sys.argv[2]) if len(sys.argv)>2 else 20   # stop if disk free drops under this
 # quality filter (client rule): only 2000-2025 rating>=8, and >=2026 rating>=7; nothing before 2000
 QUALITY=os.environ.get("VOD_QUALITY","0")=="1"
 ONLY_NEW=os.environ.get("VOD_ONLY_NEW","0")=="1"   # auto-update mode: only new (>=NEW_YEAR) releases
+US=os.environ.get("VOD_US","0")=="1"   # US/English catalog mode: EN only, 2023-26 r>=7, classics(<2023) r>=8.5
 NEW_YEAR=2026; MIN_RATING_NEW=7.0; MIN_RATING_OLD=8.0; MIN_YEAR=2000
 
 def log(m):
@@ -587,7 +588,10 @@ def main():
     # prefer Spanish/Latino for the Mexican audience, newest first within each tier
     PREF={"ES":0,"LAT":0,"MX":0,"LA":0,"BR":2}
     cands=[x for x in data if x.get("stream_icon") and str(x.get("container_extension","")).lower() in ("mp4","mkv")]
-    if QUALITY:  # quality catalog: Spanish/Latino first, then highest-rated
+    if US:  # US/English catalog: English only, highest-rated first
+        cands=[x for x in cands if lang_of(x.get("name","")) in ("EN","US")]
+        cands.sort(key=lambda x:-rating_of(x))
+    elif QUALITY:  # quality catalog: Spanish/Latino first, then highest-rated
         cands.sort(key=lambda x:(PREF.get(lang_of(x.get("name","")),3), -rating_of(x)))
     else:
         cands.sort(key=lambda x:(PREF.get(lang_of(x.get("name","")),3), -added_key(x)))
@@ -603,7 +607,11 @@ def main():
         if not raw: continue
         name=clean_title(raw)
         if norm_title(name) in seen_titles: continue   # skip title already in catalog
-        if QUALITY:   # client rule: 2000-2025 rating>=8, >=2026 rating>=7, nothing pre-2000
+        if US:   # US English rule: 2023-2026 rating>=7; classics (<2023) rating>=8.5
+            if lang_of(raw) not in ("EN","US"): continue
+            y=int(year_from_name(raw) or 0); r=rating_of(c)
+            if not ((2023<=y<=2026 and r>=7.0) or (0<y<2023 and r>=8.5)): continue
+        elif QUALITY:   # client rule: 2000-2025 rating>=8, >=2026 rating>=7, nothing pre-2000
             y=int(year_from_name(raw) or 0); r=rating_of(c)
             if y < MIN_YEAR: continue
             if ONLY_NEW and y < NEW_YEAR: continue

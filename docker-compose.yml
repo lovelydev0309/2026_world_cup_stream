@@ -27,6 +27,7 @@ services:
       - ./player:/var/www/player                   # Browser test players
       - ./vc-logs:/var/log/vc                       # view-count beacon log
       - ./vod-disk:/var/www/player/vod              # 200GB movie disk
+      - ./vod-disk-us:/var/www/player/vod-us         # 1TB US movie disk
       - ./nginx-rtmp/nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro       # Let's Encrypt certs
     environment:
