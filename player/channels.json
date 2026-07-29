@@ -187,5 +187,117 @@
     "logo": "/player/logos/channel27.png",
     "hls": "https://stream.tv247on.com/hls/channel27/index.m3u8",
     "page": "/player/channel27.html"
+  },
+  {
+    "name": "channel28",
+    "title": "Apple TV+",
+    "logo": "/player/logos/channel28.png",
+    "hls": "https://stream.tv247on.com/hls/channel28/index.m3u8",
+    "page": "/player/channel28.html"
+  },
+  {
+    "name": "channel29",
+    "title": "Hulu",
+    "logo": "/player/logos/channel29.png",
+    "hls": "https://stream.tv247on.com/hls/channel29/index.m3u8",
+    "page": "/player/channel29.html"
+  },
+  {
+    "name": "channel30",
+    "title": "HBO",
+    "logo": "/player/logos/channel30.png",
+    "hls": "https://stream.tv247on.com/hls/channel30/index.m3u8",
+    "page": "/player/channel30.html"
+  },
+  {
+    "name": "channel31",
+    "title": "HBO Max (1)",
+    "logo": "/player/logos/channel31.png",
+    "hls": "https://stream.tv247on.com/hls/channel31/index.m3u8",
+    "page": "/player/channel31.html"
+  },
+  {
+    "name": "channel32",
+    "title": "HBO Max (15)",
+    "logo": "/player/logos/channel32.png",
+    "hls": "https://stream.tv247on.com/hls/channel32/index.m3u8",
+    "page": "/player/channel32.html"
+  },
+  {
+    "name": "channel33",
+    "title": "Paramount Network",
+    "logo": "/player/logos/channel33.png",
+    "hls": "https://stream.tv247on.com/hls/channel33/index.m3u8",
+    "page": "/player/channel33.html"
+  },
+  {
+    "name": "channel34",
+    "title": "Paramount+ w/ Showtime",
+    "logo": "/player/logos/channel34.png",
+    "hls": "https://stream.tv247on.com/hls/channel34/index.m3u8",
+    "page": "/player/channel34.html"
+  },
+  {
+    "name": "channel35",
+    "title": "Peacock",
+    "logo": "/player/logos/channel35.png",
+    "hls": "https://stream.tv247on.com/hls/channel35/index.m3u8",
+    "page": "/player/channel35.html"
+  },
+  {
+    "name": "channel36",
+    "title": "Cinemax",
+    "logo": "/player/logos/channel36.png",
+    "hls": "https://stream.tv247on.com/hls/channel36/index.m3u8",
+    "page": "/player/channel36.html"
+  },
+  {
+    "name": "channel37",
+    "title": "ESPN ACC Network",
+    "logo": "/player/logos/channel37.png",
+    "hls": "https://stream.tv247on.com/hls/channel37/index.m3u8",
+    "page": "/player/channel37.html"
+  },
+  {
+    "name": "channel38",
+    "title": "ESPN 2 (US)",
+    "logo": "/player/logos/channel38.png",
+    "hls": "https://stream.tv247on.com/hls/channel38/index.m3u8",
+    "page": "/player/channel38.html"
+  },
+  {
+    "name": "channel39",
+    "title": "ESPN U",
+    "logo": "/player/logos/channel39.png",
+    "hls": "https://stream.tv247on.com/hls/channel39/index.m3u8",
+    "page": "/player/channel39.html"
+  },
+  {
+    "name": "channel40",
+    "title": "beIN Sports",
+    "logo": "/player/logos/channel40.png",
+    "hls": "https://stream.tv247on.com/hls/channel40/index.m3u8",
+    "page": "/player/channel40.html"
+  },
+  {
+    "name": "channel41",
+    "title": "Fox Sports 1 (US)",
+    "logo": "/player/logos/channel41.png",
+    "hls": "https://stream.tv247on.com/hls/channel41/index.m3u8",
+    "page": "/player/channel41.html"
+  },
+  {
+    "name": "channel42",
+    "title": "NBC Sports Bay Area",
+    "logo": "/player/logos/channel42.png",
+    "hls": "https://stream.tv247on.com/hls/channel42/index.m3u8",
+    "page": "/player/channel42.html"
+  },
+  {
+    "name": "channel43",
+    "title": "NBC Golf",
+    "logo": "/player/logos/channel43.png",
+    "hls": "https://stream.tv247on.com/hls/channel43/index.m3u8",
+    "page": "/player/channel43.html"
   }
 ]
