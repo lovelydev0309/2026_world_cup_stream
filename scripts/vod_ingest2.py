@@ -607,10 +607,16 @@ def main():
         if not raw: continue
         name=clean_title(raw)
         if norm_title(name) in seen_titles: continue   # skip title already in catalog
-        if US:   # US English rule: 2023-2026 rating>=7; classics (<2023) rating>=8.5
+        us_info=None
+        if US:   # US English rule: 2023-2026 r>=7; classics(<2023) r>=8.5; target genres
             if lang_of(raw) not in ("EN","US"): continue
             y=int(year_from_name(raw) or 0); r=rating_of(c)
             if not ((2023<=y<=2026 and r>=7.0) or (0<y<2023 and r>=8.5)): continue
+            try: us_info=(api("get_vod_info",vod_id=sid).get("info",{}) or {})
+            except Exception: us_info={}
+            _g=(us_info.get("genre","") or "").lower()
+            if _g and not any(k in _g for k in ("science fiction","sci-fi","action","comedy","thriller","suspense","mystery","drama","romance","adventure")):
+                log(f"skip {sid} {name[:38]}: genre '{us_info.get('genre','')}'"); continue
         elif QUALITY:   # client rule: 2000-2025 rating>=8, >=2026 rating>=7, nothing pre-2000
             y=int(year_from_name(raw) or 0); r=rating_of(c)
             if y < MIN_YEAR: continue
@@ -668,14 +674,15 @@ def main():
             req=urllib.request.Request(c["stream_icon"],headers={"User-Agent":UA})
             open(os.path.join(outdir,"poster.jpg"),"wb").write(urllib.request.urlopen(req,timeout=30).read())
         except Exception as ex: log(f"  poster-fail: {ex}")
-        info={}
-        try: info=(api("get_vod_info",vod_id=sid).get("info",{}) or {})
-        except Exception as ex: log(f"  vod_info-fail: {ex}")
+        info=us_info if US else {}
+        if not US:
+            try: info=(api("get_vod_info",vod_id=sid).get("info",{}) or {})
+            except Exception as ex: log(f"  vod_info-fail: {ex}")
         year=((info.get("releasedate") or info.get("release_date") or "")[:4]) or year_from_name(raw)
         try: rating=float(info.get("rating") or c.get("rating") or 0)
         except: rating=0.0
         rec={"title":name,"slug":slug,"year":year,"rating":round(rating,1),
-             "language":"Spanish","genre":info.get("genre","") or "","duration":fmt_hms(dur),
+             "language":("English" if US else "Spanish"),"genre":info.get("genre","") or "","duration":fmt_hms(dur),
              "country":info.get("country","") or "","director":info.get("director","") or "",
              "cast":info.get("cast","") or info.get("actors","") or "",
              "plot":info.get("plot") or info.get("description") or "",
