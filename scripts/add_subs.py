@@ -1,5 +1,5 @@
 import os, re, json, glob, subprocess, time, unicodedata, sys
-DISK="/opt/streaming-stack/vod-disk"
+DISK=os.environ.get("VOD_DISK","/opt/streaming-stack/vod-disk")
 # Provider credentials live in the untracked config/accounts.env (gitignored), NOT here.
 def _acct(k, d=""):
     p=os.path.join(os.path.dirname(os.path.abspath(__file__)),"..","config","accounts.env")
