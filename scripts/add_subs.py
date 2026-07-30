@@ -11,9 +11,10 @@ def _acct(k, d=""):
                 if kk.strip()==k: return vv.strip()
     except FileNotFoundError: pass
     return os.environ.get(k, d)
-HOST=_acct("VOD_HOST","tvon247.com"); USER=_acct("VOD_USER"); PW=_acct("VOD_PW"); UA="okhttp/4.9.3"
+HOST=os.environ.get("SUB_HOST") or _acct("VOD_HOST","tvon247.com"); USER=os.environ.get("SUB_USER") or _acct("VOD_USER"); PW=os.environ.get("SUB_PW") or _acct("VOD_PW"); UA="okhttp/4.9.3"
 LOG=DISK+"/subs.log"
 ONLY=set(sys.argv[1:])  # optional slug filter for testing
+WORKER_N=int(os.environ.get("WORKER_N","1")); WORKER_I=int(os.environ.get("WORKER_I","0"))
 TEXT={"subrip","srt","ass","ssa","mov_text","webvtt","text","microdvd"}
 LANG={"spa":("es","Español"),"es":("es","Español"),"eng":("en","English"),"en":("en","English"),
  "por":("pt","Português"),"pt":("pt","Português"),"fre":("fr","Français"),"fra":("fr","Français"),"fr":("fr","Français"),
@@ -54,6 +55,7 @@ for p in sorted(glob.glob(DISK+"/*/index.html")):
 log("=== subs start: %d movies ==="%len(movies))
 ok=nosub=skip=fail=0
 for slug,sid,ext in movies:
+    if WORKER_N>1 and (int(sid)%WORKER_N)!=WORKER_I: continue
     d=os.path.join(DISK,slug); page=os.path.join(d,"index.html")
     html=open(page,encoding="utf-8").read()
     if 'kind="subtitles"' in html: skip+=1; continue
