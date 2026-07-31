@@ -30,11 +30,22 @@ UA         = "Mozilla/5.0 (SyntheticMonitor)"
 SILENCE_DB = -70          # a full segment below this = effectively silent
 CONFIRM_N  = 2            # unhealthy for this many consecutive runs before we alert
 
-CHANNELS = {
-    1:"World Cup", 2:"Canal 5", 3:"ESPN", 4:"Las Estrellas", 5:"Azteca Uno",
-    6: "Discovery Channel", 7:"Azteca 7", 8:"Fox Sports 1", 9:"ESPN 2", 10:"TUDN",
-    11:"Cartoon Network", 12:"TNT Mexico", 13:"AXN", 14:"Space", 15:"ESPN 3",
-}
+# Channel list is loaded from the LIVE lineup (player/channels.json) so the
+# monitor auto-covers every channel and never goes stale when channels change.
+import json as _json
+def _load_channels():
+    try:
+        lineup = _json.load(open("/opt/streaming-stack/player/channels.json"))
+        out = {}
+        for c in lineup:
+            nm = c.get("name", "")
+            if nm.startswith("channel"):
+                try: out[int(nm[7:])] = (c.get("title") or nm)
+                except Exception: pass
+        return out or {n: "channel%d" % n for n in range(1, 16)}
+    except Exception:
+        return {n: "channel%d" % n for n in range(1, 16)}
+CHANNELS = _load_channels()
 
 def now():  return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 def log(m):
