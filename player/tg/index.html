@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Kozee TV — Live</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:#0b1220;color:#e6edf6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+  .player{position:sticky;top:0;width:100%;height:34vh;min-height:200px;background:#000;z-index:2}
+  video{width:100%;height:100%;object-fit:contain;background:#000}
+  .unmute{position:absolute;bottom:10px;right:10px;background:rgba(2,132,199,.92);color:#fff;border:0;
+    padding:8px 12px;border-radius:20px;font-size:13px;font-weight:600;z-index:3;cursor:pointer}
+  .hint{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.55);padding:4px 10px;border-radius:12px;font-size:11px}
+  .list{padding:10px 10px 30px}
+  .card{display:flex;align-items:center;gap:12px;padding:11px 13px;margin-bottom:8px;
+    background:#141d2e;border:1px solid #1e2a40;border-radius:12px;cursor:pointer}
+  .card.active{background:#0284c7;border-color:#0284c7;font-weight:700}
+  .card img{width:36px;height:36px;object-fit:contain;border-radius:8px;background:#0b1220;flex:none}
+  .card .n{font-size:14px}
+</style>
+</head>
+<body>
+  <div class="player">
+    <video id="v" autoplay muted playsinline webkit-playsinline></video>
+    <span class="hint" id="hint">▶︎ En vivo</span>
+    <button class="unmute" id="unmute">🔇 Toca para sonido</button>
+  </div>
+  <div class="list" id="list"></div>
+
+<script>
+(function(){
+  var TG = window.Telegram && window.Telegram.WebApp;
+  if (TG){ TG.ready(); TG.expand();
+    try{ if(TG.isVersionAtLeast && TG.isVersionAtLeast('7.7')) TG.disableVerticalSwipes(); }catch(e){} }
+
+  // Base host that serves the MASKED stream paths (/tv/<opaque-id>/...). Swap to a
+  // branded subdomain later if desired; it must be HTTPS and CORS-enabled.
+  var BASE = "https://stream.tv247on.com";
+  var LOGO = BASE + "/player/logos/";
+
+  // 16 US channels -> OPAQUE ids (the real channelN is hidden behind these; the
+  // /tv/<id>/ nginx map on the server resolves id -> channelN). Rotate ids to kill leaks.
+  var CH = [
+    {id:"a7x2k9",name:"Apple TV+",           logo:"channel28.png"},
+    {id:"b3m8p1",name:"Hulu",                logo:"channel29.png"},
+    {id:"c5q2w7",name:"HBO",                 logo:"channel30.png"},
+    {id:"d9r4t6",name:"HBO Max",             logo:"channel31.png"},
+    {id:"e2n8y3",name:"HBO Max 2",           logo:"channel32.png"},
+    {id:"f6k1v9",name:"Paramount Network",   logo:"channel33.png"},
+    {id:"g4h7z2",name:"Paramount+",          logo:"channel34.png"},
+    {id:"h8b3m5",name:"Peacock",             logo:"channel35.png"},
+    {id:"j1d6q4",name:"Cinemax",             logo:"channel36.png"},
+    {id:"k7f2x8",name:"ESPN ACC",            logo:"channel37.png"},
+    {id:"m3p9c1",name:"ESPN 2",              logo:"channel38.png"},
+    {id:"n5t4w6",name:"ESPN U",              logo:"channel39.png"},
+    {id:"p2j8k3",name:"beIN Sports",         logo:"channel40.png"},
+    {id:"q9v1h7",name:"Fox Sports 1",        logo:"channel41.png"},
+    {id:"r4m6b2",name:"NBC Sports Bay Area", logo:"channel42.png"},
+    {id:"s8x3n5",name:"NBC Golf",            logo:"channel43.png"}
+  ];
+
+  var v = document.getElementById("v");
+  var hint = document.getElementById("hint");
+  var unmute = document.getElementById("unmute");
+  var hls = null;
+
+  function play(idx){
+    var c = CH[idx];
+    var url = BASE + "/tv/" + c.id + "/index.m3u8";
+    hint.textContent = "● " + c.name;
+    if (hls){ try{hls.destroy();}catch(e){} hls=null; }
+    // iOS Telegram (WKWebView) has no MSE -> use native HLS; everyone else uses hls.js
+    if (v.canPlayType("application/vnd.apple.mpegurl")){
+      v.src = url; v.play().catch(function(){});
+    } else if (window.Hls && Hls.isSupported()){
+      hls = new Hls({maxBufferLength:30, liveSyncDurationCount:4});
+      hls.loadSource(url); hls.attachMedia(v);
+      hls.on(Hls.Events.MANIFEST_PARSED, function(){ v.play().catch(function(){}); });
+      hls.on(Hls.Events.ERROR, function(_,d){ if(d && d.fatal){
+        if(d.type===Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
+        else if(d.type===Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
+      }});
+    }
+  }
+
+  var list = document.getElementById("list");
+  CH.forEach(function(c,i){
+    var el = document.createElement("div");
+    el.className = "card" + (i===0?" active":"");
+    el.innerHTML = '<img src="'+LOGO+c.logo+'" onerror="this.style.visibility=\'hidden\'"><span class="n">'+c.name+'</span>';
+    el.onclick = function(){
+      var cards = document.querySelectorAll(".card");
+      for (var k=0;k<cards.length;k++) cards[k].classList.remove("active");
+      el.classList.add("active"); play(i);
+      window.scrollTo({top:0,behavior:"smooth"});
+    };
+    list.appendChild(el);
+  });
+
+  // muted autoplay is required; one tap enables sound
+  unmute.onclick = function(){ v.muted = !v.muted; unmute.textContent = v.muted ? "🔇 Toca para sonido" : "🔊 Sonido activado"; if(!v.muted) v.play().catch(function(){}); };
+  v.addEventListener("click", function(){ if(v.muted){ v.muted=false; unmute.textContent="🔊 Sonido activado"; } });
+
+  play(0);
+})();
+</script>
+</body>
+</html>
