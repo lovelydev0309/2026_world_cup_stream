@@ -127,7 +127,7 @@
   },
   {
     "name": "channel19",
-    "title": "DTV Sports Plus (Perú)",
+    "title": "IPE HD (Perú)",
     "logo": "/player/logos/channel19.png",
     "hls": "https://stream.tv247on.com/hls/channel19/index.m3u8",
     "page": "/player/channel19.html"
@@ -169,7 +169,7 @@
   },
   {
     "name": "channel25",
-    "title": "DTV Sports 1 (Perú)",
+    "title": "TV Perú HD",
     "logo": "/player/logos/channel25.png",
     "hls": "https://stream.tv247on.com/hls/channel25/index.m3u8",
     "page": "/player/channel25.html"
