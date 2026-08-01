@@ -104,7 +104,14 @@
   unmute.onclick = function(){ v.muted = !v.muted; unmute.textContent = v.muted ? "🔇 Toca para sonido" : "🔊 Sonido activado"; if(!v.muted) v.play().catch(function(){}); };
   v.addEventListener("click", function(){ if(v.muted){ v.muted=false; unmute.textContent="🔊 Sonido activado"; } });
 
-  play(0);
+  // Open a specific channel if ?ch=<opaque-id> is present (from a channel button).
+  // The drawer still lets viewers switch — they just land on the one they tapped.
+  var want = (new URLSearchParams(location.search)).get("ch");
+  var startIdx = 0;
+  if (want){ for (var qi=0; qi<CH.length; qi++){ if (CH[qi].id===want){ startIdx=qi; break; } } }
+  var allCards = document.querySelectorAll(".card");
+  for (var ci=0; ci<allCards.length; ci++) allCards[ci].classList.toggle("active", ci===startIdx);
+  play(startIdx);
 })();
 </script>
 </body>
