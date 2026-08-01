@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src https://api.telegram.org; img-src https: data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>Kozee TV — Panel de Control Telegram</title>
+<style>
+  :root{
+    --bg:#0f1420;--panel:#171d2b;--panel2:#1e2636;--border:#2a3446;
+    --text:#e7ecf4;--muted:#93a1b8;--accent:#3390ec;--accent2:#2b7de0;
+    --ok:#2ecc71;--err:#e74c3c;--warn:#f1c40f;--tg-bg:#0e1621;--tg-bubble:#182533;
+    --btn:#212b3d;--radius:12px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:15px;line-height:1.45;}
+  a{color:var(--accent)}
+  header{padding:18px 20px;background:linear-gradient(120deg,#182338,#0f1420);
+    border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+  header h1{margin:0;font-size:19px;display:flex;align-items:center;gap:10px}
+  header .sub{color:var(--muted);font-size:12.5px;margin-top:3px}
+  .wrap{max-width:1200px;margin:0 auto;padding:18px;display:grid;
+    grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px;margin-bottom:0}
+  .card h2{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:8px}
+  .card h2 .badge{font-size:11px;background:var(--panel2);color:var(--muted);
+    padding:2px 8px;border-radius:20px;font-weight:500}
+  label{display:block;font-size:12.5px;color:var(--muted);margin:10px 0 4px}
+  input[type=text],input[type=password],textarea,select{
+    width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    padding:9px 11px;border-radius:9px;font-size:14px;font-family:inherit;outline:none}
+  input:focus,textarea:focus{border-color:var(--accent)}
+  textarea{resize:vertical;min-height:120px;line-height:1.5;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:4px}
+  button{cursor:pointer;font-family:inherit}
+  .btn{background:var(--accent);color:#fff;border:none;padding:10px 16px;border-radius:9px;
+    font-size:14px;font-weight:600}
+  .btn:hover{background:var(--accent2)}
+  .btn.sec{background:var(--btn);border:1px solid var(--border);color:var(--text)}
+  .btn.sec:hover{background:var(--panel2)}
+  .btn.sm{padding:6px 10px;font-size:12.5px}
+  .btn.danger{background:#3a2230;border:1px solid #5a2a3a;color:#ff8fa3}
+  .btn.danger:hover{background:#4a2838}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+  .row-cfg{border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:10px;
+    background:var(--panel2)}
+  .row-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}
+  .row-head .rlabel{font-size:12px;color:var(--muted)}
+  .row-head .rbtns{display:flex;gap:6px;flex-wrap:wrap}
+  .btn-cfg{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+  .btn-cfg input{flex:1;min-width:0}
+  .btn-cfg .lbl{flex:0 0 34%}
+  .btn-cfg .del{flex:0 0 auto}
+  .btn-cfg input.empty-url{border-color:var(--warn)}
+  .x{background:transparent;border:1px solid var(--border);color:var(--muted);
+    border-radius:7px;padding:6px 9px;font-size:12px;line-height:1}
+  .x:hover{color:var(--err);border-color:var(--err)}
+  /* Telegram-style preview */
+  .tg{background:var(--tg-bg);border-radius:12px;padding:14px;
+    background-image:radial-gradient(rgba(255,255,255,.02) 1px,transparent 1px);
+    background-size:22px 22px}
+  .tg-bubble{background:var(--tg-bubble);border-radius:12px;overflow:hidden;max-width:420px;
+    box-shadow:0 1px 2px rgba(0,0,0,.3)}
+  .tg-photo{width:100%;display:block;background:#0a0f18;max-height:300px;object-fit:cover}
+  .tg-photo.hide{display:none}
+  .tg-photo-err{padding:26px;text-align:center;color:var(--muted);font-size:12.5px;
+    background:#0a0f18;display:none}
+  .tg-body{padding:10px 12px 4px;font-size:14.5px;word-wrap:break-word;white-space:pre-wrap}
+  .tg-body b{font-weight:700}
+  .tg-body code{background:rgba(255,255,255,.08);padding:1px 5px;border-radius:5px;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  .tg-body a{color:#6ab3f3}
+  .tg-kb{padding:8px;display:flex;flex-direction:column;gap:6px}
+  .tg-kb-row{display:flex;gap:6px}
+  .tg-kb-btn{flex:1;background:rgba(255,255,255,.07);color:#dbe7f5;text-align:center;
+    padding:9px 6px;border-radius:8px;font-size:13px;font-weight:500;
+    text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    display:flex;align-items:center;justify-content:center;gap:4px}
+  .tg-kb-btn:hover{background:rgba(255,255,255,.12)}
+  .tg-time{text-align:right;font-size:10.5px;color:var(--muted);padding:2px 12px 8px}
+  #result{margin-top:12px;padding:11px 13px;border-radius:9px;font-size:13px;display:none;
+    white-space:pre-wrap;word-break:break-word}
+  #result.ok{display:block;background:#12301f;border:1px solid #1f5a38;color:#9be8b8}
+  #result.err{display:block;background:#331a1f;border:1px solid #5a2a34;color:#ffb0bd}
+  #result.info{display:block;background:#1a2740;border:1px solid #2b4a7a;color:#a8c6f0}
+  #result.warn{display:block;background:#332a12;border:1px solid #5a4a1f;color:#ecd58a}
+  .full{grid-column:1/-1}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:520px){.split{grid-template-columns:1fr}.btn-cfg{flex-wrap:wrap}.btn-cfg .lbl{flex:1 1 100%}}
+  .savenote{font-size:11px;color:var(--muted);margin-left:auto}
+  .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<header>
+  <h1>📺 Kozee TV — Panel de Publicación Telegram
+    <span style="font-size:11px;font-weight:400;color:var(--muted)">@KozeeTVwatch_bot</span>
+  </h1>
+  <div class="sub">Compón la publicación (imagen + texto HTML + botones) y envíala a tu canal. La configuración se guarda en este navegador.</div>
+</header>
+
+<div class="wrap">
+
+  <!-- LEFT COLUMN: editors -->
+  <div>
+    <!-- 1. API Configuration -->
+    <div class="card">
+      <h2>🔑 Configuración de API <span class="badge">guardado sólo en tu navegador</span></h2>
+      <label>Bot Token</label>
+      <input type="password" id="botToken" placeholder="123456789:ABCdef... (pégalo aquí)" autocomplete="off">
+      <div class="hint">Sólo se envía a api.telegram.org y se guarda en este navegador. <b>No</b> se incluye al exportar la configuración.</div>
+      <label>Chat ID / Usuario del canal</label>
+      <input type="text" id="chatId" placeholder="@kozeechannel  ó  -100xxxxxxxxxx">
+      <div class="hint">El bot debe ser administrador del canal de destino.</div>
+      <div class="actions" style="margin-top:12px">
+        <button class="btn sec sm" id="btnGetMe">Probar token (getMe)</button>
+        <label style="display:flex;align-items:center;gap:6px;margin:0;color:var(--text);font-size:13px;cursor:pointer">
+          <input type="checkbox" id="showToken" style="width:auto"> Mostrar token
+        </label>
+      </div>
+    </div>
+
+    <!-- 2. Content Editing -->
+    <div class="card">
+      <h2>📝 Contenido del mensaje</h2>
+      <label>URL de imagen (cabecera, opcional)</label>
+      <input type="text" id="imageUrl" placeholder="https://.../banner.jpg">
+      <label>Cuerpo del mensaje (HTML: &lt;b&gt; &lt;i&gt; &lt;code&gt; &lt;a&gt; ...)</label>
+      <textarea id="bodyText" spellcheck="false"></textarea>
+      <div class="hint">Usa <code>\n</code> reales (Enter) para saltos de línea. Etiquetas HTML permitidas por Telegram.</div>
+      <div class="hint" id="capWarn" style="color:var(--warn);display:none">⚠️ El texto supera 1024 caracteres: al enviarse con imagen no cabe en el pie de foto, así que la imagen y el texto se publicarán como dos mensajes separados.</div>
+    </div>
+
+    <!-- 3. Buttons -->
+    <div class="card">
+      <h2>🔘 Botones (teclado inline)</h2>
+      <div id="rowsWrap"></div>
+      <div class="actions">
+        <button class="btn sec sm" id="btnAddRow">➕ Añadir fila nueva</button>
+      </div>
+      <div class="hint">Los botones sin URL (resaltados en amarillo) se omiten al enviar y en la vista previa.</div>
+    </div>
+
+    <!-- 5. Actions -->
+    <div class="card">
+      <h2>🚀 Acciones</h2>
+      <div class="toolbar">
+        <button class="btn" id="btnSend">📨 Enviar al canal</button>
+        <button class="btn sec" id="btnExport">⬇️ Exportar config (TXT)</button>
+        <button class="btn sec" id="btnImport">⬆️ Importar config (TXT)</button>
+        <input type="file" id="fileImport" accept=".txt,.json,application/json,text/plain" style="display:none">
+        <button class="btn sec sm" id="btnReset">↺ Restaurar por defecto</button>
+        <span class="savenote" id="saveNote">guardado ✔</span>
+      </div>
+      <div id="result"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN: preview -->
+  <div>
+    <div class="card" style="position:sticky;top:96px">
+      <h2>👁 Vista previa en vivo</h2>
+      <div class="tg">
+        <div class="tg-bubble">
+          <img class="tg-photo hide" id="pvPhoto" alt="" referrerpolicy="no-referrer">
+          <div class="tg-photo-err" id="pvPhotoErr">⚠️ No se pudo cargar la imagen (se enviará igualmente si la URL es válida)</div>
+          <div class="tg-body" id="pvBody"></div>
+          <div class="tg-kb" id="pvKb"></div>
+          <div class="tg-time" id="pvTime"></div>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:10px">El texto se renderiza tal como Telegram lo mostrará (parse_mode HTML). Los botones vacíos se omiten al enviar.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var LS_KEY = "kozeetv_tg_panel_v1";
+  var LS_TOKEN_KEY = "kozeetv_tg_panel_v1_token";
+  var API = "https://api.telegram.org/bot";
+  var CAPTION_MAX = 1024;
+
+  // ---------- Default config ----------
+  var CH = [
+    ["Apple TV+","a7x2k9"],["Hulu","b3m8p1"],["HBO","c5q2w7"],["HBO Max","d9r4t6"],
+    ["HBO Max 2","e2n8y3"],["Paramount","f6k1v9"],["Paramount+","g4h7z2"],["Peacock","h8b3m5"],
+    ["Cinemax","j1d6q4"],["ESPN ACC","k7f2x8"],["ESPN 2","m3p9c1"],["ESPN U","n5t4w6"],
+    ["beIN Sports","p2j8k3"],["Fox Sports 1","q9v1h7"],["NBC Sports","r4m6b2"],["NBC Golf","s8x3n5"]
+  ];
+  function chBtn(name,id){ return {label:name,url:"https://stream.tv247on.com/player/tg/?ch="+id}; }
+  function defaultRows(){
+    var rows=[], i, r;
+    for(r=0;r<4;r++){
+      var row=[];
+      for(i=0;i<4;i++){ var c=CH[r*4+i]; row.push(chBtn(c[0],c[1])); }
+      rows.push(row);
+    }
+    rows.push([
+      {label:"🙋 Suscripción",url:"https://kozeetv.com/product/subscription-package/"},
+      {label:"🤷 Soporte",url:"https://kozeetv.com/"}
+    ]);
+    return rows;
+  }
+  var DEFAULT_BODY = "<b>🙋‍♂️ Mira los canales de TV más populares aquí</b>\nPuedes ver los mejores canales de EE.UU. en HD.\n\n<b>Cómo ver</b>\nToca el canal de abajo para verlo directamente ⬇️";
+
+  function defaultConfig(){
+    return {
+      botToken:"",
+      chatId:"@kozeechannel",
+      imageUrl:"",
+      body:DEFAULT_BODY,
+      rows:defaultRows()
+    };
+  }
+
+  var cfg = defaultConfig();
+
+  // ---------- DOM refs ----------
+  var $ = function(id){ return document.getElementById(id); };
+  var botToken=$("botToken"), chatId=$("chatId"), imageUrl=$("imageUrl"),
+      bodyText=$("bodyText"), rowsWrap=$("rowsWrap"), result=$("result"),
+      saveNote=$("saveNote");
+
+  // ---------- Row sanitization (deep validation) ----------
+  function sanitizeRows(rows){
+    if(!Array.isArray(rows)) return null;
+    return rows.filter(Array.isArray).map(function(r){
+      return r.map(function(b){
+        return {
+          label:String(b && b.label!=null ? b.label : ""),
+          url:String(b && b.url!=null ? b.url : "")
+        };
+      });
+    });
+  }
+
+  // ---------- URL normalization / scheme whitelist ----------
+  // Returns a safe URL, or "" if the value is empty or uses an unsafe scheme
+  // (e.g. javascript:, data:). Scheme-less values are assumed https.
+  function normalizeUrl(url){
+    url=(url==null?"":String(url)).trim();
+    if(!url) return "";
+    if(/^(https?:|tg:|mailto:)/i.test(url)) return url;
+    if(/^[a-zA-Z][a-zA-Z0-9+.\-]*:/.test(url)) return ""; // some other (unsafe/unknown) scheme -> reject
+    return "https://"+url; // scheme-less -> assume https
+  }
+
+  // ---------- Persistence ----------
+  // Main config is stored WITHOUT the token; the token lives under a separate
+  // browser-only key and is never included in exports.
+  function serializableCfg(){
+    var c=Object.assign({},cfg);
+    c.botToken="";
+    return c;
+  }
+  var saveTimer=null;
+  function persist(){
+    try{
+      localStorage.setItem(LS_KEY, JSON.stringify(serializableCfg()));
+      if(cfg.botToken) localStorage.setItem(LS_TOKEN_KEY, cfg.botToken);
+      else localStorage.removeItem(LS_TOKEN_KEY);
+    }catch(e){}
+    saveNote.textContent="guardado ✔";
+    saveNote.style.opacity="1";
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(function(){ saveNote.style.opacity="0.5"; },900);
+  }
+  function load(){
+    try{
+      var raw=localStorage.getItem(LS_KEY);
+      if(raw){
+        var o=JSON.parse(raw);
+        if(o && typeof o==="object"){
+          cfg=Object.assign(defaultConfig(),o);
+          var sr=sanitizeRows(cfg.rows);
+          cfg.rows = sr!=null ? sr : defaultRows();
+        }
+      }
+    }catch(e){}
+    try{
+      var t=localStorage.getItem(LS_TOKEN_KEY);
+      if(t) cfg.botToken=t;
+    }catch(e){}
+  }
+
+  // ---------- HTML escaping ----------
+  function escAttr(s){
+    return String(s==null?"":s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+  // Sanitize body: allow a whitelist of Telegram HTML tags, escape everything else.
+  var ALLOWED = ["b","strong","i","em","u","ins","s","strike","del","code","pre","a","tg-spoiler","span","br","blockquote"];
+  function renderBodyHTML(raw){
+    raw = String(raw==null?"":raw);
+    // Escape all, then selectively unescape allowed tags.
+    var esc = raw.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    // Unescape allowed tags: &lt;tag ...&gt; and &lt;/tag&gt;
+    // Attribute span uses [\s\S]*? (non-greedy) so escaped quotes (&quot;) inside
+    // attributes still match — a plain [^&]*? would break on &quot;/&amp;/&#39;.
+    var tagRe = /&lt;(\/?)([a-zA-Z][a-zA-Z0-9\-]*)((?:\s+[\s\S]*?)?)\s*(\/?)&gt;/g;
+    esc = esc.replace(tagRe, function(m, slash, tag, attrs, selfclose){
+      var t=tag.toLowerCase();
+      if(ALLOWED.indexOf(t)===-1) return m; // keep escaped
+      var safeAttrs="";
+      if(t==="a" && attrs){
+        // only allow href
+        var hm = attrs.match(/href\s*=\s*(&quot;|&#39;|"|')([^&"']*)(&quot;|&#39;|"|')/i)
+              || attrs.match(/href\s*=\s*([^\s]+)/i);
+        if(hm){
+          var href = hm[2]!==undefined?hm[2]:hm[1];
+          href = href.replace(/&quot;|&#39;|["']/g,"");
+          if(/^(https?:|tg:|mailto:)/i.test(href)){
+            safeAttrs=' href="'+escAttr(href)+'" target="_blank" rel="noopener"';
+          }
+        }
+      }
+      return "<"+slash+t+safeAttrs+(selfclose?"/":"")+">";
+    });
+    // Newlines to <br> for display
+    esc = esc.replace(/\n/g,"<br>");
+    return esc;
+  }
+
+  // ---------- Build inline_keyboard for sending ----------
+  function buildKeyboard(){
+    var kb=[];
+    cfg.rows.forEach(function(row){
+      var out=[];
+      row.forEach(function(b){
+        var label=(b.label||"").trim();
+        var url=normalizeUrl(b.url);
+        if(!url) return; // skip empty / label-only / unsafe-scheme buttons
+        out.push({text: label||url, url: url});
+      });
+      if(out.length) kb.push(out);
+    });
+    return kb;
+  }
+
+  // ---------- Preview ----------
+  function renderTime(){
+    var d=new Date();
+    $("pvTime").textContent=("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);
+  }
+  function renderPreview(){
+    var pvPhoto=$("pvPhoto"), pvPhotoErr=$("pvPhotoErr");
+    var img=(cfg.imageUrl||"").trim();
+    var body=(cfg.body||"");
+    if(img){
+      // Only (re)assign src when it actually changed, so the 30s clock tick
+      // never re-fetches/re-decodes the banner.
+      if(pvPhoto.getAttribute("src")!==img){
+        pvPhoto.onerror=function(){ pvPhoto.classList.add("hide"); pvPhotoErr.style.display="block"; };
+        pvPhoto.onload=function(){ pvPhoto.classList.remove("hide"); pvPhotoErr.style.display="none"; };
+        pvPhoto.setAttribute("src",img);
+      }
+    }else{
+      pvPhoto.classList.add("hide"); pvPhoto.removeAttribute("src"); pvPhotoErr.style.display="none";
+    }
+
+    var cw=$("capWarn");
+    if(cw) cw.style.display=(img && body.length>CAPTION_MAX)?"block":"none";
+
+    $("pvBody").innerHTML = renderBodyHTML(body) || '<span style="color:var(--muted)">(cuerpo vacío)</span>';
+    var kb=$("pvKb"); kb.innerHTML="";
+    cfg.rows.forEach(function(row){
+      var visible=[];
+      row.forEach(function(b){
+        var url=normalizeUrl(b.url);
+        if(!url) return; // match send behavior: skip buttons without a valid url
+        visible.push({label:(b.label||"").trim(), url:url});
+      });
+      if(!visible.length) return;
+      var rd=document.createElement("div"); rd.className="tg-kb-row";
+      visible.forEach(function(b){
+        var a=document.createElement("a"); a.className="tg-kb-btn";
+        // normalizeUrl already guarantees a whitelisted scheme; validate once more defensively.
+        var safe=/^(https?:|tg:|mailto:)/i.test(b.url)?b.url:"#";
+        a.href=safe; a.target="_blank"; a.rel="noopener noreferrer";
+        a.textContent=b.label||b.url;
+        rd.appendChild(a);
+      });
+      kb.appendChild(rd);
+    });
+    renderTime();
+  }
+
+  // ---------- Button config editor ----------
+  function renderRows(){
+    rowsWrap.innerHTML="";
+    cfg.rows.forEach(function(row,ri){
+      var box=document.createElement("div"); box.className="row-cfg";
+      var head=document.createElement("div"); head.className="row-head";
+      var lbl=document.createElement("span"); lbl.className="rlabel"; lbl.textContent="Fila "+(ri+1)+" · "+row.length+" botón(es)";
+      var rbtns=document.createElement("div"); rbtns.className="rbtns";
+      var addBtn=document.createElement("button"); addBtn.className="btn sec sm"; addBtn.textContent="＋ botón";
+      addBtn.onclick=function(){ cfg.rows[ri].push({label:"",url:""}); commit(); };
+      var delRow=document.createElement("button"); delRow.className="btn danger sm"; delRow.textContent="🗑 fila";
+      delRow.onclick=function(){ cfg.rows.splice(ri,1); commit(); };
+      rbtns.appendChild(addBtn); rbtns.appendChild(delRow);
+      head.appendChild(lbl); head.appendChild(rbtns);
+      box.appendChild(head);
+
+      row.forEach(function(b,bi){
+        var line=document.createElement("div"); line.className="btn-cfg";
+        var il=document.createElement("input"); il.type="text"; il.className="lbl";
+        il.placeholder="Etiqueta"; il.value=b.label||"";
+        il.oninput=function(){ cfg.rows[ri][bi].label=il.value; commitSoft(); };
+        var iu=document.createElement("input"); iu.type="text";
+        iu.placeholder="https://..."; iu.value=b.url||"";
+        // Flag empty-URL buttons so the operator notices before sending.
+        if(!(b.url||"").trim()) iu.classList.add("empty-url");
+        iu.oninput=function(){
+          cfg.rows[ri][bi].url=iu.value;
+          if((iu.value||"").trim()) iu.classList.remove("empty-url"); else iu.classList.add("empty-url");
+          commitSoft();
+        };
+        var x=document.createElement("button"); x.className="x del"; x.textContent="✕"; x.title="Eliminar botón";
+        x.onclick=function(){ cfg.rows[ri].splice(bi,1); commit(); };
+        line.appendChild(il); line.appendChild(iu); line.appendChild(x);
+        box.appendChild(line);
+      });
+      rowsWrap.appendChild(box);
+    });
+  }
+
+  // commit = full re-render (structure changed); commitSoft = values only
+  function commit(){ renderRows(); renderPreview(); persist(); }
+  function commitSoft(){ renderPreview(); persist(); }
+
+  // ---------- Sync inputs <-> cfg ----------
+  function fillInputs(){
+    botToken.value=cfg.botToken||"";
+    chatId.value=cfg.chatId||"";
+    imageUrl.value=cfg.imageUrl||"";
+    bodyText.value=cfg.body||"";
+  }
+
+  botToken.oninput=function(){ cfg.botToken=botToken.value; persist(); };
+  chatId.oninput=function(){ cfg.chatId=chatId.value; persist(); };
+  imageUrl.oninput=function(){ cfg.imageUrl=imageUrl.value; renderPreview(); persist(); };
+  bodyText.oninput=function(){ cfg.body=bodyText.value; renderPreview(); persist(); };
+
+  $("showToken").onchange=function(){ botToken.type=this.checked?"text":"password"; };
+  $("btnAddRow").onclick=function(){ cfg.rows.push([{label:"",url:""}]); commit(); };
+
+  $("btnReset").onclick=function(){
+    if(!confirm("¿Restaurar la configuración por defecto? Se perderán tus cambios (excepto el token, que se conserva).")) return;
+    var keepToken=cfg.botToken;
+    cfg=defaultConfig(); cfg.botToken=keepToken;
+    fillInputs(); commit();
+  };
+
+  // ---------- Result banner ----------
+  function showResult(kind,msg){
+    result.className=kind; result.textContent=msg;
+  }
+
+  // ---------- Telegram API ----------
+  function tgToken(){ return (cfg.botToken||"").trim(); }
+  function apiCall(method, payload){
+    var token=tgToken();
+    if(!token) return Promise.reject(new Error("Falta el Bot Token."));
+    return fetch(API+encodeURIComponent(token)+"/"+method,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    }).then(function(r){ return r.json().catch(function(){ return {ok:false,description:"Respuesta no-JSON (HTTP "+r.status+")"}; }); });
+  }
+
+  $("btnGetMe").onclick=function(){
+    var token=tgToken();
+    if(!token){ showResult("err","Pega primero el Bot Token."); return; }
+    showResult("info","Comprobando token…");
+    fetch(API+encodeURIComponent(token)+"/getMe").then(function(r){return r.json();})
+      .then(function(j){
+        if(j.ok){ showResult("ok","✅ Token válido: @"+j.result.username+" ("+j.result.first_name+")"); }
+        else{ showResult("err","❌ Token rechazado: "+(j.description||"desconocido")); }
+      }).catch(function(e){ showResult("err","❌ Error de red: "+e.message); });
+  };
+
+  $("btnSend").onclick=function(){
+    var token=tgToken();
+    var chat=(cfg.chatId||"").trim();
+    if(!token){ showResult("err","Falta el Bot Token."); return; }
+    if(!chat){ showResult("err","Falta el Chat ID / usuario del canal."); return; }
+    var kb=buildKeyboard();
+    var body=(cfg.body||"");
+    var img=(cfg.imageUrl||"").trim();
+    showResult("info","Enviando…");
+
+    // Attach reply_markup only when there are buttons.
+    function withKb(payload){
+      if(kb.length) payload.reply_markup={inline_keyboard:kb};
+      return payload;
+    }
+
+    function sendText(text, kind, note){
+      var payload=withKb({
+        chat_id:chat, text:text||" ", parse_mode:"HTML", disable_web_page_preview:true
+      });
+      return apiCall("sendMessage",payload).then(function(j){
+        if(j.ok){
+          showResult(kind||"ok", ((kind==="warn")?"⚠️ ":"✅ ")+"Enviado"+(note?" — "+note:"")+".\nmessage_id: "+j.result.message_id);
+        }else{
+          showResult("err","❌ Telegram rechazó el envío: "+(j.description||"error desconocido")+"\n(código "+(j.error_code||"?")+")");
+        }
+        return j;
+      });
+    }
+
+    var chain;
+    if(img){
+      if(body.length<=CAPTION_MAX){
+        // Single message: photo + caption + keyboard.
+        var pPayload=withKb({ chat_id:chat, photo:img, caption:body, parse_mode:"HTML" });
+        chain=apiCall("sendPhoto",pPayload).then(function(j){
+          if(j.ok){
+            showResult("ok","✅ Enviado con imagen (sendPhoto).\nmessage_id: "+j.result.message_id);
+            return j;
+          }
+          // Photo rejected by Telegram -> text-only fallback (image is lost).
+          return sendText(body,"warn","la foto falló ("+(j.description||"error")+"): enviado SÓLO texto, SIN imagen");
+        }).catch(function(e){
+          // Network error on the photo -> try text-only.
+          return sendText(body,"warn","error de red en la foto ("+e.message+"): enviado SÓLO texto, SIN imagen");
+        });
+      }else{
+        // Caption exceeds Telegram's 1024-char limit: send the photo first (no
+        // caption/keyboard), then the full text (with keyboard) as a follow-up.
+        var photoPayload={ chat_id:chat, photo:img };
+        chain=apiCall("sendPhoto",photoPayload).then(function(pj){
+          if(pj.ok){
+            return sendText(body,"ok","el texto ("+body.length+" car.) supera el límite de 1024 del pie de foto, así que se envió la imagen y luego el texto como mensaje aparte");
+          }
+          return sendText(body,"warn","la imagen falló ("+(pj.description||"error")+"): enviado SÓLO texto, SIN imagen");
+        }).catch(function(e){
+          return sendText(body,"warn","error de red en la imagen ("+e.message+"): enviado SÓLO texto, SIN imagen");
+        });
+      }
+    }else{
+      chain=sendText(body);
+    }
+
+    // Single terminal catch so every path resolves the banner.
+    chain.catch(function(e){ showResult("err","❌ Error de red: "+e.message); });
+  };
+
+  // ---------- Export / Import ----------
+  $("btnExport").onclick=function(){
+    // Never write the bot token into the shareable export file.
+    var out=JSON.stringify(serializableCfg(),null,2);
+    var blob=new Blob([out],{type:"text/plain"});
+    var a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="kozeetv-tg-config.txt";
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },100);
+    showResult("ok","Configuración exportada (kozeetv-tg-config.txt). El token NO se incluye.");
+  };
+  $("btnImport").onclick=function(){ $("fileImport").click(); };
+  $("fileImport").onchange=function(e){
+    var f=e.target.files&&e.target.files[0];
+    if(!f) return;
+    var reader=new FileReader();
+    reader.onload=function(){
+      try{
+        var o=JSON.parse(reader.result);
+        if(!o||typeof o!=="object") throw new Error("formato inválido");
+        var keepToken=cfg.botToken;              // never import/overwrite the token
+        var next=Object.assign(defaultConfig(),o);
+        next.botToken=keepToken;
+        var sr=sanitizeRows(o.rows);             // deep-validate imported rows
+        next.rows=(sr && sr.length) ? sr : defaultRows();
+        cfg=next;                                // commit only after validation succeeds
+        fillInputs(); commit();
+        showResult("ok","Configuración importada correctamente.");
+      }catch(err){
+        showResult("err","❌ No se pudo importar: "+err.message);
+      }
+      $("fileImport").value="";
+    };
+    reader.readAsText(f);
+  };
+
+  // ---------- Init ----------
+  load();
+  fillInputs();
+  renderRows();
+  renderPreview();
+  setInterval(renderTime,30000); // refresh only the timestamp
+})();
+</script>
+</body>
+</html>
