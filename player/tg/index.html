@@ -19,12 +19,14 @@
     color:#fff;width:36px;height:36px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;
     align-items:center;justify-content:center}
   .vbtn.theater{right:52px;font-size:14px}
-  .list{padding:10px 10px 30px}
-  .card{display:flex;align-items:center;gap:12px;padding:11px 13px;margin-bottom:8px;
-    background:#141d2e;border:1px solid #1e2a40;border-radius:12px;cursor:pointer}
+  .list{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 10px 30px}
+  .card{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;
+    padding:10px 5px;background:#141d2e;border:1px solid #1e2a40;border-radius:12px;
+    cursor:pointer;text-align:center}
   .card.active{background:#0284c7;border-color:#0284c7;font-weight:700}
-  .card img{width:36px;height:36px;object-fit:contain;border-radius:8px;background:#0b1220;flex:none}
-  .card .n{font-size:14px}
+  .card img{width:42px;height:42px;object-fit:contain;border-radius:8px;background:#0b1220;flex:none}
+  .card .n{font-size:11px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;
+    -webkit-box-orient:vertical;overflow:hidden}
 </style>
 </head>
 <body>
