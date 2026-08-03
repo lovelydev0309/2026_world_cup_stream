@@ -105,7 +105,7 @@
   function esc(s){return (s==null?'':String(s)).replace(/[<>&"]/g,function(c){
     return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];});}
 
-  fetch(CAT).then(function(r){return r.json();}).then(function(d){
+  fetch(CAT + "?_=" + Date.now()).then(function(r){return r.json();}).then(function(d){
     MOVIES = (d||[]).filter(function(m){return m && m.m3u8_url;});
     // newest first when we have a sortable field
     MOVIES.sort(function(a,b){return String(b.year||'').localeCompare(String(a.year||''));});
