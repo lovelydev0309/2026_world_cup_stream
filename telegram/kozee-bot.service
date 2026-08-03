@@ -1,0 +1,16 @@
+[Unit]
+Description=Kozee TV Telegram menu bot (@KozeeTVwatch_bot, long-polling)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/streaming-stack/telegram
+ExecStart=/usr/bin/python3 /opt/streaming-stack/telegram/kozee_bot.py
+Restart=always
+RestartSec=5
+StandardOutput=append:/opt/streaming-stack/logs/kozee_bot.log
+StandardError=append:/opt/streaming-stack/logs/kozee_bot.log
+
+[Install]
+WantedBy=multi-user.target
