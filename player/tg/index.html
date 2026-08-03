@@ -9,11 +9,16 @@
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%;background:#0b1220;color:#e6edf6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-  .player{position:sticky;top:0;width:100%;height:34vh;min-height:200px;background:#000;z-index:2}
+  .player{position:sticky;top:0;width:100%;height:40vh;min-height:220px;background:#000;z-index:2}
+  .player.big{height:100vh;height:100dvh}
   video{width:100%;height:100%;object-fit:contain;background:#000}
   .unmute{position:absolute;bottom:10px;right:10px;background:rgba(2,132,199,.92);color:#fff;border:0;
     padding:8px 12px;border-radius:20px;font-size:13px;font-weight:600;z-index:3;cursor:pointer}
   .hint{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.55);padding:4px 10px;border-radius:12px;font-size:11px}
+  .vbtn{position:absolute;top:8px;right:8px;z-index:3;background:rgba(0,0,0,.5);border:1px solid #ffffff33;
+    color:#fff;width:36px;height:36px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;
+    align-items:center;justify-content:center}
+  .vbtn.theater{right:52px;font-size:14px}
   .list{padding:10px 10px 30px}
   .card{display:flex;align-items:center;gap:12px;padding:11px 13px;margin-bottom:8px;
     background:#141d2e;border:1px solid #1e2a40;border-radius:12px;cursor:pointer}
@@ -23,9 +28,11 @@
 </style>
 </head>
 <body>
-  <div class="player">
+  <div class="player" id="player">
     <video id="v" autoplay muted playsinline webkit-playsinline></video>
     <span class="hint" id="hint">▶︎ En vivo</span>
+    <button class="vbtn theater" id="theater" title="Ampliar">⤢</button>
+    <button class="vbtn" id="fs" title="Pantalla completa">⛶</button>
     <button class="unmute" id="unmute">🔇 Toca para sonido</button>
   </div>
   <div class="list" id="list"></div>
@@ -34,7 +41,8 @@
 (function(){
   var TG = window.Telegram && window.Telegram.WebApp;
   if (TG){ TG.ready(); TG.expand();
-    try{ if(TG.isVersionAtLeast && TG.isVersionAtLeast('7.7')) TG.disableVerticalSwipes(); }catch(e){} }
+    try{ if(TG.isVersionAtLeast && TG.isVersionAtLeast('7.7')) TG.disableVerticalSwipes(); }catch(e){}
+    try{ if(TG.requestFullscreen) TG.requestFullscreen(); }catch(e){} }
 
   // Base host that serves the MASKED stream paths (/tv/<opaque-id>/...). Swap to a
   // branded subdomain later if desired; it must be HTTPS and CORS-enabled.
@@ -103,6 +111,19 @@
   // muted autoplay is required; one tap enables sound
   unmute.onclick = function(){ v.muted = !v.muted; unmute.textContent = v.muted ? "🔇 Toca para sonido" : "🔊 Sonido activado"; if(!v.muted) v.play().catch(function(){}); };
   v.addEventListener("click", function(){ if(v.muted){ v.muted=false; unmute.textContent="🔊 Sonido activado"; } });
+
+  // Expand controls: ⤢ theater grows the player to fill the screen; ⛶ = device fullscreen.
+  var player = document.getElementById("player");
+  document.getElementById("theater").onclick = function(){
+    player.classList.toggle("big");
+    if(!player.classList.contains("big")) window.scrollTo({top:0,behavior:"smooth"});
+  };
+  document.getElementById("fs").onclick = function(){
+    if(v.webkitEnterFullscreen){ try{v.webkitEnterFullscreen();return;}catch(e){} }
+    if(document.fullscreenElement){ document.exitFullscreen&&document.exitFullscreen(); }
+    else if(player.requestFullscreen){ player.requestFullscreen().catch(function(){}); }
+    else if(player.webkitRequestFullscreen){ player.webkitRequestFullscreen(); }
+  };
 
   // Open a specific channel if ?ch=<opaque-id> is present (from a channel button).
   // The drawer still lets viewers switch — they just land on the one they tapped.

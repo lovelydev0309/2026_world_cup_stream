@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Kozee TV — Movies</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:#0b1220;color:#e6edf6;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+  /* ── catalog ── */
+  .top{position:sticky;top:0;z-index:5;background:rgba(11,18,32,.97);backdrop-filter:blur(6px);
+    padding:10px 12px 8px;border-bottom:1px solid #1b2740}
+  .top h1{font-size:16px;font-weight:800;letter-spacing:.3px;margin-bottom:8px}
+  .top h1 span{color:#38bdf8}
+  .search{width:100%;border:1px solid #24324c;background:#0f1728;color:#e6edf6;
+    border-radius:10px;padding:9px 12px;font-size:14px;outline:none}
+  .search::placeholder{color:#6b7a92}
+  .chips{display:flex;gap:6px;overflow-x:auto;padding:8px 2px 2px;-webkit-overflow-scrolling:touch}
+  .chip{flex:none;font-size:12px;padding:5px 11px;border-radius:14px;background:#14203a;
+    border:1px solid #24324c;color:#b9c6db;cursor:pointer;white-space:nowrap}
+  .chip.on{background:#0284c7;border-color:#0284c7;color:#fff;font-weight:700}
+  .count{padding:6px 14px 2px;font-size:11px;color:#6b7a92}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:8px 12px 40px}
+  @media(min-width:520px){.grid{grid-template-columns:repeat(4,1fr)}}
+  @media(min-width:760px){.grid{grid-template-columns:repeat(6,1fr)}}
+  .card{position:relative;border-radius:11px;overflow:hidden;background:#111a2c;
+    border:1px solid #1b2740;cursor:pointer;aspect-ratio:2/3}
+  .card img{width:100%;height:100%;object-fit:cover;display:block;background:#0b1220}
+  .card .meta{position:absolute;left:0;right:0;bottom:0;padding:16px 7px 6px;
+    background:linear-gradient(transparent,rgba(4,7,14,.92));font-size:11px;line-height:1.25}
+  .card .t{font-weight:700;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card .sub{color:#9fb0c8;font-size:10px;margin-top:2px}
+  .card .rt{position:absolute;top:6px;right:6px;background:rgba(2,8,20,.82);color:#ffcf5c;
+    font-size:10px;font-weight:800;padding:2px 6px;border-radius:8px}
+  .empty{padding:40px 20px;text-align:center;color:#6b7a92;font-size:13px}
+  /* ── player overlay ── */
+  .player{position:fixed;inset:0;z-index:20;background:#000;display:none;flex-direction:column}
+  .player.show{display:flex}
+  .stage{position:relative;flex:none;width:100%;height:100%;background:#000}
+  .stage video{width:100%;height:100%;object-fit:contain;background:#000}
+  .pbar{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:10px;
+    padding:10px 12px;background:linear-gradient(rgba(0,0,0,.7),transparent);z-index:2}
+  .pbar .pt{flex:1;font-size:14px;font-weight:700;text-shadow:0 1px 3px #000;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ic{background:rgba(255,255,255,.14);border:0;color:#fff;width:38px;height:38px;border-radius:50%;
+    font-size:17px;cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center}
+  .ic:active{background:rgba(255,255,255,.28)}
+  .cc{position:absolute;bottom:14px;right:12px;z-index:3;background:rgba(0,0,0,.6);
+    border:1px solid #ffffff33;color:#fff;border-radius:10px;padding:8px 12px;font-size:13px;
+    display:none;cursor:pointer}
+  .ccmenu{position:absolute;bottom:56px;right:12px;z-index:4;background:rgba(10,16,28,.97);
+    border:1px solid #24324c;border-radius:12px;padding:6px;display:none;min-width:150px}
+  .ccmenu.show{display:block}
+  .ccmenu button{display:block;width:100%;text-align:left;background:none;border:0;color:#dbe6f5;
+    padding:9px 12px;font-size:13px;border-radius:8px;cursor:pointer}
+  .ccmenu button.on{background:#0284c7;color:#fff;font-weight:700}
+  .load{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1;
+    color:#9fb0c8;font-size:13px}
+</style>
+</head>
+<body>
+  <div class="top">
+    <h1>🎬 Kozee <span>Movies</span></h1>
+    <input id="q" class="search" type="text" placeholder="Search movies…" autocomplete="off">
+    <div class="chips" id="chips"></div>
+  </div>
+  <div class="count" id="count"></div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">No movies found.</div>
+
+  <div class="player" id="player">
+    <div class="stage">
+      <div class="pbar">
+        <button class="ic" id="back" title="Back">‹</button>
+        <div class="pt" id="ptitle"></div>
+        <button class="ic" id="fs" title="Fullscreen">⛶</button>
+      </div>
+      <video id="v" playsinline webkit-playsinline controls></video>
+      <div class="load" id="load">Loading…</div>
+      <button class="cc" id="cc">CC</button>
+      <div class="ccmenu" id="ccmenu"></div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  var TG = window.Telegram && window.Telegram.WebApp;
+  if (TG){ try{TG.ready();TG.expand();}catch(e){}
+    try{ if(TG.isVersionAtLeast&&TG.isVersionAtLeast('7.7')) TG.disableVerticalSwipes(); }catch(e){} }
+  function tgFull(on){ try{ if(!TG) return;
+    if(on && TG.requestFullscreen) TG.requestFullscreen();
+    else if(!on && TG.exitFullscreen) TG.exitFullscreen(); }catch(e){} }
+
+  var BASE = "https://stream.tv247on.com";
+  var CAT  = BASE + "/player/vod-us/movies.json";
+
+  var grid=document.getElementById('grid'), countEl=document.getElementById('count'),
+      emptyEl=document.getElementById('empty'), chipsEl=document.getElementById('chips'),
+      q=document.getElementById('q');
+  var MOVIES=[], genres=[], curGenre="All";
+
+  function esc(s){return (s==null?'':String(s)).replace(/[<>&"]/g,function(c){
+    return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];});}
+
+  fetch(CAT).then(function(r){return r.json();}).then(function(d){
+    MOVIES = (d||[]).filter(function(m){return m && m.m3u8_url;});
+    // newest first when we have a sortable field
+    MOVIES.sort(function(a,b){return String(b.year||'').localeCompare(String(a.year||''));});
+    var gset={};
+    MOVIES.forEach(function(m){ (m.genre||'').split(',').forEach(function(g){
+      g=g.trim(); if(g) gset[g]=(gset[g]||0)+1; }); });
+    genres = Object.keys(gset).sort(function(a,b){return gset[b]-gset[a];}).slice(0,12);
+    renderChips(); render();
+  }).catch(function(e){ countEl.textContent='Could not load catalog.'; });
+
+  function renderChips(){
+    var all=['All'].concat(genres);
+    chipsEl.innerHTML = all.map(function(g){
+      return '<div class="chip'+(g===curGenre?' on':'')+'" data-g="'+esc(g)+'">'+esc(g)+'</div>';
+    }).join('');
+    Array.prototype.forEach.call(chipsEl.children,function(c){
+      c.onclick=function(){ curGenre=c.getAttribute('data-g');
+        Array.prototype.forEach.call(chipsEl.children,function(x){x.classList.toggle('on',x===c);});
+        render(); };
+    });
+  }
+
+  function render(){
+    var term=(q.value||'').trim().toLowerCase();
+    var list=MOVIES.filter(function(m){
+      if(curGenre!=='All' && (m.genre||'').indexOf(curGenre)<0) return false;
+      if(term){ var hay=((m.title||'')+' '+(m.genre||'')+' '+(m.cast||'')).toLowerCase();
+        if(hay.indexOf(term)<0) return false; }
+      return true;
+    });
+    countEl.textContent = list.length+' movie'+(list.length===1?'':'s');
+    emptyEl.style.display = list.length? 'none':'block';
+    grid.innerHTML = list.map(function(m,i){
+      var poster = m.logo_url || (BASE+'/player/vod-us/'+m.slug+'/poster.jpg');
+      var rt = (m.rating!=null && m.rating!=='')? '<div class="rt">★ '+m.rating+'</div>':'';
+      return '<div class="card" data-i="'+i+'">'+
+        '<img loading="lazy" src="'+esc(poster)+'" onerror="this.style.opacity=0.15">'+rt+
+        '<div class="meta"><div class="t">'+esc(m.title||m.slug)+'</div>'+
+        '<div class="sub">'+esc([m.year,m.duration].filter(Boolean).join(' · '))+'</div></div></div>';
+    }).join('');
+    Array.prototype.forEach.call(grid.children,function(c){
+      c.onclick=function(){ openMovie(list[parseInt(c.getAttribute('data-i'),10)]); };
+    });
+  }
+  var deb; q.addEventListener('input',function(){clearTimeout(deb);deb=setTimeout(render,180);});
+
+  // ── player ──
+  var player=document.getElementById('player'), v=document.getElementById('v'),
+      ptitle=document.getElementById('ptitle'), load=document.getElementById('load'),
+      ccBtn=document.getElementById('cc'), ccMenu=document.getElementById('ccmenu'), hls=null;
+
+  function destroy(){ if(hls){try{hls.destroy();}catch(e){}hls=null;}
+    try{v.pause();v.removeAttribute('src');v.load();}catch(e){} }
+
+  function openMovie(m){
+    if(!m) return;
+    ptitle.textContent = m.title || m.slug;
+    player.classList.add('show'); load.style.display='block';
+    ccMenu.classList.remove('show'); ccBtn.style.display='none'; ccMenu.innerHTML='';
+    // clear old text tracks
+    Array.prototype.slice.call(v.querySelectorAll('track')).forEach(function(t){t.remove();});
+    tgFull(true);
+    if(TG&&TG.BackButton){ try{TG.BackButton.show();}catch(e){} }
+    var url=m.m3u8_url;
+    destroy();
+    v.muted=false;
+    if(v.canPlayType("application/vnd.apple.mpegurl")){
+      v.src=url; v.play().catch(function(){});
+    } else if(window.Hls && Hls.isSupported()){
+      hls=new Hls({maxBufferLength:60});
+      hls.loadSource(url); hls.attachMedia(v);
+      hls.on(Hls.Events.MANIFEST_PARSED,function(){ v.play().catch(function(){}); });
+      hls.on(Hls.Events.ERROR,function(_,dd){ if(dd&&dd.fatal){
+        if(dd.type===Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
+        else if(dd.type===Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError(); }});
+    } else { v.src=url; v.play().catch(function(){}); }
+    setupSubs(m.subtitles||[]);
+  }
+  v.addEventListener('playing',function(){ load.style.display='none'; });
+  v.addEventListener('waiting',function(){ load.style.display='block'; });
+
+  function setupSubs(subs){
+    if(!subs || !subs.length){ return; }
+    subs.forEach(function(s){
+      var tr=document.createElement('track');
+      tr.kind='subtitles'; tr.src=s.url; tr.srclang=s.lang||''; tr.label=s.label||s.lang||'Sub';
+      v.appendChild(tr);
+    });
+    // build CC menu (Off + each language); default Off
+    var opts='<button data-k="-1" class="on">Subtitles: Off</button>'+
+      subs.map(function(s,i){return '<button data-k="'+i+'">'+esc(s.label||s.lang)+'</button>';}).join('');
+    ccMenu.innerHTML=opts; ccBtn.style.display='block';
+    Array.prototype.forEach.call(ccMenu.children,function(b){
+      b.onclick=function(){
+        var k=parseInt(b.getAttribute('data-k'),10);
+        var tt=v.textTracks;
+        for(var j=0;j<tt.length;j++) tt[j].mode='disabled';
+        if(k>=0 && tt[k]) tt[k].mode='showing';
+        Array.prototype.forEach.call(ccMenu.children,function(x){x.classList.toggle('on',x===b);});
+        ccMenu.classList.remove('show');
+      };
+    });
+  }
+  ccBtn.onclick=function(){ ccMenu.classList.toggle('show'); };
+
+  function closeMovie(){
+    destroy(); player.classList.remove('show'); tgFull(false);
+    if(TG&&TG.BackButton){ try{TG.BackButton.hide();}catch(e){} }
+  }
+  document.getElementById('back').onclick=closeMovie;
+  if(TG&&TG.onEvent){ try{TG.onEvent('backButtonClicked',closeMovie);}catch(e){} }
+
+  // device-level fullscreen of the video element
+  document.getElementById('fs').onclick=function(){
+    var st=document.querySelector('.stage');
+    if(v.webkitEnterFullscreen){ try{v.webkitEnterFullscreen();return;}catch(e){} }
+    if(document.fullscreenElement){ document.exitFullscreen&&document.exitFullscreen(); }
+    else if(st.requestFullscreen){ st.requestFullscreen().catch(function(){}); }
+    else if(st.webkitRequestFullscreen){ st.webkitRequestFullscreen(); }
+  };
+})();
+</script>
+</body>
+</html>

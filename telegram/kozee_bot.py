@@ -100,13 +100,19 @@ def main():
         for u in r.get("result", []):
             offset = u["update_id"] + 1
             try:
+                # The menu uses web_app buttons, which Telegram allows ONLY in private
+                # chats — sending them to a group/channel returns BUTTON_TYPE_INVALID.
+                # So only ever respond in a private (DM) chat; ignore groups/channels.
                 if "message" in u and "chat" in u["message"]:
-                    send_menu(u["message"]["chat"]["id"])
+                    chat = u["message"]["chat"]
+                    if chat.get("type") == "private":
+                        send_menu(chat["id"])
                 elif "callback_query" in u:
                     cq = u["callback_query"]
                     api("answerCallbackQuery", {"callback_query_id": cq["id"]})
-                    if cq.get("message"):
-                        send_menu(cq["message"]["chat"]["id"])
+                    m = cq.get("message")
+                    if m and m.get("chat", {}).get("type") == "private":
+                        send_menu(m["chat"]["id"])
             except Exception as e:
                 log("handler err: %s" % e)
 
