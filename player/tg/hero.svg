@@ -1,55 +1,89 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" font-family="DejaVu Sans, sans-serif">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0c1424"/>
-      <stop offset="1" stop-color="#04060c"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="0.80" cy="0.28" r="0.78">
-      <stop offset="0" stop-color="#ff7a2e" stop-opacity="0.60"/>
-      <stop offset="0.45" stop-color="#ff3d55" stop-opacity="0.14"/>
-      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="scr" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#20304f"/>
-      <stop offset="1" stop-color="#0c1424"/>
-    </linearGradient>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" font-family="DejaVu Sans, sans-serif">
+<defs>
+  <radialGradient id="base" cx="0.5" cy="0.4" r="0.95">
+    <stop offset="0" stop-color="#0b1022"/>
+    <stop offset="0.55" stop-color="#06070f"/>
+    <stop offset="1" stop-color="#010207"/>
+  </radialGradient>
+  <radialGradient id="cyan" cx="0.5" cy="0.5" r="0.5">
+    <stop offset="0" stop-color="#1ab8ff" stop-opacity="0.9"/><stop offset="1" stop-color="#1ab8ff" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="mag" cx="0.5" cy="0.5" r="0.5">
+    <stop offset="0" stop-color="#ff2f8e" stop-opacity="0.85"/><stop offset="1" stop-color="#ff2f8e" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="viol" cx="0.5" cy="0.5" r="0.5">
+    <stop offset="0" stop-color="#8b2bff" stop-opacity="0.75"/><stop offset="1" stop-color="#8b2bff" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#cdefff" stop-opacity="0"/><stop offset="0.5" stop-color="#cdefff" stop-opacity="0.20"/><stop offset="1" stop-color="#cdefff" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="wm" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ffffff"/><stop offset="0.5" stop-color="#eaf3ff"/><stop offset="1" stop-color="#a7c6ee"/>
+  </linearGradient>
+  <linearGradient id="tv" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#28ccff"/><stop offset="1" stop-color="#ff2f8e"/>
+  </linearGradient>
+  <radialGradient id="vig" cx="0.5" cy="0.44" r="0.75">
+    <stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="0.68" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.9"/>
+  </radialGradient>
+  <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+    <feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="glowBig" x="-120%" y="-120%" width="340%" height="340%">
+    <feGaussianBlur stdDeviation="30" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="soft" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="55"/></filter>
+  <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.55 0"/></filter>
+</defs>
 
-  <rect width="1280" height="640" fill="url(#bg)"/>
-  <rect width="1280" height="640" fill="url(#glow)"/>
+<rect width="1280" height="720" fill="url(#base)"/>
 
-  <!-- channel-strip motif (generic tiles, no third-party logos) -->
-  <g opacity="0.45">
-    <rect x="92"  y="520" width="118" height="46" rx="11" fill="#141d33"/>
-    <rect x="226" y="520" width="118" height="46" rx="11" fill="#141d33"/>
-    <rect x="360" y="520" width="118" height="46" rx="11" fill="#141d33"/>
-    <rect x="494" y="520" width="118" height="46" rx="11" fill="#141d33"/>
-    <rect x="628" y="520" width="118" height="46" rx="11" fill="#141d33"/>
-  </g>
+<!-- cinematic color lighting -->
+<g filter="url(#soft)">
+  <ellipse cx="250" cy="170" rx="360" ry="300" fill="url(#cyan)"/>
+  <ellipse cx="1060" cy="580" rx="420" ry="360" fill="url(#mag)"/>
+  <ellipse cx="930" cy="120" rx="320" ry="280" fill="url(#viol)"/>
+</g>
 
-  <!-- Smart TV -->
-  <g transform="translate(772,150)">
-    <rect x="0" y="0" width="420" height="252" rx="20" fill="url(#scr)" stroke="#33436a" stroke-width="4"/>
-    <rect x="16" y="16" width="388" height="220" rx="12" fill="#0b1424"/>
-    <rect x="40" y="38" width="94" height="12" rx="6" fill="#33436a"/>
-    <rect x="40"  y="66" width="104" height="86" rx="12" fill="#7c3aed"/>
-    <rect x="156" y="66" width="104" height="86" rx="12" fill="#f59e0b"/>
-    <rect x="272" y="66" width="104" height="86" rx="12" fill="#10b981"/>
-    <rect x="40" y="168" width="336" height="10" rx="5" fill="#22304d"/>
-    <rect x="40" y="188" width="228" height="10" rx="5" fill="#1a2740"/>
-    <rect x="180" y="256" width="60" height="16" rx="4" fill="#33436a"/>
-    <rect x="150" y="272" width="120" height="12" rx="6" fill="#22304d"/>
-  </g>
+<!-- light beams -->
+<g transform="rotate(-22 640 360)" opacity="0.6">
+  <rect x="140" y="-200" width="80" height="1120" fill="url(#beam)"/>
+  <rect x="360" y="-200" width="44" height="1120" fill="url(#beam)" opacity="0.7"/>
+  <rect x="1000" y="-200" width="64" height="1120" fill="url(#beam)" opacity="0.6"/>
+</g>
 
-  <!-- Wordmark + tagline -->
-  <text x="92" y="238" font-size="104" font-weight="bold" fill="#ffffff">KOZEE<tspan fill="#ff7a2e"> TV</tspan></text>
-  <text x="96" y="302" font-size="35" fill="#cdd8ec">Canales de EE.UU. en Vivo &#183; HD</text>
+<!-- bokeh -->
+<g filter="url(#glowBig)" opacity="0.85">
+  <circle cx="170" cy="520" r="9" fill="#1ab8ff"/><circle cx="330" cy="130" r="6" fill="#cdefff"/>
+  <circle cx="1130" cy="210" r="11" fill="#ff2f8e"/><circle cx="1000" cy="640" r="7" fill="#8b2bff"/>
+  <circle cx="700" cy="640" r="8" fill="#1ab8ff"/><circle cx="590" cy="96" r="5" fill="#ffffff"/>
+</g>
 
-  <!-- EN VIVO badge -->
-  <g transform="translate(96,342)">
-    <rect x="0" y="0" width="200" height="54" rx="27" fill="#e0304a"/>
-    <circle cx="35" cy="27" r="9" fill="#ffffff"/>
-    <text x="56" y="36" font-size="26" font-weight="bold" fill="#ffffff">EN VIVO</text>
-  </g>
-  <text x="316" y="378" font-size="26" fill="#93a1b8">16 canales premium</text>
+<!-- letterbox bars -->
+<rect x="0" y="0" width="1280" height="52" fill="#000"/>
+<rect x="0" y="668" width="1280" height="52" fill="#000"/>
+
+<!-- kicker -->
+<text x="640" y="214" text-anchor="middle" font-size="28" letter-spacing="16" font-weight="bold" fill="#ffcf6a" filter="url(#glow)">PREMIUM LIVE TV</text>
+
+<!-- wordmark -->
+<text x="640" y="382" text-anchor="middle" font-size="152" font-weight="bold" fill="url(#wm)" filter="url(#glowBig)">KOZEE<tspan fill="url(#tv)"> TV</tspan></text>
+
+<!-- neon rule -->
+<rect x="452" y="416" width="376" height="4" rx="2" fill="url(#tv)" filter="url(#glow)"/>
+
+<!-- tagline -->
+<text x="640" y="482" text-anchor="middle" font-size="33" fill="#e2ecfa">16 canales de EE.UU. &#183; HD &#183; 24/7</text>
+
+<!-- EN VIVO pill -->
+<g transform="translate(541,522)" filter="url(#glow)">
+  <rect x="0" y="0" width="198" height="56" rx="28" fill="#e0304a"/>
+  <circle cx="37" cy="28" r="9" fill="#ffffff"/>
+  <text x="59" y="37" font-size="25" font-weight="bold" fill="#ffffff" letter-spacing="1">EN VIVO</text>
+</g>
+
+<!-- vignette + film grain -->
+<rect width="1280" height="720" fill="url(#vig)"/>
+<rect width="1280" height="720" filter="url(#grain)" opacity="0.05"/>
 </svg>
