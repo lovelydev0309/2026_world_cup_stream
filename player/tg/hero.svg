@@ -1,89 +1,64 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" font-family="DejaVu Sans, sans-serif">
 <defs>
-  <radialGradient id="base" cx="0.5" cy="0.4" r="0.95">
-    <stop offset="0" stop-color="#0b1022"/>
-    <stop offset="0.55" stop-color="#06070f"/>
-    <stop offset="1" stop-color="#010207"/>
-  </radialGradient>
-  <radialGradient id="cyan" cx="0.5" cy="0.5" r="0.5">
-    <stop offset="0" stop-color="#1ab8ff" stop-opacity="0.9"/><stop offset="1" stop-color="#1ab8ff" stop-opacity="0"/>
-  </radialGradient>
-  <radialGradient id="mag" cx="0.5" cy="0.5" r="0.5">
-    <stop offset="0" stop-color="#ff2f8e" stop-opacity="0.85"/><stop offset="1" stop-color="#ff2f8e" stop-opacity="0"/>
-  </radialGradient>
-  <radialGradient id="viol" cx="0.5" cy="0.5" r="0.5">
-    <stop offset="0" stop-color="#8b2bff" stop-opacity="0.75"/><stop offset="1" stop-color="#8b2bff" stop-opacity="0"/>
-  </radialGradient>
-  <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#cdefff" stop-opacity="0"/><stop offset="0.5" stop-color="#cdefff" stop-opacity="0.20"/><stop offset="1" stop-color="#cdefff" stop-opacity="0"/>
-  </linearGradient>
-  <linearGradient id="wm" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#ffffff"/><stop offset="0.5" stop-color="#eaf3ff"/><stop offset="1" stop-color="#a7c6ee"/>
-  </linearGradient>
-  <linearGradient id="tv" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0" stop-color="#28ccff"/><stop offset="1" stop-color="#ff2f8e"/>
-  </linearGradient>
-  <radialGradient id="vig" cx="0.5" cy="0.44" r="0.75">
-    <stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="0.68" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.9"/>
-  </radialGradient>
-  <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
-    <feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-  </filter>
-  <filter id="glowBig" x="-120%" y="-120%" width="340%" height="340%">
-    <feGaussianBlur stdDeviation="30" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-  </filter>
+  <radialGradient id="base" cx="0.5" cy="0.35" r="1"><stop offset="0" stop-color="#0c1226"/><stop offset="0.6" stop-color="#06070f"/><stop offset="1" stop-color="#010207"/></radialGradient>
+  <radialGradient id="gc" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#1ab8ff" stop-opacity="0.8"/><stop offset="1" stop-color="#1ab8ff" stop-opacity="0"/></radialGradient>
+  <radialGradient id="gm" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff2f8e" stop-opacity="0.8"/><stop offset="1" stop-color="#ff2f8e" stop-opacity="0"/></radialGradient>
+  <linearGradient id="tDep" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#16c76a"/><stop offset="1" stop-color="#05502c"/></linearGradient>
+  <linearGradient id="tNews" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b8bff"/><stop offset="1" stop-color="#0a2a70"/></linearGradient>
+  <linearGradient id="tSer" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9b4dff"/><stop offset="1" stop-color="#3a1785"/></linearGradient>
+  <linearGradient id="tKids" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#20d0e6"/><stop offset="1" stop-color="#0a6f86"/></linearGradient>
+  <linearGradient id="tCine" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6a2e"/><stop offset="1" stop-color="#a11414"/></linearGradient>
+  <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#04060c" stop-opacity="0"/><stop offset="0.55" stop-color="#04060c" stop-opacity="0.55"/><stop offset="1" stop-color="#04060c" stop-opacity="0.97"/></linearGradient>
+  <linearGradient id="wm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#a7c6ee"/></linearGradient>
+  <linearGradient id="tv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#28ccff"/><stop offset="1" stop-color="#ff2f8e"/></linearGradient>
+  <radialGradient id="vig" cx="0.5" cy="0.5" r="0.75"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="0.7" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.85"/></radialGradient>
   <filter id="soft" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="55"/></filter>
-  <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" result="n"/>
-    <feColorMatrix in="n" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.55 0"/></filter>
+  <filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="sh" x="-45%" y="-45%" width="190%" height="190%"><feGaussianBlur in="SourceAlpha" stdDeviation="16" result="b"/><feOffset in="b" dx="0" dy="12" result="o"/><feFlood flood-color="#000000" flood-opacity="0.6" result="c"/><feComposite in="c" in2="o" operator="in" result="s"/><feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.55 0"/></filter>
 </defs>
 
 <rect width="1280" height="720" fill="url(#base)"/>
+<g filter="url(#soft)"><ellipse cx="260" cy="180" rx="340" ry="300" fill="url(#gc)"/><ellipse cx="1040" cy="220" rx="380" ry="320" fill="url(#gm)"/></g>
 
-<!-- cinematic color lighting -->
-<g filter="url(#soft)">
-  <ellipse cx="250" cy="170" rx="360" ry="300" fill="url(#cyan)"/>
-  <ellipse cx="1060" cy="580" rx="420" ry="360" fill="url(#mag)"/>
-  <ellipse cx="930" cy="120" rx="320" ry="280" fill="url(#viol)"/>
+<!-- fanned content tiles (original genre art, no real IP) -->
+<!-- back-left: NOTICIAS -->
+<g transform="translate(410,262) rotate(-20)" filter="url(#sh)">
+  <rect x="-92" y="-132" width="184" height="264" rx="16" fill="url(#tNews)" stroke="#ffffff22" stroke-width="2"/>
+  <g stroke="#ffffff" stroke-width="6" fill="none" opacity="0.92"><circle cx="0" cy="-30" r="46"/><ellipse cx="0" cy="-30" rx="20" ry="46"/><line x1="-46" y1="-30" x2="46" y2="-30"/><line x1="-40" y1="-52" x2="40" y2="-52"/><line x1="-40" y1="-8" x2="40" y2="-8"/></g>
+  <text x="0" y="96" text-anchor="middle" font-size="20" font-weight="bold" fill="#ffffff" letter-spacing="2">NOTICIAS</text>
+</g>
+<!-- back-right: KIDS -->
+<g transform="translate(870,262) rotate(20)" filter="url(#sh)">
+  <rect x="-92" y="-132" width="184" height="264" rx="16" fill="url(#tKids)" stroke="#ffffff22" stroke-width="2"/>
+  <path d="M0,-78 L18,-30 L70,-30 L28,2 L44,52 L0,20 L-44,52 L-28,2 L-70,-30 L-18,-30 Z" fill="#ffffff" opacity="0.95"/>
+  <text x="0" y="96" text-anchor="middle" font-size="22" font-weight="bold" fill="#ffffff" letter-spacing="2">KIDS</text>
+</g>
+<!-- mid-left: DEPORTES -->
+<g transform="translate(500,250) rotate(-10)" filter="url(#sh)">
+  <rect x="-96" y="-138" width="192" height="276" rx="16" fill="url(#tDep)" stroke="#ffffff22" stroke-width="2"/>
+  <g><circle cx="0" cy="-28" r="52" fill="#ffffff"/><path d="M0,-58 L18,-44 L11,-22 L-11,-22 L-18,-44 Z" fill="#0a3a22"/><circle cx="0" cy="-58" r="4" fill="#0a3a22"/><circle cx="24" cy="-14" r="4" fill="#0a3a22"/><circle cx="-24" cy="-14" r="4" fill="#0a3a22"/><circle cx="30" cy="-40" r="4" fill="#0a3a22"/><circle cx="-30" cy="-40" r="4" fill="#0a3a22"/></g>
+  <text x="0" y="104" text-anchor="middle" font-size="21" font-weight="bold" fill="#ffffff" letter-spacing="2">DEPORTES</text>
+</g>
+<!-- mid-right: SERIES -->
+<g transform="translate(780,250) rotate(10)" filter="url(#sh)">
+  <rect x="-96" y="-138" width="192" height="276" rx="16" fill="url(#tSer)" stroke="#ffffff22" stroke-width="2"/>
+  <g fill="#ffffff" opacity="0.95"><rect x="-58" y="-70" width="116" height="86" rx="10"/><path d="M-16,-52 L28,-27 L-16,-2 Z" fill="#3a1785"/><rect x="-40" y="24" width="80" height="8" rx="4"/></g>
+  <text x="0" y="104" text-anchor="middle" font-size="24" font-weight="bold" fill="#ffffff" letter-spacing="2">SERIES</text>
+</g>
+<!-- front-center: CINE -->
+<g transform="translate(640,238)" filter="url(#sh)">
+  <rect x="-104" y="-150" width="208" height="300" rx="18" fill="url(#tCine)" stroke="#ffffff33" stroke-width="2"/>
+  <g fill="#ffffff" opacity="0.96"><rect x="-64" y="-58" width="128" height="86" rx="8"/><g fill="#7a0f0f"><rect x="-58" y="-70" width="128" height="18" rx="4" transform="rotate(-8 6 -61)"/></g><rect x="-58" y="-70" width="128" height="18" rx="4" fill="#ffffff" transform="rotate(-8 6 -61)"/><g fill="#7a0f0f"><rect x="-50" y="-70" width="14" height="18" transform="rotate(-8 -43 -61)"/><rect x="-14" y="-70" width="14" height="18" transform="rotate(-8 -7 -61)"/><rect x="22" y="-70" width="14" height="18" transform="rotate(-8 29 -61)"/></g></g>
+  <text x="0" y="118" text-anchor="middle" font-size="30" font-weight="bold" fill="#ffffff" letter-spacing="3">CINE</text>
 </g>
 
-<!-- light beams -->
-<g transform="rotate(-22 640 360)" opacity="0.6">
-  <rect x="140" y="-200" width="80" height="1120" fill="url(#beam)"/>
-  <rect x="360" y="-200" width="44" height="1120" fill="url(#beam)" opacity="0.7"/>
-  <rect x="1000" y="-200" width="64" height="1120" fill="url(#beam)" opacity="0.6"/>
-</g>
+<!-- bottom fade + brand overlay -->
+<rect x="0" y="360" width="1280" height="360" fill="url(#fade)"/>
+<text x="640" y="560" text-anchor="middle" font-size="96" font-weight="bold" fill="url(#wm)" filter="url(#glow)">KOZEE<tspan fill="url(#tv)"> TV</tspan></text>
+<text x="640" y="612" text-anchor="middle" font-size="27" fill="#dfe9f7" letter-spacing="1">Deportes &#183; Cine &#183; Series &#183; Noticias &#183; Kids &#8212; todo en un lugar</text>
+<g transform="translate(541,634)" filter="url(#glow)"><rect x="0" y="0" width="198" height="52" rx="26" fill="#e0304a"/><circle cx="35" cy="26" r="8" fill="#ffffff"/><text x="56" y="34" font-size="23" font-weight="bold" fill="#ffffff" letter-spacing="1">EN VIVO</text></g>
 
-<!-- bokeh -->
-<g filter="url(#glowBig)" opacity="0.85">
-  <circle cx="170" cy="520" r="9" fill="#1ab8ff"/><circle cx="330" cy="130" r="6" fill="#cdefff"/>
-  <circle cx="1130" cy="210" r="11" fill="#ff2f8e"/><circle cx="1000" cy="640" r="7" fill="#8b2bff"/>
-  <circle cx="700" cy="640" r="8" fill="#1ab8ff"/><circle cx="590" cy="96" r="5" fill="#ffffff"/>
-</g>
-
-<!-- letterbox bars -->
-<rect x="0" y="0" width="1280" height="52" fill="#000"/>
-<rect x="0" y="668" width="1280" height="52" fill="#000"/>
-
-<!-- kicker -->
-<text x="640" y="214" text-anchor="middle" font-size="28" letter-spacing="16" font-weight="bold" fill="#ffcf6a" filter="url(#glow)">PREMIUM LIVE TV</text>
-
-<!-- wordmark -->
-<text x="640" y="382" text-anchor="middle" font-size="152" font-weight="bold" fill="url(#wm)" filter="url(#glowBig)">KOZEE<tspan fill="url(#tv)"> TV</tspan></text>
-
-<!-- neon rule -->
-<rect x="452" y="416" width="376" height="4" rx="2" fill="url(#tv)" filter="url(#glow)"/>
-
-<!-- tagline -->
-<text x="640" y="482" text-anchor="middle" font-size="33" fill="#e2ecfa">16 canales de EE.UU. &#183; HD &#183; 24/7</text>
-
-<!-- EN VIVO pill -->
-<g transform="translate(541,522)" filter="url(#glow)">
-  <rect x="0" y="0" width="198" height="56" rx="28" fill="#e0304a"/>
-  <circle cx="37" cy="28" r="9" fill="#ffffff"/>
-  <text x="59" y="37" font-size="25" font-weight="bold" fill="#ffffff" letter-spacing="1">EN VIVO</text>
-</g>
-
-<!-- vignette + film grain -->
 <rect width="1280" height="720" fill="url(#vig)"/>
-<rect width="1280" height="720" filter="url(#grain)" opacity="0.05"/>
+<rect width="1280" height="720" filter="url(#grain)" opacity="0.045"/>
 </svg>
