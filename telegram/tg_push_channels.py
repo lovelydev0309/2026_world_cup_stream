@@ -32,7 +32,7 @@ def cfg(k, d=None):
 BOT  = cfg("TG_BOT_TOKEN")
 CHAN = cfg("TG_CHANNEL")
 BASE = cfg("TG_APP_BASE", "https://stream.tv247on.com/player/tg/")
-IMG  = cfg("TG_IMAGE_URL")
+IMG  = cfg("TG_IMAGE_URL", "https://stream.tv247on.com/player/tg/hero.jpg")
 SUB  = cfg("TG_SUBSCRIPTION_URL", "https://kozeetv.com/product/subscription-package/")
 SUP  = cfg("TG_SUPPORT_URL", "https://kozeetv.com/")
 assert BOT and CHAN, "Set TG_BOT_TOKEN and TG_CHANNEL in config/accounts.env"
