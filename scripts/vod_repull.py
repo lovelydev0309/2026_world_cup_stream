@@ -45,9 +45,9 @@ def remux(tmp, outdir, transcode):
         if f.startswith("seg_") and f.endswith(".ts"): rm(os.path.join(outdir, f))
     rm(mp)
     vopts = (["-c:v", "libx264", "-preset", "veryfast", "-crf", "21", "-pix_fmt", "yuv420p",
-              "-vf", "scale='min(1920,iw)':-2", "-threads", "6"] if transcode
+              "-vf", "scale='min(1920,iw)':-2", "-threads", "3"] if transcode
              else ["-c:v", "copy", "-bsf:v", "h264_mp4toannexb"])
-    cmd = (["nice", "-n", "15", "ffmpeg", "-y", "-nostdin", "-loglevel", "error",
+    cmd = (["nice", "-n", "19", "ionice", "-c3", "ffmpeg", "-y", "-nostdin", "-loglevel", "error",
             "-err_detect", "ignore_err", "-fflags", "+genpts", "-i", tmp,
             "-map", "0:v:0", "-map", "0:a:0"] + vopts +
            ["-c:a", "aac", "-ac", "2", "-b:a", "192k", "-ar", "48000",

@@ -674,7 +674,7 @@ def main():
         # video copied; audio re-encoded to STEREO AAC — some sources are 5.1/6ch AAC
         # which many browsers can't play through HLS/MSE (no sound). -ac 2 fixes it.
         vopts=(["-c:v","libx264","-preset","veryfast","-crf","21","-pix_fmt","yuv420p",
-                "-vf","scale='min(1920,iw)':-2","-threads","6"] if transcode_v
+                "-vf","scale='min(1920,iw)':-2","-threads","3"] if transcode_v
                else ["-c:v","copy","-bsf:v","h264_mp4toannexb"])
         cmd=["ffmpeg","-y","-nostdin","-loglevel","error","-user_agent",UA,
              "-rw_timeout","60000000","-i",url,"-map","0:v:0","-map","0:a:0"]+vopts+[
@@ -699,7 +699,7 @@ def main():
             for sf in os.listdir(outdir):
                 if sf.startswith("seg_") and sf.endswith(".ts"): os.remove(os.path.join(outdir,sf))
             tcmd=["ffmpeg","-y","-nostdin","-loglevel","error","-user_agent",UA,"-i",url,
-                  "-map","0:v:0","-map","0:a:0","-c:v","libx264","-preset","veryfast","-crf","21","-pix_fmt","yuv420p","-c:a","aac","-b:a","160k","-ac","2",
+                  "-map","0:v:0","-map","0:a:0","-c:v","libx264","-preset","veryfast","-crf","21","-pix_fmt","yuv420p","-threads","3","-c:a","aac","-b:a","160k","-ac","2",
                   "-f","hls","-hls_time","10","-hls_playlist_type","vod","-hls_flags","independent_segments",
                   "-hls_segment_filename",os.path.join(outdir,"seg_%04d.ts"),os.path.join(outdir,"index.m3u8")]
             try: r=subprocess.run(tcmd,capture_output=True,timeout=9000,text=True)
