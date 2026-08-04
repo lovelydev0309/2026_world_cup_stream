@@ -32,3 +32,4 @@ config/alert.env
 # Provider account credentials — resolved into @@ALIAS@@ placeholders at runtime.
 # NEVER commit: this maps aliases to real host/user/pass for the IPTV provider.
 config/accounts.env
+config/tg_menu.json

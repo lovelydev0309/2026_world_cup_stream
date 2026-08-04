@@ -47,19 +47,52 @@ SUP   = cfg("TG_SUPPORT_URL",  "https://kozeetv.com/")
 assert BOT, "TG_BOT_TOKEN missing in config/accounts.env"
 API = "https://api.telegram.org/bot%s/" % BOT
 
-WELCOME = ("\U0001F44B <b>Welcome to Kozee TV!</b>\n"
-           "Please choose your service:")
+# ── The whole menu lives in ONE editable file: config/tg_menu.json ──────────
+# Shape: {"welcome": "<html text>", "rows": [[{"label","type":"url"|"web_app","value"}]]}.
+# It is re-read on EVERY menu send, so edits take effect instantly (no restart).
+# If the file is missing/broken the bot falls back to (and re-seeds) the defaults below.
+MENU_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config", "tg_menu.json")
 
-def menu_markup():
-    # web_app buttons launch the player INSIDE Telegram (private chats only) so the
-    # address bar never exposes our host; url buttons open the subscription site.
-    return {"inline_keyboard": [
-        [{"text": "\U0001F381 Free Trial", "url": TRIAL},
-         {"text": "⭐ Subscribe",      "url": SUB}],
-        [{"text": "\U0001F4FA LIVE TV",    "web_app": {"url": LIVE}},
-         {"text": "\U0001F3AC Movies",     "web_app": {"url": MOVIE}},
-         {"text": "\U0001F6DF Support",    "url": SUP}],
-    ]}
+def default_menu():
+    return {
+        "welcome": "\U0001F44B <b>Welcome to Kozee TV!</b>\nPlease choose your service:",
+        "rows": [
+            [{"label": "\U0001F381 Free Trial", "type": "url", "value": TRIAL},
+             {"label": "⭐ Subscribe",         "type": "url", "value": SUB}],
+            [{"label": "\U0001F4FA LIVE TV",    "type": "web_app", "value": LIVE},
+             {"label": "\U0001F3AC Movies",     "type": "web_app", "value": MOVIE},
+             {"label": "\U0001F6DF Support",    "type": "url", "value": SUP}],
+        ],
+    }
+
+def load_menu():
+    try:
+        m = json.load(open(MENU_FILE))
+        if isinstance(m, dict) and m.get("welcome") and m.get("rows"):
+            return m
+    except Exception:
+        pass
+    return default_menu()
+
+def ensure_menu_file():
+    if not os.path.exists(MENU_FILE):
+        try: json.dump(default_menu(), open(MENU_FILE, "w"), ensure_ascii=False, indent=2)
+        except Exception as e: log("could not seed tg_menu.json: %s" % e)
+
+def menu_markup(m):
+    # web_app buttons launch the player INSIDE Telegram (private chats only); url buttons
+    # open external/subscription targets. Built from the editable config each time.
+    rows = []
+    for row in m.get("rows", []):
+        btns = []
+        for b in row:
+            if not (b.get("label") and b.get("value")): continue
+            if b.get("type") == "web_app":
+                btns.append({"text": b["label"], "web_app": {"url": b["value"]}})
+            else:
+                btns.append({"text": b["label"], "url": b["value"]})
+        if btns: rows.append(btns)
+    return {"inline_keyboard": rows}
 
 def api(method, payload, timeout=40):
     req = urllib.request.Request(API + method, data=json.dumps(payload).encode(),
@@ -76,14 +109,16 @@ def log(m):
     print("[%s] %s" % (time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), m), flush=True)
 
 def send_menu(chat_id):
-    r = api("sendMessage", {"chat_id": chat_id, "text": WELCOME, "parse_mode": "HTML",
-                            "reply_markup": menu_markup(), "disable_web_page_preview": True})
+    m = load_menu()
+    r = api("sendMessage", {"chat_id": chat_id, "text": m.get("welcome", ""), "parse_mode": "HTML",
+                            "reply_markup": menu_markup(m), "disable_web_page_preview": True})
     if r.get("ok"):
         log("menu -> chat %s OK" % chat_id)
     else:
         log("menu -> chat %s FAILED: %s" % (chat_id, json.dumps(r)[:180]))
 
 def main():
+    ensure_menu_file()   # create config/tg_menu.json from defaults on first run
     # /start hint + a persistent chat menu-button that also opens LIVE TV directly
     api("setMyCommands", {"commands": [{"command": "start", "description": "Open the Kozee TV menu"}]})
     api("setChatMenuButton", {"menu_button": {"type": "web_app", "text": "LIVE TV",
