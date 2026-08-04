@@ -537,7 +537,8 @@ def write_movie_html(outdir, rec, w, h, vcodec):
     if rec.get("country"): parts.append(f'<span>{e(rec["country"])}</span>')
     parts.append(f'<span>{w}×{h} · H.264</span>')
     metarow="<span class=\"sep\"></span>".join(parts)
-    chips=['<span class="chip lang">Español</span>']
+    _lang = rec.get("language") or "Español"
+    chips=[f'<span class="chip lang">{e(_lang)}</span>']
     for g in [x.strip() for x in (rec.get("genre") or "").split(",") if x.strip()][:3]:
         chips.append(f'<span class="chip">{e(g)}</span>')
     chips_html="".join(chips)
@@ -549,6 +550,16 @@ def write_movie_html(outdir, rec, w, h, vcodec):
     out=(MOVIE_TPL.replace("%%TITLE%%",e(rec["title"])).replace("%%RATING%%",rating_html)
          .replace("%%METAROW%%",metarow).replace("%%CHIPS%%",chips_html)
          .replace("%%PLOT%%",plot_html).replace("%%CREDITS%%",creds_html))
+    if (rec.get("language") or "").lower().startswith("english"):   # US/Kozee catalog -> English UI
+        out=(out.replace("← Volver al catálogo","← Back to catalog")
+                .replace("Cargando…","Loading…")
+                .replace('aria-label="Reproducir"','aria-label="Play"')
+                .replace("Error de reproducción — reintentando…","Playback error — retrying…")
+                .replace("HLS no soportado en este navegador.","HLS not supported in this browser.")
+                .replace("Reproduciéndose desde stream.tv247on.com","Playing from stream.tv247on.com")
+                .replace("alojado en tu CDN como HLS (H.264/AAC). Nada pasa por el proveedor durante la reproducción.",
+                         "hosted on your CDN as HLS (H.264/AAC). Nothing goes through the provider during playback.")
+                .replace(">Reparto<", ">Cast<"))
     open(os.path.join(outdir,"index.html"),"w").write(out)
 
 def probe(url):
@@ -673,7 +684,7 @@ def main():
              "-hls_segment_filename",os.path.join(outdir,"seg_%04d.ts"),
              os.path.join(outdir,"index.m3u8")]
         try:
-            r=subprocess.run(cmd,capture_output=True,timeout=(9000 if transcode_v else 2400),text=True)
+            r=subprocess.run(cmd,capture_output=True,timeout=(9000 if transcode_v else max(2400,int(dur*1.4)+900)),text=True)
         except subprocess.TimeoutExpired:
             log(f"  FAIL ffmpeg timeout ({'transcode' if transcode_v else 'copy'})"); subprocess.run(["rm","-rf",outdir]); continue
         if r.returncode!=0 or not os.path.exists(os.path.join(outdir,"index.m3u8")):

@@ -32,10 +32,10 @@
 <body>
   <div class="player" id="player">
     <video id="v" autoplay muted playsinline webkit-playsinline></video>
-    <span class="hint" id="hint">▶︎ En vivo</span>
-    <button class="vbtn theater" id="theater" title="Ampliar">⤢</button>
-    <button class="vbtn" id="fs" title="Pantalla completa">⛶</button>
-    <button class="unmute" id="unmute">🔇 Toca para sonido</button>
+    <span class="hint" id="hint">▶︎ Live</span>
+    <button class="vbtn theater" id="theater" title="Expand">⤢</button>
+    <button class="vbtn" id="fs" title="Fullscreen">⛶</button>
+    <button class="unmute" id="unmute">🔇 Tap for sound</button>
   </div>
   <div class="list" id="list"></div>
 
@@ -111,8 +111,8 @@
   });
 
   // muted autoplay is required; one tap enables sound
-  unmute.onclick = function(){ v.muted = !v.muted; unmute.textContent = v.muted ? "🔇 Toca para sonido" : "🔊 Sonido activado"; if(!v.muted) v.play().catch(function(){}); };
-  v.addEventListener("click", function(){ if(v.muted){ v.muted=false; unmute.textContent="🔊 Sonido activado"; } });
+  unmute.onclick = function(){ v.muted = !v.muted; unmute.textContent = v.muted ? "🔇 Tap for sound" : "🔊 Sound on"; if(!v.muted) v.play().catch(function(){}); };
+  v.addEventListener("click", function(){ if(v.muted){ v.muted=false; unmute.textContent="🔊 Sound on"; } });
 
   // Expand controls: ⤢ theater grows the player to fill the screen; ⛶ = device fullscreen.
   var player = document.getElementById("player");
