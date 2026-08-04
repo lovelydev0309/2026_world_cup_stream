@@ -13,7 +13,7 @@ def _acct(k, d=""):
                 if kk.strip()==k: return vv.strip()
     except FileNotFoundError: pass
     return os.environ.get(k, d)
-HOST=_acct("VOD_HOST","tvon247.com"); USER=_acct("VOD_USER"); PW=_acct("VOD_PW")
+HOST=os.environ.get("ING_HOST") or _acct("VOD_HOST","tvon247.com"); USER=os.environ.get("ING_USER") or _acct("VOD_USER"); PW=os.environ.get("ING_PW") or _acct("VOD_PW")
 UA="okhttp/4.9.3"
 DISK=os.environ.get("VOD_DISK","/opt/streaming-stack/vod-disk")
 CATALOG=DISK+"/_catalog.json"
@@ -24,6 +24,15 @@ TARGET=int(sys.argv[1]) if len(sys.argv)>1 else 30
 MIN_FREE_GB=int(sys.argv[2]) if len(sys.argv)>2 else 20   # stop if disk free drops under this
 # quality filter (client rule): only 2000-2025 rating>=8, and >=2026 rating>=7; nothing before 2000
 QUALITY=os.environ.get("VOD_QUALITY","0")=="1"
+WORKER_N=int(os.environ.get("WORKER_N","1")); WORKER_I=int(os.environ.get("WORKER_I","0"))
+RESTORE=os.environ.get("VOD_RESTORE","0")=="1"
+RESTORE_IDS=set()
+if RESTORE:
+    _rf=os.environ.get("VOD_RESTORE_FILE","")
+    if _rf and os.path.exists(_rf):
+        for _l in open(_rf):
+            _l=_l.strip()
+            if _l.isdigit(): RESTORE_IDS.add(int(_l))
 ONLY_NEW=os.environ.get("VOD_ONLY_NEW","0")=="1"   # auto-update mode: only new (>=NEW_YEAR) releases
 US=os.environ.get("VOD_US","0")=="1"   # US/English catalog mode: EN only, 2023-26 r>=7, classics(<2023) r>=8.5
 NEW_YEAR=2026; MIN_RATING_NEW=7.0; MIN_RATING_OLD=8.0; MIN_YEAR=2000
@@ -587,7 +596,11 @@ def main():
         except: return 0
     # prefer Spanish/Latino for the Mexican audience, newest first within each tier
     PREF={"ES":0,"LAT":0,"MX":0,"LA":0,"BR":2}
-    cands=[x for x in data if x.get("stream_icon") and str(x.get("container_extension","")).lower() in ("mp4","mkv")]
+    if RESTORE:
+        cands=[x for x in data if int(x.get("stream_id",0)) in RESTORE_IDS]
+        log(f"RESTORE: {len(cands)}/{len(RESTORE_IDS)} ids present in catalog")
+    else:
+        cands=[x for x in data if x.get("stream_icon") and str(x.get("container_extension","")).lower() in ("mp4","mkv")]
     if US:  # US/English catalog: English only, highest-rated first
         cands=[x for x in cands if lang_of(x.get("name","")) in ("EN","US")]
         cands.sort(key=lambda x:-rating_of(x))
@@ -602,21 +615,26 @@ def main():
         if count>=TARGET: break
         if free_gb()<MIN_FREE_GB: log(f"stop: disk free {free_gb():.0f}GB < {MIN_FREE_GB}"); break
         sid=c["stream_id"]
+        if WORKER_N>1 and (int(sid)%WORKER_N)!=WORKER_I: continue
         if sid in done_ids: continue
         raw=(c.get("name") or "").strip()
         if not raw: continue
         name=clean_title(raw)
-        if norm_title(name) in seen_titles: continue   # skip title already in catalog
+        if (not RESTORE) and norm_title(name) in seen_titles: continue   # skip title already in catalog
         us_info=None
         if US:   # US English rule: 2023-2026 r>=7; classics(<2023) r>=8.5; target genres
-            if lang_of(raw) not in ("EN","US"): continue
-            y=int(year_from_name(raw) or 0); r=rating_of(c)
-            if not ((2023<=y<=2026 and r>=7.0) or (0<y<2023 and r>=8.5)): continue
+            # RESTORE = operator hand-picked these stream_ids (e.g. blockbusters); ingest them
+            # verbatim, bypassing the rating/genre/language screen (still fetch metadata below).
+            if lang_of(raw) not in ("EN","US") and not RESTORE: continue
+            if not RESTORE:
+                y=int(year_from_name(raw) or 0); r=rating_of(c)
+                if not ((2023<=y<=2026 and r>=7.0) or (0<y<2023 and r>=8.5)): continue
             try: us_info=(api("get_vod_info",vod_id=sid).get("info",{}) or {})
             except Exception: us_info={}
-            _g=(us_info.get("genre","") or "").lower()
-            if _g and not any(k in _g for k in ("science fiction","sci-fi","action","comedy","thriller","suspense","mystery","drama","romance","adventure")):
-                log(f"skip {sid} {name[:38]}: genre '{us_info.get('genre','')}'"); continue
+            if not RESTORE:
+                _g=(us_info.get("genre","") or "").lower()
+                if _g and not any(k in _g for k in ("science fiction","sci-fi","action","comedy","thriller","suspense","mystery","drama","romance","adventure")):
+                    log(f"skip {sid} {name[:38]}: genre '{us_info.get('genre','')}'"); continue
         elif QUALITY:   # client rule: 2000-2025 rating>=8, >=2026 rating>=7, nothing pre-2000
             y=int(year_from_name(raw) or 0); r=rating_of(c)
             if y < MIN_YEAR: continue
