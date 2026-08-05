@@ -69,8 +69,8 @@ for m in d:
         m["hidden"] = True; hidden += 1              # never show an incomplete movie
     elif isnew:
         m["hidden"] = False; shown += 1
-    elif rv is None or rv < THRESH:
-        m["hidden"] = True; hidden += 1
+    elif THRESH >= 0 and (rv is None or rv < THRESH):
+        m["hidden"] = True; hidden += 1              # quality filter (skipped when THRESH<0)
     else:
         m["hidden"] = False; shown += 1
 
