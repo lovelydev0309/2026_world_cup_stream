@@ -110,8 +110,19 @@ def log(m):
 
 def send_menu(chat_id):
     m = load_menu()
-    r = api("sendMessage", {"chat_id": chat_id, "text": m.get("welcome", ""), "parse_mode": "HTML",
-                            "reply_markup": menu_markup(m), "disable_web_page_preview": True})
+    text = m.get("welcome", "")
+    markup = menu_markup(m)
+    # Optional banner above the buttons — set/clear TG_MENU_IMAGE in accounts.env
+    # (read fresh each send, so it can be toggled without restarting the bot).
+    img = cfg("TG_MENU_IMAGE", "")
+    if img:
+        r = api("sendPhoto", {"chat_id": chat_id, "photo": img, "caption": text,
+                              "parse_mode": "HTML", "reply_markup": markup})
+        if r.get("ok"):
+            log("menu(photo) -> chat %s OK" % chat_id); return
+        log("menu photo -> chat %s FAILED: %s (falling back to text)" % (chat_id, json.dumps(r)[:150]))
+    r = api("sendMessage", {"chat_id": chat_id, "text": text, "parse_mode": "HTML",
+                            "reply_markup": markup, "disable_web_page_preview": True})
     if r.get("ok"):
         log("menu -> chat %s OK" % chat_id)
     else:
