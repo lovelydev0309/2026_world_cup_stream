@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" font-family="DejaVu Sans, sans-serif">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1224"/><stop offset="0.55" stop-color="#0e0a14"/><stop offset="1" stop-color="#070509"/></linearGradient>
+  <radialGradient id="glow" cx="0.5" cy="0.44" r="0.6"><stop offset="0" stop-color="#ff7a2f" stop-opacity="0.5"/><stop offset="0.55" stop-color="#ff4d6d" stop-opacity="0.14"/><stop offset="1" stop-color="#ff4d6d" stop-opacity="0"/></radialGradient>
+  <radialGradient id="back" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff6a3d" stop-opacity="0.5"/><stop offset="1" stop-color="#ff6a3d" stop-opacity="0"/></radialGradient>
+  <linearGradient id="scr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#151d31"/><stop offset="1" stop-color="#0a1020"/></linearGradient>
+  <linearGradient id="tMov" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a5bff"/><stop offset="1" stop-color="#3a1d80"/></linearGradient>
+  <linearGradient id="tSer" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a3d"/><stop offset="1" stop-color="#b8321f"/></linearGradient>
+  <linearGradient id="tLiv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1ec8de"/><stop offset="1" stop-color="#0a6f86"/></linearGradient>
+  <linearGradient id="brand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c8d4e8"/></linearGradient>
+  <filter id="soft" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="60"/></filter>
+  <filter id="sh" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur in="SourceAlpha" stdDeviation="16" result="b"/><feOffset in="b" dy="16" result="o"/><feFlood flood-color="#000000" flood-opacity="0.6" result="c"/><feComposite in="c" in2="o" operator="in" result="s"/><feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+
+<rect width="1280" height="720" fill="url(#bg)"/>
+<g filter="url(#soft)"><ellipse cx="640" cy="300" rx="440" ry="240" fill="url(#back)"/></g>
+<rect width="1280" height="720" fill="url(#glow)"/>
+
+<!-- TV -->
+<g filter="url(#sh)">
+  <rect x="230" y="118" width="820" height="392" rx="18" fill="#05070d" stroke="#2b3040" stroke-width="6"/>
+  <rect x="248" y="136" width="784" height="356" rx="10" fill="url(#scr)"/>
+</g>
+
+<!-- top bar -->
+<text x="272" y="180" font-size="21" font-weight="bold" fill="#ffffff" letter-spacing="1">▤ SMART TV</text>
+<text x="1006" y="180" font-size="19" fill="#9fb0c8" text-anchor="end">21:14</text>
+
+<!-- genre tiles -->
+<rect x="272" y="200" width="238" height="176" rx="14" fill="url(#tMov)"/>
+<rect x="524" y="200" width="238" height="176" rx="14" fill="url(#tSer)"/>
+<rect x="776" y="200" width="232" height="176" rx="14" fill="url(#tLiv)"/>
+
+<!-- MOVIES: play -->
+<path d="M368,258 l46,30 l-46,30 z" fill="#ffffff" opacity="0.96"/>
+<text x="391" y="352" font-size="21" font-weight="bold" fill="#ffffff" text-anchor="middle" letter-spacing="1">MOVIES</text>
+<!-- SERIES: clapper -->
+<g fill="#ffffff" opacity="0.96"><rect x="606" y="250" width="76" height="54" rx="7"/></g>
+<path d="M640,262 l30,17 l-30,17 z" fill="#b8321f"/>
+<text x="643" y="352" font-size="21" font-weight="bold" fill="#ffffff" text-anchor="middle" letter-spacing="1">SERIES</text>
+<!-- LIVE TV: tv set -->
+<g fill="none" stroke="#ffffff" stroke-width="5" opacity="0.96"><rect x="856" y="252" width="76" height="50" rx="7"/><line x1="878" y1="240" x2="894" y2="252"/><line x1="910" y1="240" x2="894" y2="252"/></g>
+<circle cx="946" cy="238" r="7" fill="#ff5a5a"/>
+<text x="892" y="352" font-size="20" font-weight="bold" fill="#ffffff" text-anchor="middle" letter-spacing="1">LIVE TV</text>
+
+<!-- small row -->
+<g fill="#8b97ad" font-size="14"><circle cx="278" cy="416" r="4" fill="#8a5bff"/><text x="290" y="421">Podcast</text><circle cx="392" cy="416" r="4" fill="#ff8a3d"/><text x="404" y="421">News</text><circle cx="486" cy="416" r="4" fill="#1ec8de"/><text x="498" y="421">Recordings</text></g>
+<text x="1008" y="470" font-size="12" fill="#5a6478" text-anchor="end">Premium</text>
+
+<!-- stand -->
+<rect x="570" y="510" width="140" height="14" rx="4" fill="#171b26"/>
+<rect x="452" y="524" width="376" height="10" rx="5" fill="#10131b"/>
+
+<!-- brand -->
+<text x="640" y="600" font-size="46" font-weight="bold" fill="url(#brand)" text-anchor="middle" letter-spacing="1">KOZEE<tspan fill="#ff7a2f"> TV</tspan></text>
+<text x="640" y="638" font-size="18" fill="#aeb9cc" text-anchor="middle" letter-spacing="1">Movies &#183; Series &#183; Live TV &#8212; all in one place</text>
+<g transform="translate(559,662)"><rect x="0" y="0" width="162" height="40" rx="20" fill="#e0304a"/><circle cx="28" cy="20" r="7" fill="#ffffff"/><text x="46" y="27" font-size="18" font-weight="bold" fill="#ffffff" letter-spacing="1">EN VIVO</text></g>
+</svg>
