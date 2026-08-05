@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>MAJO TV — En Vivo</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:#0b1220;color:#e6edf6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+  .player{position:sticky;top:0;width:100%;height:40vh;min-height:220px;background:#000;z-index:2}
+  .player.big{height:100vh;height:100dvh}
+  video{width:100%;height:100%;object-fit:contain;background:#000}
+  .unmute{position:absolute;bottom:10px;right:10px;background:rgba(2,132,199,.92);color:#fff;border:0;
+    padding:8px 12px;border-radius:20px;font-size:13px;font-weight:600;z-index:3;cursor:pointer}
+  .hint{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.55);padding:4px 10px;border-radius:12px;font-size:11px}
+  .vbtn{position:absolute;top:8px;right:8px;z-index:3;background:rgba(0,0,0,.5);border:1px solid #ffffff33;
+    color:#fff;width:36px;height:36px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;
+    align-items:center;justify-content:center}
+  .vbtn.theater{right:52px;font-size:14px}
+  .list{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 10px 30px}
+  .card{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;
+    padding:10px 5px;background:#141d2e;border:1px solid #1e2a40;border-radius:12px;
+    cursor:pointer;text-align:center}
+  .card.active{background:#0284c7;border-color:#0284c7;font-weight:700}
+  .card img{width:42px;height:42px;object-fit:contain;border-radius:8px;background:#0b1220;flex:none}
+  .card .n{font-size:11px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;
+    -webkit-box-orient:vertical;overflow:hidden}
+</style>
+</head>
+<body>
+  <div class="player" id="player">
+    <video id="v" autoplay muted playsinline webkit-playsinline></video>
+    <span class="hint" id="hint">▶︎ En vivo</span>
+    <button class="vbtn theater" id="theater" title="Ampliar">⤢</button>
+    <button class="vbtn" id="fs" title="Pantalla completa">⛶</button>
+    <button class="unmute" id="unmute">🔇 Toca para sonido</button>
+  </div>
+  <div class="list" id="list"></div>
+
+<script>
+(function(){
+  var TG = window.Telegram && window.Telegram.WebApp;
+  if (TG){ TG.ready(); TG.expand();
+    try{ if(TG.isVersionAtLeast && TG.isVersionAtLeast('7.7')) TG.disableVerticalSwipes(); }catch(e){}
+    try{ if(TG.requestFullscreen) TG.requestFullscreen(); }catch(e){} }
+
+  var BASE = "https://stream.tv247on.com";
+  var LOGO = BASE + "/player/logos/";
+
+  // 27 canales mexicanos + peruanos -> ids OPACOS (el canalN real queda oculto tras
+  // el mapa /tv/<id>/ de nginx). El host de origen nunca se expone.
+  var CH = [
+    {id:"58518914",name:"FIFA World Cup 2026",logo:"channel1.png"},
+    {id:"3f21c527",name:"Canal 5 HD",logo:"channel2.png"},
+    {id:"7e161a92",name:"ESPN HD",logo:"channel3.png"},
+    {id:"e8c902ca",name:"Las Estrellas HD",logo:"channel4.png"},
+    {id:"8ad283b5",name:"Azteca Uno HD",logo:"channel5.png"},
+    {id:"6479d043",name:"Discovery HD",logo:"channel6.png"},
+    {id:"6afcdbee",name:"Azteca 7 HD",logo:"channel7.png"},
+    {id:"38ebc9fc",name:"Fox Sports 1 HD",logo:"channel8.png"},
+    {id:"621edd44",name:"ESPN 2 HD",logo:"channel9.png"},
+    {id:"32df7c9e",name:"TUDN",logo:"channel10.png"},
+    {id:"2066b8d5",name:"Fox Sports 2 HD",logo:"channel11.png"},
+    {id:"bc4d936a",name:"TNT México HD",logo:"channel12.png"},
+    {id:"258b3e8d",name:"AXN HD",logo:"channel13.png"},
+    {id:"b0ea5067",name:"Space HD",logo:"channel14.png"},
+    {id:"d456b6f9",name:"ESPN 3 HD",logo:"channel15.png"},
+    {id:"2189dacf",name:"Canal N (Perú)",logo:"channel16.png"},
+    {id:"f6a58ec0",name:"Latina (Perú)",logo:"channel17.png"},
+    {id:"b80deddb",name:"Movistar Deportes (Perú)",logo:"channel18.png"},
+    {id:"61c1ddb8",name:"IPE HD (Perú)",logo:"channel19.png"},
+    {id:"fc17f2bb",name:"ESPN Extra (Perú)",logo:"channel20.png"},
+    {id:"538bbfab",name:"ESPN HD (Perú)",logo:"channel21.png"},
+    {id:"27e99cdd",name:"América TV (Perú)",logo:"channel22.png"},
+    {id:"51ed13ed",name:"Perú Mágico",logo:"channel23.png"},
+    {id:"bb9d7ce6",name:"ATV+ (Perú)",logo:"channel24.png"},
+    {id:"fe1d46eb",name:"TV Perú HD",logo:"channel25.png"},
+    {id:"52769878",name:"DTV Sports 2 (Perú)",logo:"channel26.png"},
+    {id:"1cfc68f0",name:"ESPN 2 HD (Perú)",logo:"channel27.png"}
+  ];
+
+  var v = document.getElementById("v");
+  var hint = document.getElementById("hint");
+  var unmute = document.getElementById("unmute");
+  var hls = null;
+
+  function play(idx){
+    var c = CH[idx];
+    var url = BASE + "/tv/" + c.id + "/index.m3u8";
+    hint.textContent = "● " + c.name;
+    if (hls){ try{hls.destroy();}catch(e){} hls=null; }
+    if (v.canPlayType("application/vnd.apple.mpegurl")){
+      v.src = url; v.play().catch(function(){});
+    } else if (window.Hls && Hls.isSupported()){
+      hls = new Hls({maxBufferLength:30, liveSyncDurationCount:4});
+      hls.loadSource(url); hls.attachMedia(v);
+      hls.on(Hls.Events.MANIFEST_PARSED, function(){ v.play().catch(function(){}); });
+      hls.on(Hls.Events.ERROR, function(_,d){ if(d && d.fatal){
+        if(d.type===Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
+        else if(d.type===Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
+      }});
+    }
+  }
+
+  var list = document.getElementById("list");
+  CH.forEach(function(c,i){
+    var el = document.createElement("div");
+    el.className = "card" + (i===0?" active":"");
+    el.innerHTML = '<img src="'+LOGO+c.logo+'" onerror="this.style.visibility=\'hidden\'"><span class="n">'+c.name+'</span>';
+    el.onclick = function(){
+      var cards = document.querySelectorAll(".card");
+      for (var k=0;k<cards.length;k++) cards[k].classList.remove("active");
+      el.classList.add("active"); play(i);
+      window.scrollTo({top:0,behavior:"smooth"});
+    };
+    list.appendChild(el);
+  });
+
+  unmute.onclick = function(){ v.muted = !v.muted; unmute.textContent = v.muted ? "🔇 Toca para sonido" : "🔊 Sonido activado"; if(!v.muted) v.play().catch(function(){}); };
+  v.addEventListener("click", function(){ if(v.muted){ v.muted=false; unmute.textContent="🔊 Sonido activado"; } });
+
+  var player = document.getElementById("player");
+  document.getElementById("theater").onclick = function(){
+    player.classList.toggle("big");
+    if(!player.classList.contains("big")) window.scrollTo({top:0,behavior:"smooth"});
+  };
+  document.getElementById("fs").onclick = function(){
+    if(v.webkitEnterFullscreen){ try{v.webkitEnterFullscreen();return;}catch(e){} }
+    if(document.fullscreenElement){ document.exitFullscreen&&document.exitFullscreen(); }
+    else if(player.requestFullscreen){ player.requestFullscreen().catch(function(){}); }
+    else if(player.webkitRequestFullscreen){ player.webkitRequestFullscreen(); }
+  };
+
+  var want = (new URLSearchParams(location.search)).get("ch");
+  var startIdx = 0;
+  if (want){ for (var qi=0; qi<CH.length; qi++){ if (CH[qi].id===want){ startIdx=qi; break; } } }
+  var allCards = document.querySelectorAll(".card");
+  for (var ci=0; ci<allCards.length; ci++) allCards[ci].classList.toggle("active", ci===startIdx);
+  play(startIdx);
+})();
+</script>
+</body>
+</html>

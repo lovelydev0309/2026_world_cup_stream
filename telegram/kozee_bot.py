@@ -38,20 +38,27 @@ def cfg(k, d=None):
         pass
     return os.environ.get(k, d)
 
-BOT   = cfg("TG_BOT_TOKEN")
-LIVE  = cfg("TG_LIVE_URL",     "https://stream.tv247on.com/player/tg/")
-MOVIE = cfg("TG_MOVIES_URL",   "https://stream.tv247on.com/player/vod-us/")
-TRIAL = cfg("TG_TRIAL_URL",    "https://kozeetv.com/")
-SUB   = cfg("TG_SUBSCRIBE_URL","https://kozeetv.com/product/subscription-package/")
-SUP   = cfg("TG_SUPPORT_URL",  "https://kozeetv.com/")
-assert BOT, "TG_BOT_TOKEN missing in config/accounts.env"
+# One codebase, multiple shops. SHOP=kozee (default) uses TG_* keys; any other shop
+# (e.g. majo) uses <SHOP>_* keys — so this same file runs both the KozeeTVwatch and
+# MojaTVwatch bots via separate systemd services (SHOP=majo).
+SHOP = os.environ.get("SHOP", "kozee").lower()
+def scfg(base, d=None):
+    return cfg(("TG_%s" % base) if SHOP == "kozee" else ("%s_%s" % (SHOP.upper(), base)), d)
+BOT   = scfg("BOT_TOKEN")
+LIVE  = scfg("LIVE_URL",     "https://stream.tv247on.com/player/tg/")
+MOVIE = scfg("MOVIES_URL",   "https://stream.tv247on.com/player/vod-us/")
+TRIAL = scfg("TRIAL_URL",    "https://kozeetv.com/")
+SUB   = scfg("SUBSCRIBE_URL","https://kozeetv.com/product/subscription-package/")
+SUP   = scfg("SUPPORT_URL",  "https://kozeetv.com/")
+assert BOT, "%s bot token missing in config/accounts.env" % SHOP
 API = "https://api.telegram.org/bot%s/" % BOT
 
 # ── The whole menu lives in ONE editable file: config/tg_menu.json ──────────
 # Shape: {"welcome": "<html text>", "rows": [[{"label","type":"url"|"web_app","value"}]]}.
 # It is re-read on EVERY menu send, so edits take effect instantly (no restart).
 # If the file is missing/broken the bot falls back to (and re-seeds) the defaults below.
-MENU_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config", "tg_menu.json")
+MENU_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config",
+                         "tg_menu.json" if SHOP == "kozee" else "tg_menu_%s.json" % SHOP)
 
 def default_menu():
     return {
@@ -114,7 +121,7 @@ def send_menu(chat_id):
     markup = menu_markup(m)
     # Optional banner above the buttons — set/clear TG_MENU_IMAGE in accounts.env
     # (read fresh each send, so it can be toggled without restarting the bot).
-    img = cfg("TG_MENU_IMAGE", "")
+    img = scfg("MENU_IMAGE", "")
     if img:
         r = api("sendPhoto", {"chat_id": chat_id, "photo": img, "caption": text,
                               "parse_mode": "HTML", "reply_markup": markup})
@@ -129,12 +136,15 @@ def send_menu(chat_id):
         log("menu -> chat %s FAILED: %s" % (chat_id, json.dumps(r)[:180]))
 
 def main():
-    ensure_menu_file()   # create config/tg_menu.json from defaults on first run
+    ensure_menu_file()   # create the shop's tg_menu file from defaults on first run
+    es = (SHOP != "kozee" and scfg("LANG", "en") == "es")   # majo = Spanish labels
+    start_desc = "Abrir el menú" if es else "Open the menu"
+    live_lbl   = "TV en Vivo"   if es else "LIVE TV"
     # /start hint + a persistent chat menu-button that also opens LIVE TV directly
-    api("setMyCommands", {"commands": [{"command": "start", "description": "Open the Kozee TV menu"}]})
-    api("setChatMenuButton", {"menu_button": {"type": "web_app", "text": "LIVE TV",
+    api("setMyCommands", {"commands": [{"command": "start", "description": start_desc}]})
+    api("setChatMenuButton", {"menu_button": {"type": "web_app", "text": live_lbl,
                                               "web_app": {"url": LIVE}}})
-    log("kozee_bot menu service up  (LIVE=%s  MOVIES=%s)" % (LIVE, MOVIE))
+    log("%s bot menu service up  (LIVE=%s  MOVIES=%s)" % (SHOP, LIVE, MOVIE))
     offset = None
     while True:
         payload = {"timeout": 30, "allowed_updates": ["message", "callback_query"]}
