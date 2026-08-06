@@ -14,7 +14,7 @@ import json, os, subprocess, sys, time, urllib.request
 sys.path.insert(0, "/opt/streaming-stack/scripts")
 import vod_ingest2 as vi
 
-DISK = "/opt/streaming-stack/vod-disk-us"
+DISK = os.environ.get("VOD_DISK", "/opt/streaming-stack/vod-disk-us")
 UA = vi.UA
 ids = [int(x) for x in open(DISK + "/_repull.ids") if x.strip().isdigit()]
 mv = {int(m.get("stream_id", 0)): m for m in json.load(open(DISK + "/movies.json"))}
