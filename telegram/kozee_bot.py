@@ -51,7 +51,10 @@ TRIAL = scfg("TRIAL_URL",    "https://kozeetv.com/")
 SUB   = scfg("SUBSCRIBE_URL","https://kozeetv.com/product/subscription-package/")
 SUP   = scfg("SUPPORT_URL",  "https://kozeetv.com/")
 assert BOT, "%s bot token missing in config/accounts.env" % SHOP
-API = "https://api.telegram.org/bot%s/" % BOT
+# API base is normally Telegram's cloud; a shop can point at a self-hosted local
+# Bot API server (e.g. http://127.0.0.1:8081) to upload files up to 2GB.
+API_BASE = scfg("API_BASE", "https://api.telegram.org").rstrip("/")
+API = "%s/bot%s/" % (API_BASE, BOT)
 
 # ── The whole menu lives in ONE editable file: config/tg_menu.json ──────────
 # Shape: {"welcome": "<html text>", "rows": [[{"label","type":"url"|"web_app","value"}]]}.
@@ -147,7 +150,8 @@ def main():
     log("%s bot menu service up  (LIVE=%s  MOVIES=%s)" % (SHOP, LIVE, MOVIE))
     offset = None
     while True:
-        payload = {"timeout": 30, "allowed_updates": ["message", "callback_query"]}
+        payload = {"timeout": 30, "allowed_updates":
+                   ["message", "callback_query", "channel_post", "my_chat_member"]}
         if offset is not None:
             payload["offset"] = offset
         r = api("getUpdates", payload, timeout=45)
@@ -169,6 +173,13 @@ def main():
                     m = cq.get("message")
                     if m and m.get("chat", {}).get("type") == "private":
                         send_menu(m["chat"]["id"])
+                elif "channel_post" in u or "my_chat_member" in u:
+                    # log any channel this bot is in (used to discover the movie-storage
+                    # channel id from a private invite link — bots can't resolve those).
+                    obj = u.get("channel_post") or u.get("my_chat_member") or {}
+                    ch = obj.get("chat", {})
+                    if ch.get("type") == "channel":
+                        log("CHANNEL SEEN: id=%s title=%r" % (ch.get("id"), ch.get("title")))
             except Exception as e:
                 log("handler err: %s" % e)
 
