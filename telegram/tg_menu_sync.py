@@ -38,6 +38,10 @@ MB_T    = cfg("NOCO_MENU_TABLE", "mivq7mr4k50no69")
 SHOPS_T = cfg("NOCO_SHOPS_TABLE", "mpj1ub8xma9tto6")
 LIVE    = scfg("LIVE_URL",      "https://stream.tv247on.com/player/tg/")
 MOVIES  = scfg("MOVIES_URL",    "https://stream.tv247on.com/player/tg/movies.html")
+# "web" = HLS Mini App from CDN; "telegram" = poster-catalog Mini App over Telegram-stored
+# films (tapping a poster deep-links to the bot, which delivers the film natively).
+MOVIES_MODE = scfg("MOVIES_MODE", "web")
+MOVIES_TG   = scfg("MOVIES_TG_URL", "https://stream.tv247on.com/player/tg-mx/movies-tg.html")
 TRIAL   = scfg("TRIAL_URL",     "https://t.me/kozeetvbuy_bot?start=freetrial")
 SUB     = scfg("SUBSCRIBE_URL", "https://t.me/kozeetvbuy_bot?start=subscribe")
 OUT     = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config",
@@ -63,6 +67,8 @@ def button(label, kind, url):
     if "/live" in low or "live tv" in lab or "livetv" in lab or "en vivo" in lab or "detalles" in lab:
         return {"label": label, "type": "web_app", "value": LIVE}
     if "/movie" in low or "/vod" in low or "movies" in lab or "movie" in lab or "pel" in lab:
+        if MOVIES_MODE == "telegram":
+            return {"label": label, "type": "callback", "value": "movies"}
         return {"label": label, "type": "web_app", "value": MOVIES}
     if url:
         return {"label": label, "type": "url", "value": url}

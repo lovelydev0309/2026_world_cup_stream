@@ -725,6 +725,8 @@ def main():
              "plot":info.get("plot") or info.get("description") or "",
              "m3u8_url":f"{CDN}/{slug}/index.m3u8","logo_url":f"{CDN}/{slug}/poster.jpg",
              "player_url":f"{CDN}/{slug}/","stream_id":sid,"added":c.get("added")}
+        if os.environ.get("INGEST_HIDDEN")=="1":
+            rec["hidden"]=True   # stay hidden until post-ingest omdb re-rate + curate decide
         try: write_movie_html(outdir,rec,w,h,v)
         except Exception as ex: log(f"  html-fail: {ex}")
         open(JSONL,"a").write(json.dumps(rec,ensure_ascii=False)+"\n")

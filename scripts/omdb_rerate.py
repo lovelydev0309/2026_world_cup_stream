@@ -97,6 +97,8 @@ rated = 0; hidden = []; processed = 0
 for m in movies:
     if calls >= MAX_CALLS or quota_hit[0]:
         break                                   # stop cleanly; remaining left untouched
+    if os.environ.get("ONLY_UNRATED") == "1" and m.get("rating_source") == "imdb":
+        continue                                # already has a real IMDb rating -> don't re-spend quota
     processed += 1
     if "_provider_rating" not in m:
         m["_provider_rating"] = m.get("rating")

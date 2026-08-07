@@ -97,8 +97,11 @@ def menu_markup(m):
         btns = []
         for b in row:
             if not (b.get("label") and b.get("value")): continue
-            if b.get("type") == "web_app":
+            t = b.get("type")
+            if t == "web_app":
                 btns.append({"text": b["label"], "web_app": {"url": b["value"]}})
+            elif t == "callback":
+                btns.append({"text": b["label"], "callback_data": b["value"]})
             else:
                 btns.append({"text": b["label"], "url": b["value"]})
         if btns: rows.append(btns)
@@ -117,6 +120,68 @@ def api(method, payload, timeout=40):
 
 def log(m):
     print("[%s] %s" % (time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), m), flush=True)
+
+# ── Movies stored on Telegram: catalog config/tg_movies_<shop>.json (title+message_id).
+# The bot lists ONLY these and delivers a picked one by copying it from the storage
+# channel (native playback) — so movies use Telegram's storage, not our CDN.
+STORAGE = cfg("TG_STORAGE_CHANNEL")
+MOVIES_CATALOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config",
+                              "tg_movies_%s.json" % SHOP)
+MOVIES_ES = (SHOP != "kozee")
+MOVIES_TG = scfg("MOVIES_TG_URL", "https://stream.tv247on.com/player/tg-mx/movies-tg.html")
+
+def load_movies():
+    try: return json.load(open(MOVIES_CATALOG))
+    except Exception: return []
+
+def send_movie_list(chat_id):
+    mv = load_movies()
+    if not mv:
+        api("sendMessage", {"chat_id": chat_id,
+                            "text": "Aún no hay películas disponibles." if MOVIES_ES else "No movies available yet."})
+        return
+    head = ("🎬 <b>Películas</b> (%d) — toca una para verla:" if MOVIES_ES
+            else "🎬 <b>Movies</b> (%d) — tap one to watch:") % len(mv)
+    rows = [[{"text": ("🎬 %s%s" % (m.get("title") or m.get("slug"),
+                                   " (%s)" % m.get("year") if m.get("year") else ""))[:60],
+              "callback_data": "mv:%s" % m["message_id"]}] for m in mv[:45]]
+    api("sendMessage", {"chat_id": chat_id, "text": head, "parse_mode": "HTML",
+                        "reply_markup": {"inline_keyboard": rows}})
+
+def deliver_movie(chat_id, mid):
+    if not STORAGE: return
+    r = api("copyMessage", {"chat_id": chat_id, "from_chat_id": int(STORAGE), "message_id": int(mid)})
+    if not r.get("ok"):
+        log("deliver mv %s -> chat %s FAILED: %s" % (mid, chat_id, json.dumps(r)[:150]))
+
+def send_movies_open(chat_id):
+    # A reply-keyboard web_app button — the only launch that lets the Mini App call
+    # sendData() back to the bot (inline/menu web_app buttons can't). Tapping a poster
+    # inside then sends {mv:<message_id>} here and we deliver that film natively.
+    lab = "📽️ Abrir catálogo" if MOVIES_ES else "📽️ Open catalog"
+    txt = ("🎬 <b>Películas</b> — toca «%s» abajo 👇" if MOVIES_ES
+           else "🎬 <b>Movies</b> — tap «%s» below 👇") % lab
+    kb = {"keyboard": [[{"text": lab, "web_app": {"url": MOVIES_TG}}]],
+          "resize_keyboard": True, "one_time_keyboard": True}
+    api("sendMessage", {"chat_id": chat_id, "text": txt, "parse_mode": "HTML", "reply_markup": kb})
+
+def send_service(chat_id, kind):
+    # Deep-link landing: a single prominent web_app button for one service, so a group/
+    # channel button (t.me/<bot>?start=vivo|cine) drops the user straight onto it. web_app
+    # buttons are allowed here because this reply lands in the user's private chat.
+    if kind == "live":
+        lab = "📺 TV en Vivo" if MOVIES_ES else "📺 LIVE TV"
+        txt = ("📺 <b>TV en Vivo</b> — toca el botón para ver 👇" if MOVIES_ES
+               else "📺 <b>LIVE TV</b> — tap the button to watch 👇")
+        url = LIVE
+    else:
+        lab = "🎬 Películas" if MOVIES_ES else "🎬 Movies"
+        txt = ("🎬 <b>Películas</b> — toca el botón para ver 👇" if MOVIES_ES
+               else "🎬 <b>Movies</b> — tap the button to watch 👇")
+        url = MOVIE
+    mk = {"inline_keyboard": [[{"text": lab, "web_app": {"url": url}}]]}
+    r = api("sendMessage", {"chat_id": chat_id, "text": txt, "parse_mode": "HTML", "reply_markup": mk})
+    if not r.get("ok"): log("service %s -> chat %s FAILED: %s" % (kind, chat_id, json.dumps(r)[:150]))
 
 def send_menu(chat_id):
     m = load_menu()
@@ -164,15 +229,43 @@ def main():
                 # chats — sending them to a group/channel returns BUTTON_TYPE_INVALID.
                 # So only ever respond in a private (DM) chat; ignore groups/channels.
                 if "message" in u and "chat" in u["message"]:
-                    chat = u["message"]["chat"]
+                    msg = u["message"]; chat = msg["chat"]
                     if chat.get("type") == "private":
-                        send_menu(chat["id"])
+                        if "web_app_data" in msg:                       # poster tapped in the Mini App
+                            try:
+                                dd = json.loads(msg["web_app_data"].get("data", "{}"))
+                                if dd.get("mv"): deliver_movie(chat["id"], dd["mv"])
+                            except Exception as e: log("web_app_data err: %s" % e)
+                        else:
+                            txt = msg.get("text") or ""
+                            if txt.startswith("/start") and "mv_" in txt:
+                                deliver_movie(chat["id"], txt.split("mv_", 1)[1].strip())
+                            elif txt.startswith("/start"):
+                                parts = txt.split(maxsplit=1)
+                                pl = parts[1].strip().lower() if len(parts) > 1 else ""
+                                if pl in ("vivo", "live", "tv", "livetv", "envivo"):
+                                    send_service(chat["id"], "live")     # group deep-link -> Live TV
+                                elif pl in ("cine", "peliculas", "películas", "movies", "pelis", "vod"):
+                                    send_service(chat["id"], "movies")   # group deep-link -> Movies
+                                else:
+                                    send_menu(chat["id"])
+                            else:
+                                send_menu(chat["id"])
                 elif "callback_query" in u:
                     cq = u["callback_query"]
-                    api("answerCallbackQuery", {"callback_query_id": cq["id"]})
-                    m = cq.get("message")
-                    if m and m.get("chat", {}).get("type") == "private":
-                        send_menu(m["chat"]["id"])
+                    data = cq.get("data", "") or ""
+                    m = cq.get("message"); chat = m.get("chat", {}).get("id") if m else None
+                    if data == "movies" and chat:
+                        api("answerCallbackQuery", {"callback_query_id": cq["id"]})
+                        send_movie_list(chat)   # reliable inline list -> tap -> deliver (no Mini App handoff)
+                    elif data.startswith("mv:") and chat:
+                        api("answerCallbackQuery", {"callback_query_id": cq["id"],
+                                                    "text": "Enviando…" if MOVIES_ES else "Sending…"})
+                        deliver_movie(chat, data[3:])
+                    else:
+                        api("answerCallbackQuery", {"callback_query_id": cq["id"]})
+                        if m and m.get("chat", {}).get("type") == "private":
+                            send_menu(chat)
                 elif "channel_post" in u or "my_chat_member" in u:
                     # log any channel this bot is in (used to discover the movie-storage
                     # channel id from a private invite link — bots can't resolve those).
