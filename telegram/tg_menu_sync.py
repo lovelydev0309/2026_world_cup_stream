@@ -61,18 +61,55 @@ def button(label, kind, url):
     low = (url or "").lower(); lab = label.lower()
     if kind == "trial":  return {"label": label, "type": "url", "value": TRIAL}
     if kind == "plans":  return {"label": label, "type": "url", "value": SUB}
+    # App Guide / FAQ -> opens the 2nd-tier FAQ sub-menu (handled in-bot by callback "faq")
+    if kind == "faq" or any(k in lab for k in ("faq", "guía", "guia", "app guide", "tutorial")):
+        return {"label": label, "type": "callback", "value": "faq"}
     if kind in ("web_app", "miniapp", "app"):
         return {"label": label, "type": "web_app", "value": url or LIVE}
-    # url kind: route LIVE TV / Movies to that shop's in-Telegram player; pass others through
+    # url kind: LIVE TV / Movies open that shop's in-Telegram player. Use the URL set in
+    # NocoDB if the client entered one (so every link is visible + editable in the table),
+    # otherwise fall back to the shop's configured player URL.
     if "/live" in low or "live tv" in lab or "livetv" in lab or "en vivo" in lab or "detalles" in lab:
-        return {"label": label, "type": "web_app", "value": LIVE}
+        return {"label": label, "type": "web_app", "value": url or LIVE}
     if "/movie" in low or "/vod" in low or "movies" in lab or "movie" in lab or "pel" in lab:
         if MOVIES_MODE == "telegram":
             return {"label": label, "type": "callback", "value": "movies"}
-        return {"label": label, "type": "web_app", "value": MOVIES}
+        return {"label": label, "type": "web_app", "value": url or MOVIES}
     if url:
         return {"label": label, "type": "url", "value": url}
     return None
+
+def resolve_banner(shop):
+    """Mirror the shop's NocoDB 'Banner' attachment onto our CDN and return its public URL,
+    so the client can change the menu banner just by uploading a new image in NocoDB. The
+    NocoDB attachment URL is not a stable/fast host for Telegram, so we re-host it; we only
+    re-download when the source changes (tracked by its path)."""
+    b = shop.get("Banner")
+    if not (isinstance(b, list) and b and isinstance(b[0], dict) and b[0].get("path")):
+        return ""
+    att = b[0]; path = att["path"]
+    sub = (LIVE.rstrip("/").split("/player/")[-1] or ("tg-mx" if SHOP == "majo" else "tg")).strip("/")
+    pdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "player", sub)
+    ext = (att.get("title", "x.jpg").rsplit(".", 1)[-1] or "jpg").lower()
+    if ext not in ("jpg", "jpeg", "png", "webp"): ext = "jpg"
+    name = "hero_%s_noco.%s" % (SHOP, ext)
+    dest = os.path.join(pdir, name); marker = dest + ".src"
+    try: prev = open(marker).read().strip()
+    except Exception: prev = ""
+    if path != prev or not os.path.exists(dest):
+        try:
+            import urllib.parse
+            src = NOCO + "/" + urllib.parse.quote(path, safe="/")   # handle non-ASCII filenames
+            data = urllib.request.urlopen(urllib.request.Request(
+                src, headers={"User-Agent": "curl/8"}), timeout=30).read()
+            if len(data) > 1000:
+                os.makedirs(pdir, exist_ok=True)
+                open(dest, "wb").write(data); open(marker, "w").write(path)
+                print("[%s] banner synced from NocoDB (%d KB) -> %s" % (SHOP, len(data) // 1024, name))
+        except Exception as e:
+            print("[%s] banner fetch failed (%s) — keeping previous" % (SHOP, str(e)[:80]))
+            if not os.path.exists(dest): return ""
+    return "https://stream.tv247on.com/player/%s/%s" % (sub, name)
 
 def main():
     try:
@@ -101,6 +138,8 @@ def main():
     if not rows:
         print("[%s] no active '%s' buttons — keeping existing menu" % (SHOP, NSHOP)); return
     menu = {"welcome": "<b>%s</b>" % intro, "rows": rows}
+    banner = resolve_banner(shop)                 # client-editable menu image from NocoDB
+    if banner: menu["image"] = banner
     tmp = OUT + ".tmp"; json.dump(menu, open(tmp, "w"), ensure_ascii=False, indent=2)
     os.replace(tmp, OUT)
     print("[%s] synced from NocoDB '%s': %d row(s), %d button(s)"

@@ -40,7 +40,7 @@ def cfg(k, d=None):
 
 # One codebase, multiple shops. SHOP=kozee (default) uses TG_* keys; any other shop
 # (e.g. majo) uses <SHOP>_* keys — so this same file runs both the KozeeTVwatch and
-# MojaTVwatch bots via separate systemd services (SHOP=majo).
+# MajoTVwatch bots via separate systemd services (SHOP=majo).
 SHOP = os.environ.get("SHOP", "kozee").lower()
 def scfg(base, d=None):
     return cfg(("TG_%s" % base) if SHOP == "kozee" else ("%s_%s" % (SHOP.upper(), base)), d)
@@ -165,6 +165,47 @@ def send_movies_open(chat_id):
           "resize_keyboard": True, "one_time_keyboard": True}
     api("sendMessage", {"chat_id": chat_id, "text": txt, "parse_mode": "HTML", "reply_markup": kb})
 
+# ── App Guide / FAQ (2nd-tier sub-menu) ─────────────────────────────────────
+# The 1st-tier "Guía de la app / FAQ" button (callback "faq") opens a list of
+# questions; tapping one edits the message in place to show the answer, with Back
+# navigation. Content is config/tg_faq_<shop>.json (Spanish for majo, English for kozee).
+FAQ_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config",
+                        "tg_faq.json" if SHOP == "kozee" else "tg_faq_%s.json" % SHOP)
+
+def load_faq():
+    try: return json.load(open(FAQ_FILE))
+    except Exception: return None
+
+def faq_menu_markup(faq):
+    rows = [[{"text": (it.get("q") or "?")[:64], "callback_data": "faq:%d" % i}]
+            for i, it in enumerate(faq.get("items", []))]
+    rows.append([{"text": faq.get("back_label", "⬅️ Menu"), "callback_data": "menu"}])
+    return {"inline_keyboard": rows}
+
+def send_faq_menu(chat_id):
+    faq = load_faq()
+    if not faq:
+        return send_menu(chat_id)
+    api("sendMessage", {"chat_id": chat_id, "text": faq.get("title", "FAQ"), "parse_mode": "HTML",
+                        "reply_markup": faq_menu_markup(faq), "disable_web_page_preview": True})
+
+def edit_faq_menu(chat_id, message_id):
+    faq = load_faq()
+    if not faq: return
+    api("editMessageText", {"chat_id": chat_id, "message_id": message_id, "text": faq.get("title", "FAQ"),
+                            "parse_mode": "HTML", "reply_markup": faq_menu_markup(faq),
+                            "disable_web_page_preview": True})
+
+def edit_faq_answer(chat_id, message_id, i):
+    faq = load_faq(); items = (faq or {}).get("items", [])
+    if not (0 <= i < len(items)): return
+    it = items[i]
+    txt = "<b>%s</b>\n\n%s" % (it.get("q", ""), it.get("a", ""))
+    mk = {"inline_keyboard": [[{"text": faq.get("q_back_label", "⬅️ Back"), "callback_data": "faqmenu"}],
+                              [{"text": faq.get("back_label", "⬅️ Menu"), "callback_data": "menu"}]]}
+    api("editMessageText", {"chat_id": chat_id, "message_id": message_id, "text": txt,
+                            "parse_mode": "HTML", "reply_markup": mk, "disable_web_page_preview": True})
+
 def send_service(chat_id, kind):
     # Deep-link landing: a single prominent web_app button for one service, so a group/
     # channel button (t.me/<bot>?start=vivo|cine) drops the user straight onto it. web_app
@@ -189,7 +230,7 @@ def send_menu(chat_id):
     markup = menu_markup(m)
     # Optional banner above the buttons — set/clear TG_MENU_IMAGE in accounts.env
     # (read fresh each send, so it can be toggled without restarting the bot).
-    img = scfg("MENU_IMAGE", "")
+    img = m.get("image") or scfg("MENU_IMAGE", "")   # banner from NocoDB (synced) else config
     if img:
         r = api("sendPhoto", {"chat_id": chat_id, "photo": img, "caption": text,
                               "parse_mode": "HTML", "reply_markup": markup})
@@ -255,7 +296,21 @@ def main():
                     cq = u["callback_query"]
                     data = cq.get("data", "") or ""
                     m = cq.get("message"); chat = m.get("chat", {}).get("id") if m else None
-                    if data == "movies" and chat:
+                    mid_id = m.get("message_id") if m else None
+                    if data == "faq" and chat:                       # open App Guide / FAQ sub-menu
+                        api("answerCallbackQuery", {"callback_query_id": cq["id"]})
+                        send_faq_menu(chat)
+                    elif data == "faqmenu" and chat and mid_id:       # back to the question list
+                        api("answerCallbackQuery", {"callback_query_id": cq["id"]})
+                        edit_faq_menu(chat, mid_id)
+                    elif data.startswith("faq:") and chat and mid_id:  # show one answer in place
+                        api("answerCallbackQuery", {"callback_query_id": cq["id"]})
+                        try: edit_faq_answer(chat, mid_id, int(data.split(":", 1)[1]))
+                        except Exception as e: log("faq answer err: %s" % e)
+                    elif data == "menu" and chat:                     # back to the 1st-tier menu
+                        api("answerCallbackQuery", {"callback_query_id": cq["id"]})
+                        send_menu(chat)
+                    elif data == "movies" and chat:
                         api("answerCallbackQuery", {"callback_query_id": cq["id"]})
                         send_movie_list(chat)   # reliable inline list -> tap -> deliver (no Mini App handoff)
                     elif data.startswith("mv:") and chat:

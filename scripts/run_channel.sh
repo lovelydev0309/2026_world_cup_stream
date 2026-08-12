@@ -330,9 +330,9 @@ detect_audio_ok() {
     # EMPTY probe result (the truly transient case) is retried.
     local chans i
     for i in 1 2 3; do
-        chans=$(timeout 5 ffprobe -v quiet -hide_banner \
+        chans=$(timeout 8 ffprobe -v quiet -hide_banner \
             -user_agent "IPTV Smarters/1.0 Dalvik/2.1.0" \
-            -analyzeduration 2000000 -probesize 1000000 \
+            -analyzeduration 3000000 -probesize 3000000 \
             -select_streams a:0 -show_entries stream=channels \
             -of csv=p=0 "$SOURCE_URL" 2>/dev/null | head -1)
         if [ -n "$chans" ] && [ "$chans" -ge 1 ] 2>/dev/null; then

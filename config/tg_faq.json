@@ -1,0 +1,27 @@
+{
+  "title": "📖 <b>App Guide / FAQ</b>\n\nChoose a question:",
+  "back_label": "⬅️ Main menu",
+  "q_back_label": "⬅️ Back to questions",
+  "items": [
+    {
+      "q": "Why install the APP?",
+      "a": "We offer limited free live TV channels and movies. Subscribe to unlock thousands of channels and movies, and download our recommended third-party app — also available on Smart TVs!\n\nSubscribe here: @kozeetvbuy_bot"
+    },
+    {
+      "q": "Can I install the app on TV?",
+      "a": "Yes! You can download the <b>IPTV Smarters</b> app on your TV and request login credentials (username and password) from us to start watching.\n\n▶️ Video tutorial: https://www.youtube.com/watch?v=2ozhBBVaG0A"
+    },
+    {
+      "q": "How to get the username and password for the App?",
+      "a": "To get your APP login details, click here to subscribe: @kozeetvbuy_bot"
+    },
+    {
+      "q": "How to sign in the app?",
+      "a": "Once you've downloaded the app and received your login details, log in by entering:\n\n• <b>Name:</b> any name\n• <b>Username:</b> the one you received\n• <b>Password:</b> the one you received\n• <b>URL:</b> the one you received\n\n▶️ Video tutorial: https://www.youtube.com/watch?v=2ozhBBVaG0A"
+    },
+    {
+      "q": "How can I pay to subscribe?",
+      "a": "You need to buy <b>Telegram Stars</b> first — find them in Telegram <b>Settings → My Stars</b> (if you don't have any, buy directly from Google Play or the iPhone App Store).\n\nThen use your Telegram Stars to subscribe here: @kozeetvbuy_bot"
+    }
+  ]
+}

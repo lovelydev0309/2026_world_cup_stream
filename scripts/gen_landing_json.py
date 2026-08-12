@@ -3,8 +3,9 @@
 
 The real config/channels.json holds IPTV account credentials in source_url /
 source_urls, so it must NEVER be web-exposed. This emits player/channels.json
-with only public fields (title, logo, hls, page) for every enabled channel, so
-index.html can build its cards dynamically — new channels appear automatically.
+with only public fields (name, title, logo [absolute URL], hls) for every enabled
+channel, so index.html — and external sites — can build lists dynamically; new
+channels appear automatically. The per-channel player page is derived from `name`.
 
 Run on a 1-min cron; also called after any channel add.
 """
@@ -21,12 +22,14 @@ for ch in cfg.get('channels', []):
     if not ch.get('enabled', True):
         continue
     name = ch['channel_name']
+    logo = ch.get('logo', f'/player/logos/{name}.png')
+    if logo.startswith('/'):          # emit an absolute URL so external sites can use it directly
+        logo = BASE + logo
     out.append({
         'name':  name,
         'title': ch.get('display_name', name),
-        'logo':  ch.get('logo', f'/player/logos/{name}.png'),
+        'logo':  logo,
         'hls':   ch.get('hls_url', f'{BASE}/hls/{name}/index.m3u8'),
-        'page':  f'/player/{name}.html',
     })
 
 tmp = OUT + '.tmp'

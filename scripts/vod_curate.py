@@ -57,7 +57,9 @@ for m in d:
     if isnew: nr += 1
 
     meta = hms(m.get("duration")); a = actual_dur(m.get("slug"))
-    truncated = (meta >= 300 and a > 0 and a < meta * 0.85)
+    mp_ok = os.path.exists(os.path.join(DISK, m.get("slug") or "", "index.m3u8"))
+    # broken = HLS missing entirely, OR present but < 85% of the metadata length
+    truncated = (not mp_ok) or (meta >= 300 and a < meta * 0.85)
     m["truncated"] = bool(truncated)
     if truncated: trunc += 1
 

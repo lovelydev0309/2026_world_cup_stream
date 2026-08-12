@@ -441,7 +441,7 @@ function buildCats(){
 if(cattab) cattab.addEventListener('click',()=>catwrap.classList.toggle('open'));
 
 fetch('movies.json?_='+Date.now()).then(r=>r.json()).then(d=>{
-  ALL=(Array.isArray(d)?d:(d.movies||[])).map((m,i)=>({...m,_added:(m.added?parseInt(m.added):(1e9-i))}));
+  ALL=(Array.isArray(d)?d:(d.movies||[])).filter(m=>m&&m.m3u8_url&&!m.hidden).map((m,i)=>({...m,_added:(m.added?parseInt(m.added):(1e9-i))}));
   buildCats();
   refresh();
 }).catch(e=>{emptyEl.textContent='No se pudo cargar el catálogo.';emptyEl.style.display='block';});
@@ -662,6 +662,12 @@ def main():
         if US:
             if v not in ("h264","hevc"): log(f"skip {sid} {name[:42]}: video {v}"); continue
             transcode_v=(v=="hevc")   # hevc->h264 (cap 1080p); any audio ->aac
+        elif os.environ.get("INGEST_TRANSCODE")=="1":
+            # recovery mode: accept non-AAC audio (always re-encoded to AAC below) and
+            # transcode non-h264 video to h264. h264 video is still copied (fast).
+            if v not in ("h264","hevc","mpeg4","mpeg2video","vc1","vp9","av1"):
+                log(f"skip {sid} {name[:42]}: video {v}"); continue
+            transcode_v=(v!="h264")
         else:
             if v!="h264" or a!="aac": log(f"skip {sid} {name[:42]}: {v}/{a}"); continue
             transcode_v=False

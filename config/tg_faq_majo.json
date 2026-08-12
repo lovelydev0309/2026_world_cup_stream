@@ -1,0 +1,27 @@
+{
+  "title": "📖 <b>Guía de la app / FAQ</b>\n\nElige una pregunta:",
+  "back_label": "⬅️ Menú principal",
+  "q_back_label": "⬅️ Volver a las preguntas",
+  "items": [
+    {
+      "q": "¿Por qué usar la App para ver?",
+      "a": "Disfruta TV gratis. Descarga una app de terceros en tu celular o Smart TV y accede a miles de canales y películas.\n\nSuscríbete para desbloquear todo: @majotvbuy_bot"
+    },
+    {
+      "q": "¿Se puede ver en la TV?",
+      "a": "¡Sí! Puedes descargar la app <b>IPTV Smarters</b> en tu TV y solicitar con nosotros tus datos de acceso (usuario y contraseña) para empezar a ver.\n\n▶️ Tutorial en video: https://www.youtube.com/watch?v=8VE_0J-5zUo"
+    },
+    {
+      "q": "¿Cómo obtener el usuario y contraseña para la App?",
+      "a": "Para obtener los datos de acceso de la app, haz clic aquí para suscribirte: @majotvbuy_bot"
+    },
+    {
+      "q": "¿Cómo ingresar los datos de acceso en la app?",
+      "a": "Tras descargar la app y recibir tus datos, inicia sesión ingresando:\n\n• <b>Nombre:</b> cualquiera\n• <b>Usuario:</b> el que recibiste\n• <b>Contraseña:</b> la que recibiste\n• <b>URL:</b> la que recibiste\n\n▶️ Tutorial en video: https://www.youtube.com/watch?v=8VE_0J-5zUo"
+    },
+    {
+      "q": "¿Cómo puedo pagar la suscripción?",
+      "a": "Primero necesitas comprar <b>Telegram Stars</b>. Las encuentras en la Configuración de tu Telegram → <b>Mis estrellas</b> (si no tienes, cómpralas directamente en Google Play Store o App Store de iPhone).\n\nLuego, usa tus Telegram Stars para suscribirte aquí: @majotvbuy_bot"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+[
+  {"id": "1m1d", "label": "1 month × 1 device",   "months": 1, "devices": 1, "stars": 1},
+  {"id": "1m2d", "label": "1 month × 2 devices",  "months": 1, "devices": 2, "stars": 900},
+  {"id": "1m3d", "label": "1 month × 3 devices",  "months": 1, "devices": 3, "stars": 1200},
+  {"id": "3m1d", "label": "3 months × 1 device",  "months": 3, "devices": 1, "stars": 1600},
+  {"id": "3m2d", "label": "3 months × 2 devices", "months": 3, "devices": 2, "stars": 2400},
+  {"id": "3m3d", "label": "3 months × 3 devices", "months": 3, "devices": 3, "stars": 3200},
+  {"id": "6m1d", "label": "6 months × 1 device",  "months": 6, "devices": 1, "stars": 2800},
+  {"id": "6m2d", "label": "6 months × 2 devices", "months": 6, "devices": 2, "stars": 4200},
+  {"id": "6m3d", "label": "6 months × 3 devices", "months": 6, "devices": 3, "stars": 5600}
+]
