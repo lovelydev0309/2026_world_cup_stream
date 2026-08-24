@@ -16,6 +16,15 @@ CFG = os.path.join(PROJECT, 'config', 'channels.json')
 OUT = os.path.join(PROJECT, 'player', 'channels.json')
 BASE = 'https://stream.tv247on.com'
 
+def country_of(name):
+    """Country for filtering. Uses the channel's explicit `country` field if set,
+    else derives from the channel number: 1-15 Mexico, 16-27 Peru, 28+ US."""
+    try:
+        n = int(''.join(filter(str.isdigit, name)))
+    except ValueError:
+        return ''
+    return 'Mexico' if n <= 15 else 'Peru' if n <= 27 else 'US'
+
 cfg = json.load(open(CFG))
 out = []
 for ch in cfg.get('channels', []):
@@ -26,10 +35,11 @@ for ch in cfg.get('channels', []):
     if logo.startswith('/'):          # emit an absolute URL so external sites can use it directly
         logo = BASE + logo
     out.append({
-        'name':  name,
-        'title': ch.get('display_name', name),
-        'logo':  logo,
-        'hls':   ch.get('hls_url', f'{BASE}/hls/{name}/index.m3u8'),
+        'name':    name,
+        'title':   ch.get('display_name', name),
+        'country': ch.get('country') or country_of(name),
+        'logo':    logo,
+        'hls':     ch.get('hls_url', f'{BASE}/hls/{name}/index.m3u8'),
     })
 
 tmp = OUT + '.tmp'

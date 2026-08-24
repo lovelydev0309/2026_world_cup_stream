@@ -162,6 +162,31 @@ else
     HLS_FLAGS="delete_segments+append_list+independent_segments+omit_endlist+temp_file"
 fi
 GOP=$((FPS * 2))
+# ── Match output fps to the SOURCE cadence ───────────────────────────────────
+# Hard-forcing 30.000 on a 59.94fps or 25fps feed drops/duplicates frames UNEVENLY →
+# visible video judder (audio unaffected — the "video stutters, not buffering" report).
+# Probe the source rate ONCE and output a clean match: the source fps halved while >32
+# (so we stay ~24-30fps, CPU-neutral) with an EXACT integer ratio (59.94→29.97, 50→25,
+# 25→25) instead of a lossy 30.000 resample. Falls back to the config fps if probe fails.
+OUT_FPS="$FPS"; OUT_GOP="$GOP"
+_srcfps=$(timeout 12 ffprobe -v error -user_agent "IPTV Smarters/1.0 Dalvik/2.1.0" \
+    -analyzeduration 4M -probesize 4M -select_streams v:0 -show_entries stream=r_frame_rate \
+    -of csv=p=0 "${SOURCE_URLS[0]}" 2>/dev/null | head -1)
+if [ -n "$_srcfps" ]; then
+    _out=$(python3 - "$_srcfps" <<'PY'
+import sys
+try:
+    n, d = (sys.argv[1].split('/') + ['1'])[:2]; n, d = int(n), int(d)
+    assert n > 0 and d > 0
+    while n / d > 32: n //= 2       # exact-ratio decimation down to ~24-30fps
+    print("%d/%d %d" % (n, d, max(1, round(n / d)) * 2))
+except Exception:
+    pass
+PY
+)
+    [ -n "$_out" ] && { OUT_FPS="${_out% *}"; OUT_GOP="${_out#* }"; }
+fi
+log "  output fps=$OUT_FPS gop=$OUT_GOP (source cadence ${_srcfps:-unknown})"
 STALE_KILL_SECS=10   # kill ffmpeg after this many seconds of ZERO write progress.
 # Root cause of the "buffer→0 on some channels" reports: the tvon247 sources are
 # 302-redirect tokenized feeds whose token expires every ~90-285s. On expiry the
@@ -480,7 +505,7 @@ push_live() {
     else
         vid_args=(-vf "scale=${ENC_W}:${ENC_H}:force_original_aspect_ratio=decrease,pad=${ENC_W}:${ENC_H}:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS" \
                   -c:v libx264 -preset ultrafast -crf 24 -threads 2 \
-                  -r "$FPS" -g "$GOP" -keyint_min "$GOP" \
+                  -r "$OUT_FPS" -g "$OUT_GOP" -keyint_min "$OUT_GOP" \
                   -force_key_frames "expr:gte(t,n_forced*4)")
     fi
 
@@ -546,7 +571,7 @@ push_standby() {
         -re -stream_loop -1 -i "$STANDBY" \
         -vf "scale=${ENC_W}:${ENC_H}:force_original_aspect_ratio=decrease,pad=${ENC_W}:${ENC_H}:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS" \
         -c:v libx264 -preset ultrafast -crf 26 \
-        -r "$FPS" -g "$GOP" \
+        -r "$OUT_FPS" -g "$OUT_GOP" \
         -force_key_frames "expr:gte(t,n_forced*2)" \
         -c:a aac -b:a "${AUDIO_BR}k" -ar 48000 -ac 2 \
         -t 30 \

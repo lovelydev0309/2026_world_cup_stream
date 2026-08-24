@@ -60,6 +60,16 @@ for fn in ("movies_all.json", "movies.json"):
             seen[s] = m
 full = list(seen.values())
 
+# 1b) permanent blocklist — slugs in config/vod_blocklist.txt NEVER enter the catalog,
+# no matter what a source file contains (e.g. undertone re-added by a re-ingest).
+try:
+    _blpath = os.path.join(os.path.dirname(DISK.rstrip("/")), "config", "vod_blocklist.txt")
+    _blocked = {l.strip().lower() for l in open(_blpath) if l.strip() and not l.startswith("#")}
+except Exception:
+    _blocked = set()
+if _blocked:
+    full = [m for m in full if str(m.get("slug", "")).lower() not in _blocked]
+
 # 2) recompute truncated (missing/short HLS) + hidden (broken OR rating<THRESH OR unrated)
 for m in full:
     s = m.get("slug", "")
@@ -69,7 +79,7 @@ for m in full:
     r = m.get("rating")
     try: rv = float(r) if r is not None else None
     except Exception: rv = None
-    m["hidden"] = bool(trunc or rv is None or rv < THRESH)
+    m["hidden"] = bool(trunc or ((not m.get("featured")) and (rv is None or rv < THRESH)))
 
 # 3) served = not hidden AND playable (video+poster); regenerate a missing poster if video exists
 served = []
@@ -87,6 +97,25 @@ for m in full:
         if not has_poster(s):
             continue
     served.append(m)
+
+# 4) order the served catalog by real quality: recognizable/high-rated first. The metadata has
+# no vote counts, so a plain rating sort leads with a few obscure no-vote shorts inflated to
+# 10.0 (e.g. sports mini-movies) ABOVE genuine classics; demote anything rated >9.3 (no real
+# film beats Shawshank's 9.3 on IMDb) below the legit top band. Ties broken by newer year.
+def _quality(m):
+    r = m.get("rating"); rv = r if isinstance(r, (int, float)) else 0
+    try: y = int(str(m.get("year") or "0")[:4])
+    except Exception: y = 0
+    if m.get("rating_source") != "imdb":
+        eff = min(rv, 7.4)                     # provider-sourced rating: unreliable -> cap out of the top band
+    elif y >= 2022 and rv >= 8.7:
+        eff = min(rv, 7.8)                     # very-recent + very-high IMDb = low-vote anomaly (e.g. obscure fest films)
+    elif rv > 9.3:
+        eff = rv - 3.0                          # no genuine film beats Shawshank's 9.3 -> demote inflated
+    else:
+        eff = rv
+    return (0 if m.get("featured") else 1, -eff, -y)
+served.sort(key=_quality)
 
 json.dump(full, open(DISK + "/movies_all.json", "w"), ensure_ascii=False, indent=1)
 tmp = DISK + "/movies.json.tmp"

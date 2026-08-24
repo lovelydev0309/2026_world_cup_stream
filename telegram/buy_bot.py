@@ -42,8 +42,8 @@ if not BOT:
     raise SystemExit("%s buy-bot token missing in accounts.env" % SHOP)
 API = "https://api.telegram.org/bot%s/" % BOT
 ADMIN = cfg("TG_BUY_ADMIN_ID") or cfg("TG_ADMIN_ID")
-SUPPORT = cfg("TG_SUPPORT_URL" if SHOP == "kozee" else "%s_SUPPORT_URL" % SHOP.upper()) \
-    or ("https://t.me/majotvcom" if ES else "https://t.me/kozeetv")
+# Support/Group -> the shop's Telegram GROUP (matches the watch bot's "Support / Group" button)
+SUPPORT = "https://t.me/majotvcom" if ES else "https://t.me/+NBNp9uDma485ZDA1"
 WATCH = "https://t.me/%s" % ("majotvwatch_bot" if ES else "KozeeTVwatch_bot")
 PLANS_FILE = os.path.join(CFGDIR, "tg_plans_%s.json" % SHOP)
 MENU_FILE = os.path.join(CFGDIR, "tg_menu_%s.json" % SHOP)
@@ -77,12 +77,12 @@ def banner_url():
     return ""
 
 def menu_kb():
-    # Purchase-only menu — intentionally NO Live TV / Movies (those live in the watch bot).
+    # Original-format menu (client-requested layout): Subscribe APP full-width, then
+    # Support/Group + Back side-by-side. Subscribe APP still opens the Stars plans.
     return {"inline_keyboard": [
-        [{"text": T("🛒 Comprar suscripción", "🛒 Buy subscription"), "callback_data": "buy"}],
-        [{"text": T("🎁 Prueba gratuita", "🎁 Free trial"), "callback_data": "trial"}],
-        [{"text": T("🛟 Soporte", "🛟 Support"), "url": SUPPORT}],
-        [{"text": T("↩️ Regresar", "↩️ Back"), "url": WATCH}],
+        [{"text": T("📲 Suscribirse APP", "📲 Subscribe APP"), "callback_data": "buy"}],
+        [{"text": T("🛟 Soporte / Grupo", "🛟 Support / Group"), "url": SUPPORT},
+         {"text": T("↩️ Regresar", "↩️ Back"), "url": WATCH}],
     ]}
 
 def send_menu(chat_id):
@@ -157,6 +157,7 @@ def fulfill(chat_id, user, months, devices, tag, trial=False):
         pass
 
 def main():
+    api("deleteWebhook", {"drop_pending_updates": False})   # reclaim control if the old backend re-set a webhook
     api("setMyCommands", {"commands": [{"command": "start", "description": T("Menú", "Menu")}]})
     me = api("getMe", {}).get("result", {}).get("username", "?")
     log("%s BUY bot up as @%s (Telegram Stars)" % (SHOP, me))
@@ -166,7 +167,12 @@ def main():
         if offset is not None: p["offset"] = offset
         r = api("getUpdates", p, timeout=45)
         if not r.get("ok"):
-            log("getUpdates err: %s" % json.dumps(r)[:150]); time.sleep(3); continue
+            desc = (json.dumps(r) or "").lower()
+            if "409" in desc or "webhook" in desc:   # backend re-set a webhook -> take it back
+                api("deleteWebhook", {"drop_pending_updates": False}); log("reclaimed webhook (backend re-set it)")
+            else:
+                log("getUpdates err: %s" % json.dumps(r)[:150])
+            time.sleep(3); continue
         for u in r.get("result", []):
             offset = u["update_id"] + 1
             try:

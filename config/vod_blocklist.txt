@@ -1,0 +1,5 @@
+# VOD blocklist — one slug per line. These titles are stripped from movies.json every
+# minute (scripts/vod_blocklist_enforce.py cron) and can NEVER appear in the served
+# catalog, no matter which ingest/publish script re-adds them. Their on-disk folder is
+# also removed so they can't be served as playable.
+undertone

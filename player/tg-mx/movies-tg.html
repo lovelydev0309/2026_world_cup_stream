@@ -70,7 +70,7 @@
 
   fetch(CAT + "?_=" + Date.now()).then(function(r){return r.json();}).then(function(d){
     MOVIES = (d||[]).filter(function(m){return m && m.message_id;});
-    MOVIES.sort(function(a,b){return (b.rating||0)-(a.rating||0);});
+    MOVIES.sort(function(a,b){return ((b.new_release?1:0)-(a.new_release?1:0))||((b.rating||0)-(a.rating||0));});
     var gset={};
     MOVIES.forEach(function(m){ (m.genre||'').split(',').forEach(function(g){
       g=g.trim(); if(g) gset[g]=(gset[g]||0)+1; }); });

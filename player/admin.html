@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Live Channel Admin</title>
+<style>
+  :root{ --bg:#0f1216; --card:#1a1f26; --line:#2a313b; --txt:#e7ebf0; --mut:#8a94a3;
+         --live:#22c55e; --paused:#9aa4b2; --down:#ef4444; --warn:#f59e0b; --accent:#f97316;
+         --chip:#0c0f13; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--txt); font:15px/1.4 system-ui,Segoe UI,Roboto,sans-serif; }
+  header{ position:sticky; top:0; background:#12161c; border-bottom:1px solid var(--line);
+          padding:12px 18px; z-index:5; }
+  .hrow{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  header h1{ font-size:18px; margin:0; margin-right:auto; display:flex; align-items:center; gap:8px; }
+  .refbox{ display:flex; align-items:center; gap:8px; color:var(--mut); font-size:13px; }
+  .refbox .age{ min-width:96px; text-align:right; }
+  .icon{ background:#233044; }
+  .icon.on{ background:var(--accent); }
+  /* summary chips */
+  .chips{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .chip{ display:flex; align-items:center; gap:7px; background:var(--chip); border:1px solid var(--line);
+         border-radius:999px; padding:6px 13px; cursor:pointer; font-size:13px; user-select:none; transition:.15s; }
+  .chip:hover{ border-color:#3d4757; }
+  .chip.active{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+  .chip .n{ font-weight:700; font-size:15px; }
+  .chip .d{ width:9px; height:9px; border-radius:50%; }
+  .chip.all .d{ background:#5b6675; }
+  .chip.live .d{ background:var(--live); }
+  .chip.warn .d{ background:var(--warn); }
+  .chip.paused .d{ background:var(--paused); }
+  .chip.down .d{ background:var(--down); }
+  /* search */
+  .tools{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px; }
+  input[type=search]{ background:#0c0f13; border:1px solid var(--line); color:var(--txt);
+                      border-radius:9px; padding:8px 12px; width:260px; max-width:60vw; font-size:14px; }
+  input[type=search]::placeholder{ color:#5f6976; }
+  button{ border:0; border-radius:8px; padding:7px 14px; font-weight:600; cursor:pointer; color:#fff; font-size:14px; }
+  main{ padding:16px 18px 48px; max-width:1300px; margin:0 auto; }
+  .cols{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; align-items:start; }
+  @media(max-width:980px){ .cols{ grid-template-columns:1fr; } }
+  .col{ background:#141922; border:1px solid var(--line); border-radius:14px; padding:4px 10px 12px; }
+  .grp{ margin:10px 4px 8px; color:var(--txt); font-size:14px; font-weight:700; text-transform:uppercase;
+        letter-spacing:.05em; display:flex; gap:8px; align-items:center; }
+  .grp .c{ color:var(--mut); font-weight:600; }
+  .row{ display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid var(--line);
+        border-left:3px solid var(--line); border-radius:10px; padding:8px 10px; margin:6px 0; }
+  .row.lv-live{ border-left-color:var(--live); }
+  .row.lv-warn{ border-left-color:var(--warn); }
+  .row.lv-down{ border-left-color:var(--down); }
+  .row.lv-paused{ border-left-color:var(--paused); }
+  .row img{ width:34px; height:34px; object-fit:contain; border-radius:6px; background:#0c0f13; flex:0 0 34px; }
+  .row button{ padding:6px 12px; font-size:13px; }
+  .row .meta{ flex:1 1 auto; min-width:0; }
+  .row .name{ font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sub{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px; }
+  .id{ color:var(--mut); font-size:12px; }
+  .badge{ font-size:11px; padding:1px 7px; border-radius:6px; background:var(--chip); border:1px solid var(--line);
+          color:var(--mut); white-space:nowrap; }
+  .badge.b-warn{ color:#fde68a; border-color:#5b4708; background:#2a2205; }
+  .badge.b-down{ color:#fecaca; border-color:#5b1010; background:#2a0808; }
+  .dot{ width:11px; height:11px; border-radius:50%; flex:0 0 11px; }
+  .lv-live .dot{ background:var(--live); box-shadow:0 0 8px var(--live); }
+  .lv-warn .dot{ background:var(--warn); box-shadow:0 0 8px var(--warn); }
+  .lv-paused .dot{ background:var(--paused); }
+  .lv-down .dot{ background:var(--down); box-shadow:0 0 8px var(--down); }
+  .pause{ background:var(--down); } .resume{ background:var(--live); }
+  button[disabled]{ opacity:.5; cursor:default; }
+  .hidden{ display:none !important; }
+  .msg{ color:var(--mut); padding:24px; text-align:center; }
+  .banner{ background:#2a0808; border:1px solid #5b1010; color:#fecaca; border-radius:10px;
+           padding:8px 14px; margin:0 0 12px; font-size:13px; display:none; }
+  .banner.show{ display:block; }
+  .toast{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:#0c0f13;
+          border:1px solid var(--line); padding:10px 16px; border-radius:10px; opacity:0; transition:.2s;
+          pointer-events:none; z-index:9; }
+  .toast.show{ opacity:1; }
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <h1>&#9654; Live Channel Admin</h1>
+    <div class="refbox">
+      <span class="age" id="age">—</span>
+      <button class="icon" id="refresh" title="Refresh now">&#8635;</button>
+      <button class="icon on" id="auto" title="Toggle auto-refresh">Auto&nbsp;10s</button>
+    </div>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="tools">
+    <input type="search" id="q" placeholder="Search channel name or id…" autocomplete="off">
+  </div>
+</header>
+<main>
+  <div class="banner" id="banner"></div>
+  <div id="list" class="msg">Loading channels…</div>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+(function(){
+  var API   = '/admin-api';
+  var HEALTH = '/player/status.json';                 // synthetic monitor: audio/video health
+  var token = '5fbfbb6626407d12bf128abe76289022';     // embedded so the URL opens without a token
+  var listEl = document.getElementById('list');
+  var chipsEl = document.getElementById('chips');
+  var ageEl = document.getElementById('age');
+  var banner = document.getElementById('banner');
+  var qEl = document.getElementById('q');
+  var autoBtn = document.getElementById('auto');
+
+  var chans = [];            // last merged listing
+  var filter = 'all';        // all | live | warn | paused | down
+  var query = '';
+  var lastLoad = 0;
+  var autoOn = true;
+  var timer = null, ageTimer = null;
+
+  function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show');
+    clearTimeout(t._h); t._h=setTimeout(function(){ t.classList.remove('show'); }, 1800); }
+  function api(path, method){
+    return fetch(API + path, { method: method||'GET', headers:{ 'X-Admin-Token': token }, cache:'no-store' });
+  }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function chNum(name){ var m=String(name).match(/\d+/); return m?parseInt(m[0],10):null; }
+
+  // control state (live/paused/down) + health (OK/SILENT/DOWN) -> one display level
+  function levelOf(c){
+    if(c.status==='paused') return 'paused';
+    if(c.status==='down')   return 'down';
+    var h=c.health;                                    // may be undefined if monitor unreachable
+    if(h){
+      if(h.status==='DOWN')   return 'down';
+      if(h.status==='SILENT') return 'warn';
+      if(h.status && h.status!=='OK' && String(h.detail||'').indexOf('recovering')<0) return 'warn';
+    }
+    return 'live';
+  }
+  var LABEL={ live:'Live', warn:'Issue', paused:'Paused', down:'Down' };
+
+  function badges(c){
+    var h=c.health, out='';
+    var lv=c._lv;
+    if(lv==='paused') return '<span class="badge">paused</span>';
+    if(h){
+      if(h.video) out+='<span class="badge">'+esc(h.video)+'</span>';
+      if(h.status==='SILENT') out+='<span class="badge b-warn">&#128263; audio silent</span>';
+      else if(h.status==='DOWN') out+='<span class="badge b-down">&#128308; '+esc((h.detail||'down').slice(0,40))+'</span>';
+      else if(typeof h.mean==='number') out+='<span class="badge">&#128266; '+Math.round(h.mean)+' dB</span>';
+      else if(h.detail && h.status!=='OK') out+='<span class="badge b-warn">'+esc(h.detail.slice(0,40))+'</span>';
+    } else if(lv==='down'){
+      out+='<span class="badge b-down">&#128308; no signal</span>';
+    }
+    return out;
+  }
+
+  function counts(){
+    var c={all:chans.length, live:0, warn:0, paused:0, down:0};
+    chans.forEach(function(x){ c[x._lv]=(c[x._lv]||0)+1; });
+    return c;
+  }
+  function renderChips(){
+    var c=counts();
+    var defs=[['all','All'],['live','Live'],['warn','Issues'],['paused','Paused'],['down','Down']];
+    chipsEl.innerHTML=defs.map(function(d){
+      var k=d[0];
+      return '<div class="chip '+k+(filter===k?' active':'')+'" data-f="'+k+'">'
+           + '<span class="d"></span><span class="n">'+(c[k]||0)+'</span><span>'+d[1]+'</span></div>';
+    }).join('');
+    chipsEl.querySelectorAll('.chip').forEach(function(el){
+      el.onclick=function(){ filter=el.getAttribute('data-f'); renderChips(); renderList(); };
+    });
+  }
+
+  function matches(c){
+    if(filter!=='all' && c._lv!==filter) return false;
+    if(query){
+      var hay=(c.title+' '+c.name).toLowerCase();
+      if(hay.indexOf(query)<0) return false;
+    }
+    return true;
+  }
+
+  function act(name, action, btn){
+    if(action==='pause' && !confirm('Pause "'+name+'"? Viewers will lose this channel until you resume it.')) return;
+    btn.disabled=true;
+    api('/channel/'+name+'/'+action,'POST').then(function(r){
+      if(!r.ok) throw 0;
+      toast(action==='pause' ? name+' paused' : name+' resumed');
+      setTimeout(load, action==='resume' ? 3000 : 600);
+    }).catch(function(){ toast('Action failed'); btn.disabled=false; });
+  }
+
+  function renderList(){
+    var order=['Mexico','Peru','US'], groups={};
+    chans.forEach(function(c){ if(matches(c)) (groups[c.country]=groups[c.country]||[]).push(c); });
+    var keys=order.concat(Object.keys(groups).filter(function(k){return order.indexOf(k)<0;}));
+    var any=false, html='';
+    keys.forEach(function(g){
+      if(!groups[g]||!groups[g].length) return; any=true;
+      html+='<div class="col"><div class="grp">'+esc(g)+' <span class="c">&middot; '+groups[g].length+'</span></div>';
+      groups[g].forEach(function(c){
+        var paused=c.status==='paused';
+        html+='<div class="row lv-'+c._lv+'" title="'+esc((c.health&&c.health.detail)||c.status)+'">'
+          + '<img src="'+esc(c.logo)+'" onerror="this.style.visibility=\'hidden\'">'
+          + '<div class="meta"><div class="name">'+esc(c.title)+'</div>'
+          + '<div class="sub"><span class="id">'+esc(c.name)+'</span>'+badges(c)+'</div></div>'
+          + '<span class="dot"></span>'
+          + (paused
+              ? '<button class="resume" data-n="'+esc(c.name)+'" data-a="resume">Resume</button>'
+              : '<button class="pause" data-n="'+esc(c.name)+'" data-a="pause">Pause</button>')
+          + '</div>';
+      });
+      html+='</div>';
+    });
+    if(!any){ listEl.className='msg'; listEl.innerHTML='No channels match.'; return; }
+    listEl.className='cols'; listEl.innerHTML=html;
+    listEl.querySelectorAll('button[data-n]').forEach(function(b){
+      b.onclick=function(){ act(b.getAttribute('data-n'), b.getAttribute('data-a'), b); };
+    });
+  }
+
+  function load(){
+    if(!token){ listEl.className='msg'; listEl.textContent='Enter your admin token to load channels…'; return; }
+    // health is best-effort — never block the control panel on it
+    var pHealth=fetch(HEALTH,{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});
+    var pList=api('/channels').then(function(r){
+      if(r.status===401){ throw {code:401}; }
+      if(!r.ok) throw {code:r.status};
+      return r.json();
+    });
+    Promise.all([pList,pHealth]).then(function(res){
+      var list=res[0], health=res[1];
+      var hmap={};
+      if(health && health.channels) health.channels.forEach(function(h){ hmap[h.ch]=h; });
+      list.forEach(function(c){ c.health=hmap[chNum(c.name)]; c._lv=levelOf(c); });
+      chans=list; lastLoad=Date.now();
+      banner.classList.remove('show');
+      if(health && health.updated){
+        // warn if the health feed itself is stale (monitor stopped)
+        var age=(Date.now()-Date.parse(health.updated))/1000;
+        if(age>600){ banner.textContent='⚠ Health monitor feed is '+Math.round(age/60)+' min stale — audio/video badges may be outdated.'; banner.classList.add('show'); }
+      } else {
+        banner.textContent='⚠ Health monitor unreachable — showing control state only (audio-silent detection unavailable).'; banner.classList.add('show');
+      }
+      renderChips(); renderList(); tickAge();
+    }).catch(function(e){
+      if(e && e.code===401){ listEl.className='msg'; listEl.textContent='Invalid admin token.'; }
+      else { banner.textContent='⚠ Could not reach the admin API — retrying…'; banner.classList.add('show'); }
+    });
+  }
+
+  function tickAge(){
+    if(!lastLoad){ ageEl.textContent='—'; return; }
+    var s=Math.round((Date.now()-lastLoad)/1000);
+    ageEl.textContent = s<2 ? 'updated just now' : 'updated '+s+'s ago';
+  }
+
+  function setAuto(on){
+    autoOn=on;
+    autoBtn.classList.toggle('on',on);
+    autoBtn.innerHTML = on ? 'Auto&nbsp;10s' : 'Auto&nbsp;off';
+    if(timer) clearInterval(timer);
+    if(on) timer=setInterval(load,10000);
+  }
+
+  // wiring
+  document.getElementById('refresh').onclick=function(){ load(); };
+  autoBtn.onclick=function(){ setAuto(!autoOn); };
+  qEl.oninput=function(){ query=qEl.value.trim().toLowerCase(); renderList(); };
+
+  ageTimer=setInterval(tickAge,1000);
+  setAuto(true);
+  load();
+})();
+</script>
+</body>
+</html>

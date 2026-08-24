@@ -363,7 +363,7 @@ function applySort(list){
   if(s==='az') a.sort((x,y)=>x.title.localeCompare(y.title,'es'));
   else if(s==='rating') a.sort((x,y)=>(y.rating||0)-(x.rating||0));
   else if(s==='year') a.sort((x,y)=>(parseInt(y.year)||0)-(parseInt(x.year)||0));
-  else a.sort((x,y)=>(y._added||0)-(x._added||0)); // recent
+  else a.sort((x,y)=>((y.featured?1:0)-(x.featured?1:0))||((y._added||0)-(x._added||0))); // featured first, then recent
   return a;
 }
 function refresh(){
@@ -683,7 +683,7 @@ def main():
                 "-vf","scale='min(1920,iw)':-2","-threads","3"] if transcode_v
                else ["-c:v","copy","-bsf:v","h264_mp4toannexb"])
         cmd=["ffmpeg","-y","-nostdin","-loglevel","error","-user_agent",UA,
-             "-rw_timeout","60000000","-i",url,"-map","0:v:0","-map","0:a:0"]+vopts+[
+             "-rw_timeout","60000000","-reconnect","1","-reconnect_at_eof","1","-reconnect_streamed","1","-reconnect_delay_max","30","-i",url,"-map","0:v:0","-map","0:a:0"]+vopts+[
              "-c:a","aac","-ac","2","-b:a","192k","-ar","48000",
              "-f","hls","-hls_time","10","-hls_playlist_type","vod",
              "-hls_flags","independent_segments",
@@ -704,7 +704,7 @@ def main():
             log(f"  no video headers after copy -> transcoding {name[:40]}")
             for sf in os.listdir(outdir):
                 if sf.startswith("seg_") and sf.endswith(".ts"): os.remove(os.path.join(outdir,sf))
-            tcmd=["ffmpeg","-y","-nostdin","-loglevel","error","-user_agent",UA,"-i",url,
+            tcmd=["ffmpeg","-y","-nostdin","-loglevel","error","-user_agent",UA,"-reconnect","1","-reconnect_at_eof","1","-reconnect_streamed","1","-reconnect_delay_max","30","-i",url,
                   "-map","0:v:0","-map","0:a:0","-c:v","libx264","-preset","veryfast","-crf","21","-pix_fmt","yuv420p","-threads","3","-c:a","aac","-b:a","160k","-ac","2",
                   "-f","hls","-hls_time","10","-hls_playlist_type","vod","-hls_flags","independent_segments",
                   "-hls_segment_filename",os.path.join(outdir,"seg_%04d.ts"),os.path.join(outdir,"index.m3u8")]
@@ -804,6 +804,11 @@ def regen_movies_json():
     mvset=set(m.get("slug") for m in top)
     for m in merged:
         m["tags"]=tags_for(m, m.get("slug") in mvset)
+    def _featkey(m):
+        try: y=int(str(m.get("year") or "0")[:4])
+        except Exception: y=0
+        return (0, -y) if m.get("featured") else (1, 0)   # featured first, newest year first
+    merged.sort(key=_featkey)
     tmp=DISK+"/.movies.json.tmp"   # atomic write (concurrent workers + CDN reads)
     json.dump(merged, open(tmp,"w"), ensure_ascii=False, indent=1)
     os.replace(tmp, DISK+"/movies.json")

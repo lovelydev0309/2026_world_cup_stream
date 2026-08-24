@@ -23,16 +23,16 @@
   "channels": [
     {
       "channel_name": "channel1",
-      "display_name": "FIFA World Cup 2026 – Match Feed",
+      "display_name": "Imagen Televisión",
       "enabled": true,
-      "source_url": "http://@@ACCT1@@/1027109",
+      "source_url": "http://@@ACCT1@@/1028364",
       "hls_url": "https://stream.tv247on.com/hls/channel1/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
       "resolution": "1280x720",
       "fps": 30,
       "audio_bitrate": 128,
-      "_comment_source": "tvon247 id 1027109 = DAZN MUNDIAL HD (the live World Cup / Mundial feed; H264 1080p25, MP2 stereo). No channel is literally named 'FIFA World Cup 2026' on this provider — DAZN Mundial is the live match carrier for the MX/LatAm package.",
+      "_comment_source": "MX - IMAGEN TV FHD (1028364; 645999 backup). Replaced FIFA World Cup 2026 (1027109 dead, tournament ended) 2026-08-16.",
       "_comment_audio": "audio_sync=preserve (2026-06-25): the default regen (asetpts=N/SR/TB) raced channel1's audio PTS ~70,000s ahead of video -> browser couldn't align -> infinite-load / lag. All 3 failover feeds are A/V-aligned at source (gap 0.02-0.39s, mp2 or AAC-LC), so preserve (asetpts=PTS-STARTPTS) keeps them aligned. Same fix as channel2.",
       "audio_sync": "preserve",
       "force_silent_audio": false,
@@ -41,14 +41,11 @@
       "encode_resolution": "960x540",
       "_comment_failover": "Backups are the same World Cup match on DAZN MUNDIAL FHD/HD2 — a dropped primary fails over instantly instead of going to a standby gap.",
       "source_urls": [
-        "http://@@ACCT1@@/1027109",
-        "http://@@ACCT2@@/1027109",
-        "http://@@ACCT3@@/1027109",
-        "http://@@ACCT4@@/1027109",
-        "http://@@ACCT5@@/1027109",
-        "http://@@ACCT6@@/1027109",
-        "http://@@ACCT1@@/309042",
-        "http://@@ACCT1@@/1027112"
+        "http://@@ACCT1@@/1028364",
+        "http://@@ACCT2@@/1028364",
+        "http://@@ACCT4@@/1028364",
+        "http://@@ACCT6@@/1028364",
+        "http://@@ACCT1@@/645999"
       ],
       "logo": "/player/logos/channel1.png",
       "use_standby": true
@@ -297,11 +294,11 @@
       "encode_resolution": "960x540",
       "source_urls": [
         "http://@@ACCT4@@/1028360",
-        "http://@@ACCT3@@/1028360",
-        "http://@@ACCT2@@/1028360",
         "http://@@ACCT1@@/1028360",
-        "http://@@ACCT6@@/1028360",
-        "http://@@ACCT5@@/1028360"
+        "http://@@ACCT2@@/1028360",
+        "http://@@ACCT3@@/1028360",
+        "http://@@ACCT5@@/1028360",
+        "http://@@ACCT6@@/1028360"
       ]
     },
     {
@@ -424,7 +421,7 @@
       "channel_name": "channel14",
       "display_name": "Space HD",
       "enabled": true,
-      "source_url": "http://@@ACCT2@@/140329",
+      "source_url": "http://@@ACCT6@@/140329",
       "hls_url": "https://stream.tv247on.com/hls/channel14/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -439,18 +436,12 @@
       "use_standby": true,
       "encode_resolution": "960x540",
       "source_urls": [
-        "http://@@ACCT2@@/140329",
-        "http://@@ACCT1@@/140329",
-        "http://@@ACCT4@@/140329",
         "http://@@ACCT6@@/140329",
+        "http://@@ACCT1@@/140329",
+        "http://@@ACCT2@@/140329",
         "http://@@ACCT3@@/140329",
-        "http://@@ACCT5@@/140329",
-        "http://@@ACCT2@@/30619",
-        "http://@@ACCT1@@/30619",
-        "http://@@ACCT4@@/30619",
-        "http://@@ACCT6@@/30619",
-        "http://@@ACCT3@@/30619",
-        "http://@@ACCT5@@/30619"
+        "http://@@ACCT4@@/140329",
+        "http://@@ACCT5@@/140329"
       ]
     },
     {
@@ -488,28 +479,28 @@
     },
     {
       "channel_name": "channel16",
-      "display_name": "Canal N HD (Perú)",
+      "display_name": "Exitosa (Perú)",
       "enabled": true,
-      "source_url": "http://@@ACCT_PE1@@/187634",
+      "source_url": "http://@@ACCT_PE2@@/187653",
       "hls_url": "https://stream.tv247on.com/hls/channel16/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
       "resolution": "1280x720",
       "fps": 30,
       "audio_bitrate": 128,
-      "_comment_source": "Peru package (tvon247 Latin+Spain+BR accounts). 187634 = PER - CANAL N HD (H264 1080p30, AAC 48k stereo). Added 2026-07-22.",
+      "_comment_source": "PER - EXITOSA HD (H264 540p, AAC stereo). From client Peru list. Swapped 2026-08-12 (Canal N video dead).",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "video_mode": "encode",
       "encode_resolution": "960x540",
       "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
       "source_urls": [
-        "http://@@ACCT_PE1@@/187634",
-        "http://@@ACCT_PE2@@/187634",
-        "http://@@ACCT_PE3@@/187634"
+        "http://@@ACCT_PE2@@/187653",
+        "http://@@ACCT_PE3@@/187653"
       ],
       "logo": "/player/logos/channel16.png",
-      "use_standby": true
+      "use_standby": true,
+      "token_refresh_secs": 180
     },
     {
       "channel_name": "channel17",
@@ -534,32 +525,34 @@
         "http://@@ACCT_PE1@@/187628"
       ],
       "logo": "/player/logos/channel17.png",
-      "use_standby": true
+      "use_standby": true,
+      "token_refresh_secs": 180
     },
     {
       "channel_name": "channel18",
-      "display_name": "Movistar Deportes (Perú)",
+      "display_name": "DTV Sports 1 (Perú)",
       "enabled": true,
-      "source_url": "http://@@ACCT_PE3@@/187629",
+      "source_url": "http://@@ACCT_PE2@@/197711",
       "hls_url": "https://stream.tv247on.com/hls/channel18/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
       "resolution": "1280x720",
       "fps": 30,
       "audio_bitrate": 128,
-      "_comment_source": "Peru package (tvon247 Latin+Spain+BR accounts). 187629 = PER - MOVISTAR DEPORTES HD (H264 480p30, MP2->AAC re-encoded). Added 2026-07-22.",
+      "_comment_source": "PER - DTV Sports 1 (Perú) (197711). From client not-added list 2026-08-17.",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "video_mode": "encode",
       "encode_resolution": "960x540",
       "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
       "source_urls": [
-        "http://@@ACCT_PE3@@/187629",
-        "http://@@ACCT_PE1@@/187629",
-        "http://@@ACCT_PE2@@/187629"
+        "http://@@ACCT_PE2@@/197711",
+        "http://@@ACCT_PE3@@/197711",
+        "http://@@ACCT_PE1@@/197711"
       ],
       "logo": "/player/logos/channel18.png",
-      "use_standby": true
+      "use_standby": true,
+      "token_refresh_secs": 180
     },
     {
       "channel_name": "channel19",
@@ -584,13 +577,14 @@
         "http://@@ACCT_PE3@@/187639"
       ],
       "logo": "/player/logos/channel19.png",
-      "use_standby": true
+      "use_standby": true,
+      "token_refresh_secs": 180
     },
     {
       "channel_name": "channel20",
       "display_name": "ESPN Extra HD (Perú)",
       "enabled": true,
-      "source_url": "http://@@ACCT_PE2@@/312518",
+      "source_url": "http://@@ACCT_PE3@@/312518",
       "hls_url": "https://stream.tv247on.com/hls/channel20/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -604,12 +598,13 @@
       "encode_resolution": "960x540",
       "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
       "source_urls": [
-        "http://@@ACCT_PE2@@/312518",
         "http://@@ACCT_PE3@@/312518",
-        "http://@@ACCT_PE1@@/312518"
+        "http://@@ACCT_PE1@@/312518",
+        "http://@@ACCT_PE2@@/312518"
       ],
       "logo": "/player/logos/channel20.png",
-      "use_standby": true
+      "use_standby": true,
+      "token_refresh_secs": 180
     },
     {
       "channel_name": "channel21",
@@ -634,7 +629,8 @@
         "http://@@ACCT_PE2@@/312515"
       ],
       "logo": "/player/logos/channel21.png",
-      "use_standby": true
+      "use_standby": true,
+      "token_refresh_secs": 180
     },
     {
       "channel_name": "channel22",
@@ -663,13 +659,14 @@
       ],
       "logo": "/player/logos/channel22.png",
       "use_standby": true,
-      "_comment": "tvon247 PER AMERICA TV: 187630 (VIP) primary + 30574 (base América Televisión) as 2nd feed variant across the 3 Peru accounts. 2026-07-27: BOTH feeds degrading provider-side (Connection reset by peer / ~10s bursts + broken audio) = source outage, auto-recovers when provider restores. Encode 540p."
+      "_comment": "tvon247 PER AMERICA TV: 187630 (VIP) primary + 30574 (base América Televisión) as 2nd feed variant across the 3 Peru accounts. 2026-07-27: BOTH feeds degrading provider-side (Connection reset by peer / ~10s bursts + broken audio) = source outage, auto-recovers when provider restores. Encode 540p.",
+      "token_refresh_secs": 180
     },
     {
       "channel_name": "channel23",
       "display_name": "Perú Mágico",
       "enabled": true,
-      "source_url": "http://@@ACCT_PE2@@/187632",
+      "source_url": "http://@@ACCT_PE1@@/187632",
       "hls_url": "https://stream.tv247on.com/hls/channel23/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -683,16 +680,17 @@
       "encode_resolution": "960x540",
       "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
       "source_urls": [
-        "http://@@ACCT_PE2@@/187632",
+        "http://@@ACCT_PE1@@/187632",
         "http://@@ACCT_PE3@@/187632",
-        "http://@@ACCT_PE1@@/187632"
+        "http://@@ACCT_PE2@@/187632"
       ],
       "logo": "/player/logos/channel23.png",
-      "use_standby": true
+      "use_standby": true,
+      "token_refresh_secs": 180
     },
     {
       "channel_name": "channel24",
-      "display_name": "ATV+ (Perú)",
+      "display_name": "Panamericana (Perú)",
       "enabled": true,
       "source_url": "http://@@ACCT_PE3@@/69200",
       "hls_url": "https://stream.tv247on.com/hls/channel24/index.m3u8",
@@ -708,12 +706,13 @@
       "encode_resolution": "960x540",
       "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
       "source_urls": [
-        "http://@@ACCT_PE3@@/69200",
-        "http://@@ACCT_PE1@@/69200",
-        "http://@@ACCT_PE2@@/69200"
+        "http://@@ACCT_PE3@@/187631",
+        "http://@@ACCT_PE1@@/187631",
+        "http://@@ACCT_PE2@@/187631"
       ],
       "logo": "/player/logos/channel24.png",
-      "use_standby": true
+      "use_standby": true,
+      "token_refresh_secs": 180
     },
     {
       "channel_name": "channel25",
@@ -738,32 +737,34 @@
         "http://@@ACCT_PE3@@/187633"
       ],
       "logo": "/player/logos/channel25.png",
-      "use_standby": true
+      "use_standby": true,
+      "token_refresh_secs": 180
     },
     {
       "channel_name": "channel26",
-      "display_name": "DTV Sports 2 (Perú)",
+      "display_name": "DTV Sports Plus (Perú)",
       "enabled": true,
-      "source_url": "http://@@ACCT_PE2@@/197712",
+      "source_url": "http://@@ACCT_PE2@@/197713",
       "hls_url": "https://stream.tv247on.com/hls/channel26/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
       "resolution": "1280x720",
       "fps": 30,
       "audio_bitrate": 128,
-      "_comment_source": "Peru package (accounts in config/accounts.env). 197712 = PER - DTV SPORTS 2 HD (H264 1080p, AAC 48k stereo). Added 2026-07-23.",
+      "_comment_source": "PER - DTV Sports Plus (Perú) (197713). From client not-added list 2026-08-17.",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "video_mode": "encode",
       "encode_resolution": "960x540",
       "_comment_failover": "Same stream ID across all 3 Peru accounts; primary rotated to balance ~4 primaries/account. Only one URL active at a time.",
       "source_urls": [
-        "http://@@ACCT_PE2@@/197712",
-        "http://@@ACCT_PE3@@/197712",
-        "http://@@ACCT_PE1@@/197712"
+        "http://@@ACCT_PE2@@/197713",
+        "http://@@ACCT_PE3@@/197713",
+        "http://@@ACCT_PE1@@/197713"
       ],
       "logo": "/player/logos/channel26.png",
-      "use_standby": true
+      "use_standby": true,
+      "token_refresh_secs": 180
     },
     {
       "channel_name": "channel27",
@@ -788,13 +789,14 @@
         "http://@@ACCT_PE2@@/312516"
       ],
       "logo": "/player/logos/channel27.png",
-      "use_standby": true
+      "use_standby": true,
+      "token_refresh_secs": 180
     },
     {
       "channel_name": "channel28",
-      "display_name": "Apple TV+",
+      "display_name": "Starz",
       "enabled": true,
-      "source_url": "http://@@KOZEE1@@/1054886",
+      "source_url": "http://@@KOZEE1@@/71862",
       "hls_url": "https://stream.tv247on.com/hls/channel28/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -802,25 +804,25 @@
       "fps": 30,
       "audio_bitrate": 128,
       "logo": "/player/logos/channel28.png",
-      "_comment_source": "kozeetv US bouquet (host tvon247.com; creds KOZEE1-5 in config/accounts.env). stream_id 1054886 = US - APPLE TV+ SERIES 1 HD (H264 1920x1080, AAC). Added 2026-07-28. 5-account failover; primary KOZEE1.",
+      "_comment_source": "US - Starz (kozeetv 71862). Replaced premium feed that lost provider audio 2026-08-16.",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "video_mode": "encode",
       "encode_resolution": "960x540",
       "source_urls": [
-        "http://@@KOZEE1@@/1054886",
-        "http://@@KOZEE2@@/1054886",
-        "http://@@KOZEE3@@/1054886",
-        "http://@@KOZEE4@@/1054886",
-        "http://@@KOZEE5@@/1054886"
+        "http://@@KOZEE1@@/71862",
+        "http://@@KOZEE2@@/71862",
+        "http://@@KOZEE3@@/71862",
+        "http://@@KOZEE4@@/71862",
+        "http://@@KOZEE5@@/71862"
       ],
       "use_standby": true
     },
     {
       "channel_name": "channel29",
-      "display_name": "Hulu",
+      "display_name": "Showtime",
       "enabled": true,
-      "source_url": "http://@@KOZEE2@@/1054973",
+      "source_url": "http://@@KOZEE2@@/71853",
       "hls_url": "https://stream.tv247on.com/hls/channel29/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -828,17 +830,17 @@
       "fps": 30,
       "audio_bitrate": 128,
       "logo": "/player/logos/channel29.png",
-      "_comment_source": "kozeetv US bouquet (host tvon247.com; creds KOZEE1-5 in config/accounts.env). stream_id 1054973 = US - HULU ORIGINALS 1 HD (H264 1920x1080, AAC). Added 2026-07-28. 5-account failover; primary KOZEE2.",
+      "_comment_source": "US - Showtime (kozeetv 71853). Replaced premium feed that lost provider audio 2026-08-16.",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "video_mode": "encode",
       "encode_resolution": "960x540",
       "source_urls": [
-        "http://@@KOZEE2@@/1054973",
-        "http://@@KOZEE3@@/1054973",
-        "http://@@KOZEE4@@/1054973",
-        "http://@@KOZEE5@@/1054973",
-        "http://@@KOZEE1@@/1054973"
+        "http://@@KOZEE2@@/71853",
+        "http://@@KOZEE3@@/71853",
+        "http://@@KOZEE4@@/71853",
+        "http://@@KOZEE5@@/71853",
+        "http://@@KOZEE1@@/71853"
       ],
       "use_standby": true
     },
@@ -870,9 +872,9 @@
     },
     {
       "channel_name": "channel31",
-      "display_name": "HBO Max (1)",
+      "display_name": "AMC",
       "enabled": true,
-      "source_url": "http://@@KOZEE4@@/1255873",
+      "source_url": "http://@@KOZEE4@@/71330",
       "hls_url": "https://stream.tv247on.com/hls/channel31/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -880,25 +882,25 @@
       "fps": 30,
       "audio_bitrate": 128,
       "logo": "/player/logos/channel31.png",
-      "_comment_source": "kozeetv US bouquet (host tvon247.com; creds KOZEE1-5 in config/accounts.env). stream_id 1255873 = US - HBO MAX ON-DEMAND 1 HD (H264 1920x1080, AAC). Added 2026-07-28. 5-account failover; primary KOZEE4.",
+      "_comment_source": "US - AMC (kozeetv 71330). Replaced premium feed that lost provider audio 2026-08-16.",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "video_mode": "encode",
       "encode_resolution": "960x540",
       "source_urls": [
-        "http://@@KOZEE4@@/1255873",
-        "http://@@KOZEE5@@/1255873",
-        "http://@@KOZEE1@@/1255873",
-        "http://@@KOZEE2@@/1255873",
-        "http://@@KOZEE3@@/1255873"
+        "http://@@KOZEE4@@/71330",
+        "http://@@KOZEE5@@/71330",
+        "http://@@KOZEE1@@/71330",
+        "http://@@KOZEE2@@/71330",
+        "http://@@KOZEE3@@/71330"
       ],
       "use_standby": true
     },
     {
       "channel_name": "channel32",
-      "display_name": "HBO Max (15)",
+      "display_name": "FX",
       "enabled": true,
-      "source_url": "http://@@KOZEE5@@/1255887",
+      "source_url": "http://@@KOZEE5@@/71335",
       "hls_url": "https://stream.tv247on.com/hls/channel32/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -906,17 +908,17 @@
       "fps": 30,
       "audio_bitrate": 128,
       "logo": "/player/logos/channel32.png",
-      "_comment_source": "kozeetv US bouquet (host tvon247.com; creds KOZEE1-5 in config/accounts.env). stream_id 1255887 = US - HBO MAX ON-DEMAND 15 HD (H264 1920x1080, AAC). Added 2026-07-28. 5-account failover; primary KOZEE5.",
+      "_comment_source": "US - FX (kozeetv 71335). Replaced premium feed that lost provider audio 2026-08-16.",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "video_mode": "encode",
       "encode_resolution": "960x540",
       "source_urls": [
-        "http://@@KOZEE5@@/1255887",
-        "http://@@KOZEE1@@/1255887",
-        "http://@@KOZEE2@@/1255887",
-        "http://@@KOZEE3@@/1255887",
-        "http://@@KOZEE4@@/1255887"
+        "http://@@KOZEE5@@/71335",
+        "http://@@KOZEE1@@/71335",
+        "http://@@KOZEE2@@/71335",
+        "http://@@KOZEE3@@/71335",
+        "http://@@KOZEE4@@/71335"
       ],
       "use_standby": true
     },
@@ -974,9 +976,9 @@
     },
     {
       "channel_name": "channel35",
-      "display_name": "Peacock",
+      "display_name": "TNT",
       "enabled": true,
-      "source_url": "http://@@KOZEE3@@/1055034",
+      "source_url": "http://@@KOZEE3@@/71324",
       "hls_url": "https://stream.tv247on.com/hls/channel35/index.m3u8",
       "standby_file": "standby/standby.mp4",
       "bitrate": 2500,
@@ -984,17 +986,17 @@
       "fps": 30,
       "audio_bitrate": 128,
       "logo": "/player/logos/channel35.png",
-      "_comment_source": "kozeetv US bouquet (host tvon247.com; creds KOZEE1-5 in config/accounts.env). stream_id 1055034 = US - PEACOCK SERIES 1 HD (H264 1920x1080, AAC). Added 2026-07-28. 5-account failover; primary KOZEE3.",
+      "_comment_source": "US - TNT (kozeetv 71324). Replaced premium feed that lost provider audio 2026-08-16.",
       "audio_sync": "preserve",
       "force_silent_audio": false,
       "video_mode": "encode",
       "encode_resolution": "960x540",
       "source_urls": [
-        "http://@@KOZEE3@@/1055034",
-        "http://@@KOZEE4@@/1055034",
-        "http://@@KOZEE5@@/1055034",
-        "http://@@KOZEE1@@/1055034",
-        "http://@@KOZEE2@@/1055034"
+        "http://@@KOZEE3@@/71324",
+        "http://@@KOZEE4@@/71324",
+        "http://@@KOZEE5@@/71324",
+        "http://@@KOZEE1@@/71324",
+        "http://@@KOZEE2@@/71324"
       ],
       "use_standby": true
     },

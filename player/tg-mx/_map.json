@@ -1,0 +1,164 @@
+[
+ {
+  "id": "58518914",
+  "ch": 1,
+  "title": "Imagen Televisión",
+  "logo": "/player/logos/channel1.png"
+ },
+ {
+  "id": "3f21c527",
+  "ch": 2,
+  "title": "MX – Canal 5 HD",
+  "logo": "/player/logos/channel2.png"
+ },
+ {
+  "id": "7e161a92",
+  "ch": 3,
+  "title": "ESPN HD",
+  "logo": "/player/logos/channel3.png"
+ },
+ {
+  "id": "e8c902ca",
+  "ch": 4,
+  "title": "Las Estrellas HD",
+  "logo": "/player/logos/channel4.png"
+ },
+ {
+  "id": "8ad283b5",
+  "ch": 5,
+  "title": "Azteca Uno HD",
+  "logo": "/player/logos/channel5.png"
+ },
+ {
+  "id": "6479d043",
+  "ch": 6,
+  "title": "Discovery Channel HD",
+  "logo": "/player/logos/channel6.png"
+ },
+ {
+  "id": "6afcdbee",
+  "ch": 7,
+  "title": "Azteca 7 HD",
+  "logo": "/player/logos/channel7.png"
+ },
+ {
+  "id": "38ebc9fc",
+  "ch": 8,
+  "title": "Fox Sports 1 HD",
+  "logo": "/player/logos/channel8.png"
+ },
+ {
+  "id": "621edd44",
+  "ch": 9,
+  "title": "ESPN 2 HD",
+  "logo": "/player/logos/channel9.png"
+ },
+ {
+  "id": "32df7c9e",
+  "ch": 10,
+  "title": "TUDN",
+  "logo": "/player/logos/channel10.png"
+ },
+ {
+  "id": "2066b8d5",
+  "ch": 11,
+  "title": "Fox Sports 2 HD",
+  "logo": "/player/logos/channel11.png"
+ },
+ {
+  "id": "bc4d936a",
+  "ch": 12,
+  "title": "TNT México HD",
+  "logo": "/player/logos/channel12.png"
+ },
+ {
+  "id": "258b3e8d",
+  "ch": 13,
+  "title": "AXN HD",
+  "logo": "/player/logos/channel13.png"
+ },
+ {
+  "id": "b0ea5067",
+  "ch": 14,
+  "title": "Space HD",
+  "logo": "/player/logos/channel14.png"
+ },
+ {
+  "id": "d456b6f9",
+  "ch": 15,
+  "title": "ESPN 3 HD",
+  "logo": "/player/logos/channel15.png"
+ },
+ {
+  "id": "2189dacf",
+  "ch": 16,
+  "title": "Canal N HD (Perú)",
+  "logo": "/player/logos/channel16.png"
+ },
+ {
+  "id": "f6a58ec0",
+  "ch": 17,
+  "title": "Latina HD (Perú)",
+  "logo": "/player/logos/channel17.png"
+ },
+ {
+  "id": "b80deddb",
+  "ch": 18,
+  "title": "DTV Sports 1",
+  "logo": "/player/logos/channel18.png"
+ },
+ {
+  "id": "61c1ddb8",
+  "ch": 19,
+  "title": "IPE HD (Perú)",
+  "logo": "/player/logos/channel19.png"
+ },
+ {
+  "id": "fc17f2bb",
+  "ch": 20,
+  "title": "ESPN Extra HD (Perú)",
+  "logo": "/player/logos/channel20.png"
+ },
+ {
+  "id": "538bbfab",
+  "ch": 21,
+  "title": "ESPN HD (Perú)",
+  "logo": "/player/logos/channel21.png"
+ },
+ {
+  "id": "27e99cdd",
+  "ch": 22,
+  "title": "América TV HD (Perú)",
+  "logo": "/player/logos/channel22.png"
+ },
+ {
+  "id": "51ed13ed",
+  "ch": 23,
+  "title": "Perú Mágico",
+  "logo": "/player/logos/channel23.png"
+ },
+ {
+  "id": "bb9d7ce6",
+  "ch": 24,
+  "title": "Panamericana (Perú)",
+  "logo": "/player/logos/channel24.png"
+ },
+ {
+  "id": "fe1d46eb",
+  "ch": 25,
+  "title": "TV Perú HD",
+  "logo": "/player/logos/channel25.png"
+ },
+ {
+  "id": "52769878",
+  "ch": 26,
+  "title": "DTV Sports Plus",
+  "logo": "/player/logos/channel26.png"
+ },
+ {
+  "id": "1cfc68f0",
+  "ch": 27,
+  "title": "ESPN 2 HD (Perú)",
+  "logo": "/player/logos/channel27.png"
+ }
+]
