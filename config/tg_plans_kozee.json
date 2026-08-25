@@ -1,11 +1,86 @@
 [
-  {"id": "1m1d", "label": "1 month × 1 device",   "months": 1, "devices": 1, "stars": 1},
-  {"id": "1m2d", "label": "1 month × 2 devices",  "months": 1, "devices": 2, "stars": 900},
-  {"id": "1m3d", "label": "1 month × 3 devices",  "months": 1, "devices": 3, "stars": 1200},
-  {"id": "3m1d", "label": "3 months × 1 device",  "months": 3, "devices": 1, "stars": 1600},
-  {"id": "3m2d", "label": "3 months × 2 devices", "months": 3, "devices": 2, "stars": 2400},
-  {"id": "3m3d", "label": "3 months × 3 devices", "months": 3, "devices": 3, "stars": 3200},
-  {"id": "6m1d", "label": "6 months × 1 device",  "months": 6, "devices": 1, "stars": 2800},
-  {"id": "6m2d", "label": "6 months × 2 devices", "months": 6, "devices": 2, "stars": 4200},
-  {"id": "6m3d", "label": "6 months × 3 devices", "months": 6, "devices": 3, "stars": 5600}
+  {
+    "id": "kozee-goldenott-1m-1d",
+    "label": "1 month × 1 device",
+    "months": 1,
+    "devices": 1,
+    "stars": 1000
+  },
+  {
+    "id": "kozee-goldenott-1m-2d",
+    "label": "1 month × 2 devices",
+    "months": 1,
+    "devices": 2,
+    "stars": 1500
+  },
+  {
+    "id": "kozee-goldenott-1m-3d",
+    "label": "1 month × 3 devices",
+    "months": 1,
+    "devices": 3,
+    "stars": 2000
+  },
+  {
+    "id": "kozee-goldenott-3m-1d",
+    "label": "3 months × 1 device",
+    "months": 3,
+    "devices": 1,
+    "stars": 2900
+  },
+  {
+    "id": "kozee-goldenott-3m-2d",
+    "label": "3 months × 2 devices",
+    "months": 3,
+    "devices": 2,
+    "stars": 4350
+  },
+  {
+    "id": "kozee-goldenott-3m-3d",
+    "label": "3 months × 3 devices",
+    "months": 3,
+    "devices": 3,
+    "stars": 5800
+  },
+  {
+    "id": "kozee-goldenott-6m-1d",
+    "label": "6 months × 1 device",
+    "months": 6,
+    "devices": 1,
+    "stars": 5400
+  },
+  {
+    "id": "kozee-goldenott-6m-2d",
+    "label": "6 months × 2 devices",
+    "months": 6,
+    "devices": 2,
+    "stars": 8100
+  },
+  {
+    "id": "kozee-goldenott-6m-3d",
+    "label": "6 months × 3 devices",
+    "months": 6,
+    "devices": 3,
+    "stars": 10800
+  },
+  {
+    "id": "kozee-goldenott-12m-1d",
+    "label": "12 months × 1 device",
+    "months": 12,
+    "devices": 1,
+    "stars": 9600
+  },
+  {
+    "id": "kozee-goldenott-12m-2d",
+    "label": "12 months × 2 devices",
+    "months": 12,
+    "devices": 2,
+    "stars": 14400
+  },
+  {
+    "id": "kozee-goldenott-12m-3d",
+    "label": "12 months × 3 devices",
+    "months": 12,
+    "devices": 3,
+    "stars": 19200
+  }
 ]
