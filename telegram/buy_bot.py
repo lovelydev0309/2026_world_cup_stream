@@ -45,6 +45,11 @@ ADMIN = cfg("TG_BUY_ADMIN_ID") or cfg("TG_ADMIN_ID")
 # Support/Group -> the shop's Telegram GROUP (matches the watch bot's "Support / Group" button)
 SUPPORT = "https://t.me/majotvcom" if ES else "https://t.me/+NBNp9uDma485ZDA1"
 WATCH = "https://t.me/%s" % ("majotvwatch_bot" if ES else "KozeeTVwatch_bot")
+# If a website subscribe page is configured for this shop, the "Subscribe" button opens
+# it directly (e.g. https://majotv.com/product/suscribirse/) instead of the in-bot Stars
+# plan list. Leave the key unset in accounts.env to keep the Telegram Stars flow.
+SUBSCRIBE_URL = (cfg("KOZEE_SUBSCRIBE_URL", "") if SHOP == "kozee"
+                 else cfg("%s_SUBSCRIBE_URL" % SHOP.upper(), "")).strip()
 PLANS_FILE = os.path.join(CFGDIR, "tg_plans_%s.json" % SHOP)
 MENU_FILE = os.path.join(CFGDIR, "tg_menu_%s.json" % SHOP)
 ORDERS_LOG = os.path.join(BASEDIR, "..", "logs", "buy_orders_%s.jsonl" % SHOP)
@@ -77,10 +82,13 @@ def banner_url():
     return ""
 
 def menu_kb():
-    # Original-format menu (client-requested layout): Subscribe APP full-width, then
-    # Support/Group + Back side-by-side. Subscribe APP still opens the Stars plans.
+    # Subscribe APP full-width, then Support/Group + Back side-by-side. Subscribe opens the
+    # website page when SUBSCRIBE_URL is set, otherwise the in-bot Telegram Stars plans.
+    sub = {"text": T("📲 Suscribirse APP", "📲 Subscribe APP")}
+    if SUBSCRIBE_URL: sub["url"] = SUBSCRIBE_URL
+    else:             sub["callback_data"] = "buy"
     return {"inline_keyboard": [
-        [{"text": T("📲 Suscribirse APP", "📲 Subscribe APP"), "callback_data": "buy"}],
+        [sub],
         [{"text": T("🛟 Soporte / Grupo", "🛟 Support / Group"), "url": SUPPORT},
          {"text": T("↩️ Regresar", "↩️ Back"), "url": WATCH}],
     ]}
