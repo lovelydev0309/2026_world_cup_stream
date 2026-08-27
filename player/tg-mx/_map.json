@@ -90,9 +90,21 @@
   "logo": "/player/logos/channel15.png"
  },
  {
+  "id": "0a90238e",
+  "ch": 44,
+  "title": "VIX Premium",
+  "logo": "/player/logos/channel44.png"
+ },
+ {
+  "id": "5a574afa",
+  "ch": 45,
+  "title": "Sky Sport",
+  "logo": "/player/logos/channel45.png"
+ },
+ {
   "id": "2189dacf",
   "ch": 16,
-  "title": "Canal N HD (Perú)",
+  "title": "Canal N (Perú)",
   "logo": "/player/logos/channel16.png"
  },
  {
@@ -104,19 +116,19 @@
  {
   "id": "b80deddb",
   "ch": 18,
-  "title": "DTV Sports 1",
+  "title": "Movistar Deportes (Perú)",
   "logo": "/player/logos/channel18.png"
  },
  {
   "id": "61c1ddb8",
   "ch": 19,
-  "title": "IPE HD (Perú)",
+  "title": "ATV (Perú)",
   "logo": "/player/logos/channel19.png"
  },
  {
   "id": "fc17f2bb",
   "ch": 20,
-  "title": "ESPN Extra HD (Perú)",
+  "title": "Liga1 Max (Perú)",
   "logo": "/player/logos/channel20.png"
  },
  {
@@ -130,12 +142,6 @@
   "ch": 22,
   "title": "América TV HD (Perú)",
   "logo": "/player/logos/channel22.png"
- },
- {
-  "id": "51ed13ed",
-  "ch": 23,
-  "title": "Perú Mágico",
-  "logo": "/player/logos/channel23.png"
  },
  {
   "id": "bb9d7ce6",
@@ -154,11 +160,5 @@
   "ch": 26,
   "title": "DTV Sports Plus",
   "logo": "/player/logos/channel26.png"
- },
- {
-  "id": "1cfc68f0",
-  "ch": 27,
-  "title": "ESPN 2 HD (Perú)",
-  "logo": "/player/logos/channel27.png"
  }
 ]
