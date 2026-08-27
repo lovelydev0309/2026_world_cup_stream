@@ -1262,6 +1262,35 @@
    "logo": "/player/logos/channel45.png",
    "use_standby": true,
    "country": "Mexico"
+  },
+  {
+   "channel_name": "channel46",
+   "display_name": "FOROtv",
+   "enabled": true,
+   "hls_url": "https://stream.tv247on.com/hls/channel1/index.m3u8",
+   "standby_file": "standby/standby.mp4",
+   "bitrate": 2500,
+   "resolution": "1280x720",
+   "fps": 30,
+   "audio_bitrate": 128,
+   "_comment_source": "Added 2026-08-27 per client table: FOROtv (MX 1279016, failover LATINO 30672), country=Mexico.",
+   "_comment_audio": "audio_sync=preserve (2026-06-25): the default regen (asetpts=N/SR/TB) raced channel1's audio PTS ~70,000s ahead of video -> browser couldn't align -> infinite-load / lag. All 3 failover feeds are A/V-aligned at source (gap 0.02-0.39s, mp2 or AAC-LC), so preserve (asetpts=PTS-STARTPTS) keeps them aligned. Same fix as channel2.",
+   "audio_sync": "preserve",
+   "force_silent_audio": false,
+   "_comment_video": "encode @ 540p, CRF24 (sharper than the old crf28). 720p was tried 2026-06-24 but 720p re-encode on 2 vCPU overran the box (load 3.2+); 540p is this box's re-encode ceiling. Native HD needs either a bigger server or the copy-standby fix. Copy was reverted (bufferAppendError at live<->standby codec boundary).",
+   "video_mode": "encode",
+   "encode_resolution": "960x540",
+   "_comment_failover": "Backups are the same World Cup match on DAZN MUNDIAL FHD/HD2 — a dropped primary fails over instantly instead of going to a standby gap.",
+   "source_urls": [
+    "http://@@ACCT2@@/1279016",
+    "http://@@ACCT3@@/1279016",
+    "http://@@ACCT4@@/1279016",
+    "http://@@ACCT2@@/30672",
+    "http://@@ACCT4@@/30672"
+   ],
+   "logo": "/player/logos/channel46.png",
+   "use_standby": true,
+   "country": "Mexico"
   }
  ]
 }
