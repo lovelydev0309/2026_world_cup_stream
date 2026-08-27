@@ -106,7 +106,7 @@
   },
   {
     "name": "channel16",
-    "title": "Exitosa (Perú)",
+    "title": "Canal N (Perú)",
     "country": "Peru",
     "logo": "https://stream.tv247on.com/player/logos/channel16.png",
     "hls": "https://stream.tv247on.com/hls/channel16/index.m3u8"
@@ -120,21 +120,21 @@
   },
   {
     "name": "channel18",
-    "title": "DTV Sports 1 (Perú)",
+    "title": "Movistar Deportes (Perú)",
     "country": "Peru",
     "logo": "https://stream.tv247on.com/player/logos/channel18.png",
     "hls": "https://stream.tv247on.com/hls/channel18/index.m3u8"
   },
   {
     "name": "channel19",
-    "title": "IPE HD (Perú)",
+    "title": "ATV (Perú)",
     "country": "Peru",
     "logo": "https://stream.tv247on.com/player/logos/channel19.png",
     "hls": "https://stream.tv247on.com/hls/channel19/index.m3u8"
   },
   {
     "name": "channel20",
-    "title": "ESPN Extra HD (Perú)",
+    "title": "Liga1 Max (Perú)",
     "country": "Peru",
     "logo": "https://stream.tv247on.com/player/logos/channel20.png",
     "hls": "https://stream.tv247on.com/hls/channel20/index.m3u8"
@@ -152,13 +152,6 @@
     "country": "Peru",
     "logo": "https://stream.tv247on.com/player/logos/channel22.png",
     "hls": "https://stream.tv247on.com/hls/channel22/index.m3u8"
-  },
-  {
-    "name": "channel23",
-    "title": "Perú Mágico",
-    "country": "Peru",
-    "logo": "https://stream.tv247on.com/player/logos/channel23.png",
-    "hls": "https://stream.tv247on.com/hls/channel23/index.m3u8"
   },
   {
     "name": "channel24",
@@ -180,13 +173,6 @@
     "country": "Peru",
     "logo": "https://stream.tv247on.com/player/logos/channel26.png",
     "hls": "https://stream.tv247on.com/hls/channel26/index.m3u8"
-  },
-  {
-    "name": "channel27",
-    "title": "ESPN 2 HD (Perú)",
-    "country": "Peru",
-    "logo": "https://stream.tv247on.com/player/logos/channel27.png",
-    "hls": "https://stream.tv247on.com/hls/channel27/index.m3u8"
   },
   {
     "name": "channel28",
@@ -299,5 +285,19 @@
     "country": "US",
     "logo": "https://stream.tv247on.com/player/logos/channel43.png",
     "hls": "https://stream.tv247on.com/hls/channel43/index.m3u8"
+  },
+  {
+    "name": "channel44",
+    "title": "VIX Premium",
+    "country": "Mexico",
+    "logo": "https://stream.tv247on.com/player/logos/channel44.png",
+    "hls": "https://stream.tv247on.com/hls/channel1/index.m3u8"
+  },
+  {
+    "name": "channel45",
+    "title": "Sky Sport",
+    "country": "Mexico",
+    "logo": "https://stream.tv247on.com/player/logos/channel45.png",
+    "hls": "https://stream.tv247on.com/hls/channel1/index.m3u8"
   }
 ]
