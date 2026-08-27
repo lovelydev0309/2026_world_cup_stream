@@ -299,12 +299,5 @@
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel45.png",
     "hls": "https://stream.tv247on.com/hls/channel1/index.m3u8"
-  },
-  {
-    "name": "channel46",
-    "title": "FOROtv",
-    "country": "Mexico",
-    "logo": "https://stream.tv247on.com/player/logos/channel46.png",
-    "hls": "https://stream.tv247on.com/hls/channel1/index.m3u8"
   }
 ]
