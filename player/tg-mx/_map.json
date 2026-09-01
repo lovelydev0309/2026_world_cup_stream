@@ -8,7 +8,7 @@
  {
   "id": "3f21c527",
   "ch": 2,
-  "title": "MX – Canal 5 HD",
+  "title": "Canal 5 HD",
   "logo": "/player/logos/channel2.png"
  },
  {
@@ -32,7 +32,7 @@
  {
   "id": "6479d043",
   "ch": 6,
-  "title": "Discovery Channel HD",
+  "title": "Discovery HD",
   "logo": "/player/logos/channel6.png"
  },
  {
@@ -158,7 +158,211 @@
  {
   "id": "52769878",
   "ch": 26,
-  "title": "DTV Sports Plus",
+  "title": "DTV Sports Plus (Perú)",
   "logo": "/player/logos/channel26.png"
+ },
+ {
+  "id": "2c7ce3d5",
+  "ch": 46,
+  "title": "Canal 12 (TUTV)",
+  "logo": "/player/logos/channel46.png"
+ },
+ {
+  "id": "4f175702",
+  "ch": 47,
+  "title": "Canal 21 (Megavisión)",
+  "logo": "/player/logos/channel47.png"
+ },
+ {
+  "id": "7ad81ef3",
+  "ch": 48,
+  "title": "Canal 10",
+  "logo": "/player/logos/channel48.png"
+ },
+ {
+  "id": "cb3ba441",
+  "ch": 49,
+  "title": "Canal 2 (TCS)",
+  "logo": "/player/logos/channel49.png"
+ },
+ {
+  "id": "f627e773",
+  "ch": 50,
+  "title": "Canal 4 (TCS)",
+  "logo": "/player/logos/channel50.png"
+ },
+ {
+  "id": "83d073bb",
+  "ch": 51,
+  "title": "Canal 6 (TCS)",
+  "logo": "/player/logos/channel51.png"
+ },
+ {
+  "id": "7ff7a662",
+  "ch": 52,
+  "title": "DW Español",
+  "logo": "/player/logos/channel52.png"
+ },
+ {
+  "id": "4d5d6318",
+  "ch": 53,
+  "title": "Globovisión",
+  "logo": "/player/logos/channel53.png"
+ },
+ {
+  "id": "2568a5ac",
+  "ch": 54,
+  "title": "Telesur",
+  "logo": "/player/logos/channel54.png"
+ },
+ {
+  "id": "0e5e2787",
+  "ch": 55,
+  "title": "Venevisión",
+  "logo": "/player/logos/channel55.png"
+ },
+ {
+  "id": "a632c07d",
+  "ch": 56,
+  "title": "Televen",
+  "logo": "/player/logos/channel56.png"
+ },
+ {
+  "id": "dbb6713d",
+  "ch": 57,
+  "title": "RCN Novelas",
+  "logo": "/player/logos/channel57.png"
+ },
+ {
+  "id": "db7ce06b",
+  "ch": 58,
+  "title": "TELECARIBE VP",
+  "logo": "/player/logos/channel58.png"
+ },
+ {
+  "id": "fb083427",
+  "ch": 59,
+  "title": "Caracol Internacional",
+  "logo": "/player/logos/channel59.png"
+ },
+ {
+  "id": "ce09d055",
+  "ch": 60,
+  "title": "Caracol Televisión",
+  "logo": "/player/logos/channel60.png"
+ },
+ {
+  "id": "5f070365",
+  "ch": 61,
+  "title": "RCN Televisión",
+  "logo": "/player/logos/channel61.png"
+ },
+ {
+  "id": "b7600484",
+  "ch": 62,
+  "title": "NTN24",
+  "logo": "/player/logos/channel62.png"
+ },
+ {
+  "id": "411ea0e2",
+  "ch": 63,
+  "title": "Win Sports / Win Sports+",
+  "logo": "/player/logos/channel63.png"
+ },
+ {
+  "id": "a645b1a4",
+  "ch": 64,
+  "title": "CANAL 11",
+  "logo": "/player/logos/channel64.png"
+ },
+ {
+  "id": "0616dab4",
+  "ch": 65,
+  "title": "CANAL ANTIGUA",
+  "logo": "/player/logos/channel65.png"
+ },
+ {
+  "id": "e01e4e57",
+  "ch": 66,
+  "title": "RETRO TV",
+  "logo": "/player/logos/channel66.png"
+ },
+ {
+  "id": "502b5bc9",
+  "ch": 67,
+  "title": "CANAL 3",
+  "logo": "/player/logos/channel67.png"
+ },
+ {
+  "id": "a29faa39",
+  "ch": 68,
+  "title": "GUATEVISION",
+  "logo": "/player/logos/channel68.png"
+ },
+ {
+  "id": "201b6d8a",
+  "ch": 69,
+  "title": "CANAL 6 HD",
+  "logo": "/player/logos/channel69.png"
+ },
+ {
+  "id": "168edeb4",
+  "ch": 70,
+  "title": "CANAL 10 (TEN TV)",
+  "logo": "/player/logos/channel70.png"
+ },
+ {
+  "id": "e4d65dac",
+  "ch": 71,
+  "title": "AME 47 TV (TSI)",
+  "logo": "/player/logos/channel71.png"
+ },
+ {
+  "id": "de871c63",
+  "ch": 72,
+  "title": "CANAL 5 HD (El Líder)",
+  "logo": "/player/logos/channel72.png"
+ },
+ {
+  "id": "fff9ad8e",
+  "ch": 73,
+  "title": "CANAL 11 HD",
+  "logo": "/player/logos/channel73.png"
+ },
+ {
+  "id": "19f1bf6c",
+  "ch": 74,
+  "title": "CUBAVISION",
+  "logo": "/player/logos/channel74.png"
+ },
+ {
+  "id": "0ec928b8",
+  "ch": 75,
+  "title": "CUBAVISION INTERNACIONAL",
+  "logo": "/player/logos/channel75.png"
+ },
+ {
+  "id": "92d645ef",
+  "ch": 76,
+  "title": "AMERICATEVE",
+  "logo": "/player/logos/channel76.png"
+ },
+ {
+  "id": "24e5ab05",
+  "ch": 77,
+  "title": "CUBAVISION vip",
+  "logo": "/player/logos/channel77.png"
+ },
+ {
+  "id": "fe4fa9a2",
+  "ch": 78,
+  "title": "CUBAVISIONINTER vip",
+  "logo": "/player/logos/channel78.png"
+ },
+ {
+  "id": "700ffd6f",
+  "ch": 79,
+  "title": "CUBAMAX vip",
+  "logo": "/player/logos/channel79.png"
  }
 ]

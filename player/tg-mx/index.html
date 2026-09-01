@@ -21,6 +21,10 @@
   .vbtn.theater{left:10px;font-size:14px}
   @media(hover:hover){ .vbtn,.unmute{opacity:.35;transition:opacity .2s} .vbtn:hover,.unmute:hover{opacity:1} }
   .list{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 10px 30px}
+  .countries{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 10px 4px}
+  .ctab{padding:10px 6px;background:#141d2e;border:1px solid #1e2a40;border-radius:12px;
+    font-size:12px;text-align:center;cursor:pointer;line-height:1.2}
+  .ctab.active{background:#0284c7;border-color:#0284c7;font-weight:700}
   .card{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;
     padding:10px 5px;background:#141d2e;border:1px solid #1e2a40;border-radius:12px;
     cursor:pointer;text-align:center}
@@ -37,6 +41,7 @@
     <button class="vbtn theater" id="theater" title="Ampliar">⤢</button>
     <button class="unmute" id="unmute">🔇</button>
   </div>
+  <div class="countries" id="countries"></div>
   <div class="list" id="list"></div>
 
 <script>
@@ -49,8 +54,7 @@
   var BASE = "https://stream.tv247on.com";
   var LOGO = BASE + "/player/logos/";
 
-  // 27 canales mexicanos + peruanos -> ids OPACOS (el canalN real queda oculto tras
-  // el mapa /tv/<id>/ de nginx). El host de origen nunca se expone.
+  // MAJO lineup synced from channels.json + nginx opaque map (61 canales). Ids OPACOS via /tv/<id>/.
   var CH = [
     {id:"58518914",name:"Imagen Televisión",logo:"channel1.png"},
     {id:"3f21c527",name:"Canal 5 HD",logo:"channel2.png"},
@@ -79,7 +83,67 @@
     {id:"bb9d7ce6",name:"Panamericana (Perú)",logo:"channel24.png"},
     {id:"fe1d46eb",name:"TV Perú HD",logo:"channel25.png"},
     {id:"52769878",name:"DTV Sports Plus (Perú)",logo:"channel26.png"},
+    {id:"2c7ce3d5",name:"Canal 12 (TUTV)",logo:"channel46.png"},
+    {id:"4f175702",name:"Canal 21 (Megavisión)",logo:"channel47.png"},
+    {id:"7ad81ef3",name:"Canal 10",logo:"channel48.png"},
+    {id:"cb3ba441",name:"Canal 2 (TCS)",logo:"channel49.png"},
+    {id:"f627e773",name:"Canal 4 (TCS)",logo:"channel50.png"},
+    {id:"83d073bb",name:"Canal 6 (TCS)",logo:"channel51.png"},
+    {id:"7ff7a662",name:"DW Español",logo:"channel52.png"},
+    {id:"4d5d6318",name:"Globovisión",logo:"channel53.png"},
+    {id:"2568a5ac",name:"Telesur",logo:"channel54.png"},
+    {id:"0e5e2787",name:"Venevisión",logo:"channel55.png"},
+    {id:"a632c07d",name:"Televen",logo:"channel56.png"},
+    {id:"dbb6713d",name:"RCN Novelas",logo:"channel57.png"},
+    {id:"db7ce06b",name:"TELECARIBE VP",logo:"channel58.png"},
+    {id:"fb083427",name:"Caracol Internacional",logo:"channel59.png"},
+    {id:"ce09d055",name:"Caracol Televisión",logo:"channel60.png"},
+    {id:"5f070365",name:"RCN Televisión",logo:"channel61.png"},
+    {id:"b7600484",name:"NTN24",logo:"channel62.png"},
+    {id:"411ea0e2",name:"Win Sports / Win Sports+",logo:"channel63.png"},
+    {id:"a645b1a4",name:"CANAL 11",logo:"channel64.png"},
+    {id:"0616dab4",name:"CANAL ANTIGUA",logo:"channel65.png"},
+    {id:"e01e4e57",name:"RETRO TV",logo:"channel66.png"},
+    {id:"502b5bc9",name:"CANAL 3",logo:"channel67.png"},
+    {id:"a29faa39",name:"GUATEVISION",logo:"channel68.png"},
+    {id:"201b6d8a",name:"CANAL 6 HD",logo:"channel69.png"},
+    {id:"168edeb4",name:"CANAL 10 (TEN TV)",logo:"channel70.png"},
+    {id:"e4d65dac",name:"AME 47 TV (TSI)",logo:"channel71.png"},
+    {id:"de871c63",name:"CANAL 5 HD (El Líder)",logo:"channel72.png"},
+    {id:"fff9ad8e",name:"CANAL 11 HD",logo:"channel73.png"},
+    {id:"19f1bf6c",name:"CUBAVISION",logo:"channel74.png"},
+    {id:"0ec928b8",name:"CUBAVISION INTERNACIONAL",logo:"channel75.png"},
+    {id:"92d645ef",name:"AMERICATEVE",logo:"channel76.png"},
+    {id:"24e5ab05",name:"CUBAVISION vip",logo:"channel77.png"},
+    {id:"fe4fa9a2",name:"CUBAVISIONINTER vip",logo:"channel78.png"},
+    {id:"700ffd6f",name:"CUBAMAX vip",logo:"channel79.png"},
   ];
+
+  var COUNTRY_TABS = [
+    {id:"all", label:"Todos"},
+    {id:"Mexico", label:"México"},
+    {id:"Peru", label:"Perú"},
+    {id:"El Salvador", label:"🇸🇻 Salvador"},
+    {id:"Venezuela", label:"🇻🇪 Venezuela"},
+    {id:"Colombia", label:"🇨🇴 Colombia"},
+    {id:"Guatemala", label:"🇬🇹 Guatemala"},
+    {id:"Honduras", label:"🇭🇳 Honduras"},
+    {id:"Cuba", label:"🇨🇺 Cuba"}
+  ];
+
+  function chNum(logo){ return parseInt((logo||"").replace(/\D/g,""),10) || 0; }
+  function countryOf(n){
+    if(n<=15 || n===44 || n===45) return "Mexico";
+    if(n>=16 && n<=27) return "Peru";
+    if(n>=46 && n<=52) return "El Salvador";
+    if(n>=53 && n<=56) return "Venezuela";
+    if(n>=57 && n<=63) return "Colombia";
+    if(n>=64 && n<=68) return "Guatemala";
+    if(n>=69 && n<=73) return "Honduras";
+    if(n>=74 && n<=79) return "Cuba";
+    return "";
+  }
+  CH.forEach(function(c){ c.country = countryOf(chNum(c.logo)); });
 
   var v = document.getElementById("v");
   var hint = document.getElementById("hint");
@@ -105,6 +169,40 @@
   }
 
   var list = document.getElementById("list");
+  var countryBar = document.getElementById("countries");
+  var activeCountry = "all";
+  var cardEls = [];
+
+  function renderCountries(){
+    countryBar.innerHTML = "";
+    COUNTRY_TABS.forEach(function(tab){
+      var el = document.createElement("div");
+      el.className = "ctab" + (tab.id === activeCountry ? " active" : "");
+      el.textContent = tab.label;
+      el.onclick = function(){
+        activeCountry = tab.id;
+        renderCountries();
+        applyCountryFilter();
+      };
+      countryBar.appendChild(el);
+    });
+  }
+
+  function applyCountryFilter(){
+    var firstIdx = -1;
+    cardEls.forEach(function(el, i){
+      var show = activeCountry === "all" || CH[i].country === activeCountry;
+      el.style.display = show ? "" : "none";
+      if(show && firstIdx < 0) firstIdx = i;
+    });
+    if(firstIdx >= 0){
+      var cards = document.querySelectorAll(".card");
+      for(var k=0;k<cards.length;k++) cards[k].classList.remove("active");
+      cardEls[firstIdx].classList.add("active");
+      play(firstIdx);
+    }
+  }
+
   CH.forEach(function(c,i){
     var el = document.createElement("div");
     el.className = "card" + (i===0?" active":"");
@@ -116,7 +214,9 @@
       window.scrollTo({top:0,behavior:"smooth"});
     };
     list.appendChild(el);
+    cardEls.push(el);
   });
+  renderCountries();
 
   function toggleSound(){ v.muted = !v.muted; if(!v.muted) v.play().catch(function(){}); unmute.textContent = v.muted ? "🔇" : "🔊"; unmute.classList.toggle("sound-on", !v.muted); }
   unmute.onclick = function(e){ e.stopPropagation(); toggleSound(); };
@@ -139,11 +239,13 @@
   }
 
   var want = (new URLSearchParams(location.search)).get("ch");
+  var countryWant = (new URLSearchParams(location.search)).get("country");
+  if(countryWant){ activeCountry = countryWant; renderCountries(); applyCountryFilter(); }
   var startIdx = 0;
   if (want){ for (var qi=0; qi<CH.length; qi++){ if (CH[qi].id===want){ startIdx=qi; break; } } }
   var allCards = document.querySelectorAll(".card");
   for (var ci=0; ci<allCards.length; ci++) allCards[ci].classList.toggle("active", ci===startIdx);
-  play(startIdx);
+  if(!countryWant) play(startIdx);
 })();
 </script>
 </body>
