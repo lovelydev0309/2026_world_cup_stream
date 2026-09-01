@@ -154,6 +154,13 @@
     "hls": "https://stream.tv247on.com/hls/channel22/index.m3u8"
   },
   {
+    "name": "channel23",
+    "title": "Perú Mágico",
+    "country": "Peru",
+    "logo": "https://stream.tv247on.com/player/logos/channel23.png",
+    "hls": "https://stream.tv247on.com/hls/channel23/index.m3u8"
+  },
+  {
     "name": "channel24",
     "title": "Panamericana (Perú)",
     "country": "Peru",
@@ -173,6 +180,13 @@
     "country": "Peru",
     "logo": "https://stream.tv247on.com/player/logos/channel26.png",
     "hls": "https://stream.tv247on.com/hls/channel26/index.m3u8"
+  },
+  {
+    "name": "channel27",
+    "title": "ESPN 2 HD (Perú)",
+    "country": "Peru",
+    "logo": "https://stream.tv247on.com/player/logos/channel27.png",
+    "hls": "https://stream.tv247on.com/hls/channel27/index.m3u8"
   },
   {
     "name": "channel28",
@@ -299,5 +313,243 @@
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel45.png",
     "hls": "https://stream.tv247on.com/hls/channel1/index.m3u8"
+  },
+  {
+    "name": "channel46",
+    "title": "Canal 12 (TUTV)",
+    "country": "El Salvador",
+    "logo": "https://stream.tv247on.com/player/logos/channel46.png",
+    "hls": "https://stream.tv247on.com/hls/channel46/index.m3u8"
+  },
+  {
+    "name": "channel47",
+    "title": "Canal 21 (Megavisión)",
+    "country": "El Salvador",
+    "logo": "https://stream.tv247on.com/player/logos/channel47.png",
+    "hls": "https://stream.tv247on.com/hls/channel47/index.m3u8"
+  },
+  {
+    "name": "channel48",
+    "title": "Canal 10",
+    "country": "El Salvador",
+    "logo": "https://stream.tv247on.com/player/logos/channel48.png",
+    "hls": "https://stream.tv247on.com/hls/channel48/index.m3u8"
+  },
+  {
+    "name": "channel49",
+    "title": "Canal 2 (TCS)",
+    "country": "El Salvador",
+    "logo": "https://stream.tv247on.com/player/logos/channel49.png",
+    "hls": "https://stream.tv247on.com/hls/channel49/index.m3u8"
+  },
+  {
+    "name": "channel50",
+    "title": "Canal 4 (TCS)",
+    "country": "El Salvador",
+    "logo": "https://stream.tv247on.com/player/logos/channel50.png",
+    "hls": "https://stream.tv247on.com/hls/channel50/index.m3u8"
+  },
+  {
+    "name": "channel51",
+    "title": "Canal 6 (TCS)",
+    "country": "El Salvador",
+    "logo": "https://stream.tv247on.com/player/logos/channel51.png",
+    "hls": "https://stream.tv247on.com/hls/channel51/index.m3u8"
+  },
+  {
+    "name": "channel52",
+    "title": "DW Español",
+    "country": "El Salvador",
+    "logo": "https://stream.tv247on.com/player/logos/channel52.png",
+    "hls": "https://stream.tv247on.com/hls/channel52/index.m3u8"
+  },
+  {
+    "name": "channel53",
+    "title": "Globovisión",
+    "country": "Venezuela",
+    "logo": "https://stream.tv247on.com/player/logos/channel53.png",
+    "hls": "https://stream.tv247on.com/hls/channel53/index.m3u8"
+  },
+  {
+    "name": "channel54",
+    "title": "Telesur",
+    "country": "Venezuela",
+    "logo": "https://stream.tv247on.com/player/logos/channel54.png",
+    "hls": "https://stream.tv247on.com/hls/channel54/index.m3u8"
+  },
+  {
+    "name": "channel55",
+    "title": "Venevisión",
+    "country": "Venezuela",
+    "logo": "https://stream.tv247on.com/player/logos/channel55.png",
+    "hls": "https://stream.tv247on.com/hls/channel55/index.m3u8"
+  },
+  {
+    "name": "channel56",
+    "title": "Televen",
+    "country": "Venezuela",
+    "logo": "https://stream.tv247on.com/player/logos/channel56.png",
+    "hls": "https://stream.tv247on.com/hls/channel56/index.m3u8"
+  },
+  {
+    "name": "channel57",
+    "title": "RCN Novelas",
+    "country": "Colombia",
+    "logo": "https://stream.tv247on.com/player/logos/channel57.png",
+    "hls": "https://stream.tv247on.com/hls/channel57/index.m3u8"
+  },
+  {
+    "name": "channel58",
+    "title": "TELECARIBE VP",
+    "country": "Colombia",
+    "logo": "https://stream.tv247on.com/player/logos/channel58.png",
+    "hls": "https://stream.tv247on.com/hls/channel58/index.m3u8"
+  },
+  {
+    "name": "channel59",
+    "title": "Caracol Internacional",
+    "country": "Colombia",
+    "logo": "https://stream.tv247on.com/player/logos/channel59.png",
+    "hls": "https://stream.tv247on.com/hls/channel59/index.m3u8"
+  },
+  {
+    "name": "channel60",
+    "title": "Caracol Televisión",
+    "country": "Colombia",
+    "logo": "https://stream.tv247on.com/player/logos/channel60.png",
+    "hls": "https://stream.tv247on.com/hls/channel60/index.m3u8"
+  },
+  {
+    "name": "channel61",
+    "title": "RCN Televisión",
+    "country": "Colombia",
+    "logo": "https://stream.tv247on.com/player/logos/channel61.png",
+    "hls": "https://stream.tv247on.com/hls/channel61/index.m3u8"
+  },
+  {
+    "name": "channel62",
+    "title": "NTN24",
+    "country": "Colombia",
+    "logo": "https://stream.tv247on.com/player/logos/channel62.png",
+    "hls": "https://stream.tv247on.com/hls/channel62/index.m3u8"
+  },
+  {
+    "name": "channel63",
+    "title": "Win Sports / Win Sports+",
+    "country": "Colombia",
+    "logo": "https://stream.tv247on.com/player/logos/channel63.png",
+    "hls": "https://stream.tv247on.com/hls/channel63/index.m3u8"
+  },
+  {
+    "name": "channel64",
+    "title": "CANAL 11",
+    "country": "Guatemala",
+    "logo": "https://stream.tv247on.com/player/logos/channel64.png",
+    "hls": "https://stream.tv247on.com/hls/channel64/index.m3u8"
+  },
+  {
+    "name": "channel65",
+    "title": "CANAL ANTIGUA",
+    "country": "Guatemala",
+    "logo": "https://stream.tv247on.com/player/logos/channel65.png",
+    "hls": "https://stream.tv247on.com/hls/channel65/index.m3u8"
+  },
+  {
+    "name": "channel66",
+    "title": "RETRO TV",
+    "country": "Guatemala",
+    "logo": "https://stream.tv247on.com/player/logos/channel66.png",
+    "hls": "https://stream.tv247on.com/hls/channel66/index.m3u8"
+  },
+  {
+    "name": "channel67",
+    "title": "CANAL 3",
+    "country": "Guatemala",
+    "logo": "https://stream.tv247on.com/player/logos/channel67.png",
+    "hls": "https://stream.tv247on.com/hls/channel67/index.m3u8"
+  },
+  {
+    "name": "channel68",
+    "title": "GUATEVISION",
+    "country": "Guatemala",
+    "logo": "https://stream.tv247on.com/player/logos/channel68.png",
+    "hls": "https://stream.tv247on.com/hls/channel68/index.m3u8"
+  },
+  {
+    "name": "channel69",
+    "title": "CANAL 6 HD",
+    "country": "Honduras",
+    "logo": "https://stream.tv247on.com/player/logos/channel69.png",
+    "hls": "https://stream.tv247on.com/hls/channel69/index.m3u8"
+  },
+  {
+    "name": "channel70",
+    "title": "CANAL 10 (TEN TV)",
+    "country": "Honduras",
+    "logo": "https://stream.tv247on.com/player/logos/channel70.png",
+    "hls": "https://stream.tv247on.com/hls/channel70/index.m3u8"
+  },
+  {
+    "name": "channel71",
+    "title": "AME 47 TV (TSI)",
+    "country": "Honduras",
+    "logo": "https://stream.tv247on.com/player/logos/channel71.png",
+    "hls": "https://stream.tv247on.com/hls/channel71/index.m3u8"
+  },
+  {
+    "name": "channel72",
+    "title": "CANAL 5 HD (El Líder)",
+    "country": "Honduras",
+    "logo": "https://stream.tv247on.com/player/logos/channel72.png",
+    "hls": "https://stream.tv247on.com/hls/channel72/index.m3u8"
+  },
+  {
+    "name": "channel73",
+    "title": "CANAL 11 HD",
+    "country": "Honduras",
+    "logo": "https://stream.tv247on.com/player/logos/channel73.png",
+    "hls": "https://stream.tv247on.com/hls/channel73/index.m3u8"
+  },
+  {
+    "name": "channel74",
+    "title": "CUBAVISION",
+    "country": "Cuba",
+    "logo": "https://stream.tv247on.com/player/logos/channel74.png",
+    "hls": "https://stream.tv247on.com/hls/channel74/index.m3u8"
+  },
+  {
+    "name": "channel75",
+    "title": "CUBAVISION INTERNACIONAL",
+    "country": "Cuba",
+    "logo": "https://stream.tv247on.com/player/logos/channel75.png",
+    "hls": "https://stream.tv247on.com/hls/channel75/index.m3u8"
+  },
+  {
+    "name": "channel76",
+    "title": "AMERICATEVE",
+    "country": "Cuba",
+    "logo": "https://stream.tv247on.com/player/logos/channel76.png",
+    "hls": "https://stream.tv247on.com/hls/channel76/index.m3u8"
+  },
+  {
+    "name": "channel77",
+    "title": "CUBAVISION vip",
+    "country": "Cuba",
+    "logo": "https://stream.tv247on.com/player/logos/channel77.png",
+    "hls": "https://stream.tv247on.com/hls/channel77/index.m3u8"
+  },
+  {
+    "name": "channel78",
+    "title": "CUBAVISIONINTER vip",
+    "country": "Cuba",
+    "logo": "https://stream.tv247on.com/player/logos/channel78.png",
+    "hls": "https://stream.tv247on.com/hls/channel78/index.m3u8"
+  },
+  {
+    "name": "channel79",
+    "title": "CUBAMAX vip",
+    "country": "Cuba",
+    "logo": "https://stream.tv247on.com/player/logos/channel79.png",
+    "hls": "https://stream.tv247on.com/hls/channel79/index.m3u8"
   }
 ]
