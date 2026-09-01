@@ -1465,10 +1465,10 @@
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=[436884].",
    "source_urls": [
     "http://@@ACCT_LAT7@@/436902",
-    "http://@@ACCT_LAT8@@/436902",
-    "http://@@ACCT_LAT9@@/436902",
     "http://@@ACCT_LAT7@@/273291",
-    "http://@@ACCT_LAT8@@/273291"
+    "http://@@ACCT_LAT8@@/436902",
+    "http://@@ACCT_LAT8@@/273291",
+    "http://@@ACCT_LAT9@@/436902"
    ],
    "logo": "/player/logos/channel52.png",
    "use_standby": true,
@@ -1954,7 +1954,7 @@
   {
    "channel_name": "channel69",
    "display_name": "CANAL 6 HD",
-   "enabled": true,
+   "enabled": false,
    "source_url": "http://@@ACCT_LAT6@@/214635",
    "hls_url": "https://stream.tv247on.com/hls/channel69/index.m3u8",
    "standby_file": "standby/standby.mp4",
@@ -1962,7 +1962,7 @@
    "resolution": "1280x720",
    "fps": 30,
    "audio_bitrate": 128,
-   "_comment_source": "tvon247 Honduras stream 214635 (Free). Added 2026-08-29 per client majotv sheet (AM|LATINO / AM|SALVADOR).",
+   "_comment_source": "tvon247 Honduras stream 214635 (Free). Added 2026-08-29 per client majotv sheet (AM|LATINO / AM|SALVADOR). | DISABLED 2026-09-01: provider feed dead, no alternate. Re-enable when source restored.",
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
@@ -2066,7 +2066,7 @@
   {
    "channel_name": "channel73",
    "display_name": "CANAL 11 HD",
-   "enabled": true,
+   "enabled": false,
    "source_url": "http://@@ACCT_LAT1@@/214631",
    "hls_url": "https://stream.tv247on.com/hls/channel73/index.m3u8",
    "standby_file": "standby/standby.mp4",
@@ -2074,7 +2074,7 @@
    "resolution": "1280x720",
    "fps": 30,
    "audio_bitrate": 128,
-   "_comment_source": "tvon247 Honduras stream 214631 (Premium). Added 2026-08-29 per client majotv sheet (AM|LATINO / AM|SALVADOR).",
+   "_comment_source": "tvon247 Honduras stream 214631 (Premium). Added 2026-08-29 per client majotv sheet (AM|LATINO / AM|SALVADOR). | DISABLED 2026-09-01: provider feed dead, no alternate. Re-enable when source restored.",
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
