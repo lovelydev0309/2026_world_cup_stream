@@ -305,7 +305,7 @@
    "channel_name": "channel10",
    "display_name": "TUDN",
    "enabled": true,
-   "source_url": "http://@@ACCT4@@/1028371",
+   "source_url": "http://@@ACCT4@@/140336",
    "hls_url": "https://stream.tv247on.com/hls/channel10/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -313,19 +313,21 @@
    "fps": 30,
    "audio_bitrate": 128,
    "logo": "/player/logos/channel10.png",
-   "_comment": "tvon247 id 1028371 via account ACCT4. Re-encoded 540p (fixes source DTS/1080p issues copy couldn't) + standby, like ch1-3.",
+   "_comment": "tvon247 id 140336 (MX - TUDN FHD, h264 720p30 AAC 48k) via account ACCT4. SWAPPED from 1028371 on 2026-09-02: that id went fully dead provider-side on ALL 6 accounts (connection reset ~9s in, curl returned 0 bytes) so the channel cycled live->failover->standby forever. Re-encoded 540p + standby, like ch1-3. LATINO - TUDN HD 200868 appended as cross-package deep backup.",
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@ACCT5@@/1028371",
-    "http://@@ACCT4@@/1028371",
-    "http://@@ACCT6@@/1028371",
-    "http://@@ACCT1@@/1028371",
-    "http://@@ACCT3@@/1028371",
-    "http://@@ACCT2@@/1028371"
+    "http://@@ACCT5@@/140336",
+    "http://@@ACCT4@@/140336",
+    "http://@@ACCT6@@/140336",
+    "http://@@ACCT1@@/140336",
+    "http://@@ACCT3@@/140336",
+    "http://@@ACCT2@@/140336",
+    "http://@@ACCT1@@/200868",
+    "http://@@ACCT4@@/200868"
    ]
   },
   {
