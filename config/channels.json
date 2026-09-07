@@ -697,7 +697,7 @@
   {
    "channel_name": "channel24",
    "display_name": "Panamericana (Perú)",
-   "enabled": true,
+   "enabled": false,
    "source_url": "http://@@ACCT_PE3@@/69200",
    "hls_url": "https://stream.tv247on.com/hls/channel24/index.m3u8",
    "standby_file": "standby/standby.mp4",
@@ -705,19 +705,19 @@
    "resolution": "1280x720",
    "fps": 30,
    "audio_bitrate": 128,
-   "_comment_source": "Swapped 2026-09-07: 187631 (vip) flaky/low-bitrate -> 30568 (regular Panamericana, stable 2MB); 187631 kept as failover.",
+   "_comment_source": "PAUSED 2026-09-07 per client: both Panamericana feeds (30568 + 187631 vip) unstable/intermittent at provider. Re-enable when source restored.",
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
    "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
    "source_urls": [
-    "http://@@ACCT_PE2@@/30568",
-    "http://@@ACCT_PE3@@/30568",
-    "http://@@ACCT_PE1@@/30568",
     "http://@@ACCT_PE2@@/187631",
     "http://@@ACCT_PE3@@/187631",
-    "http://@@ACCT_PE1@@/187631"
+    "http://@@ACCT_PE1@@/187631",
+    "http://@@ACCT_PE2@@/30568",
+    "http://@@ACCT_PE3@@/30568",
+    "http://@@ACCT_PE1@@/30568"
    ],
    "logo": "/player/logos/channel24.png",
    "use_standby": true,

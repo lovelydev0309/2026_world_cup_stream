@@ -161,13 +161,6 @@
     "hls": "https://stream.tv247on.com/hls/channel23/index.m3u8"
   },
   {
-    "name": "channel24",
-    "title": "Panamericana (Perú)",
-    "country": "Peru",
-    "logo": "https://stream.tv247on.com/player/logos/channel24.png",
-    "hls": "https://stream.tv247on.com/hls/channel24/index.m3u8"
-  },
-  {
     "name": "channel25",
     "title": "TV Perú HD",
     "country": "Peru",
