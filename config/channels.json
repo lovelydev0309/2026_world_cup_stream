@@ -322,12 +322,12 @@
    "source_urls": [
     "http://@@ACCT5@@/140336",
     "http://@@ACCT4@@/140336",
+    "http://@@ACCT4@@/200868",
     "http://@@ACCT6@@/140336",
     "http://@@ACCT1@@/140336",
-    "http://@@ACCT3@@/140336",
-    "http://@@ACCT2@@/140336",
     "http://@@ACCT1@@/200868",
-    "http://@@ACCT4@@/200868"
+    "http://@@ACCT3@@/140336",
+    "http://@@ACCT2@@/140336"
    ]
   },
   {
@@ -561,14 +561,14 @@
    "channel_name": "channel19",
    "display_name": "ATV (Perú)",
    "enabled": true,
-    "source_url": "http://@@ACCT_PE3@@/69200",
+   "source_url": "http://@@ACCT_PE3@@/69200",
    "hls_url": "https://stream.tv247on.com/hls/channel19/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
    "resolution": "1280x720",
    "fps": 30,
    "audio_bitrate": 128,
-    "_comment_source": "ATV (Peru). FIXED 2026-09-05: primary had been 30575, which is an Xtream CATEGORY DIVIDER ROW (catalog name \"##### PERU - GENERAL #####\"), not a channel - it was serving Brazilian content under a Peruvian label; the only backup 187639 is PER - IPE HD, a DIFFERENT channel. Both removed. Real ATV 30572 tests dead (0 bytes) on all 3 Peru accounts, so primary is now ATV+ 69200 (verified alive on ACCT_PE3, ~18MB/14s) with 30572 kept as backup. RE-TEST 30572 periodically and promote it back to primary when it recovers, for label accuracy (same pattern as ch12/ch14).",
+   "_comment_source": "ATV (Peru). FIXED 2026-09-05: primary had been 30575, which is an Xtream CATEGORY DIVIDER ROW (catalog name \"##### PERU - GENERAL #####\"), not a channel - it was serving Brazilian content under a Peruvian label; the only backup 187639 is PER - IPE HD, a DIFFERENT channel. Both removed. Real ATV 30572 tests dead (0 bytes) on all 3 Peru accounts, so primary is now ATV+ 69200 (verified alive on ACCT_PE3, ~18MB/14s) with 30572 kept as backup. RE-TEST 30572 periodically and promote it back to primary when it recovers, for label accuracy (same pattern as ch12/ch14).",
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
@@ -576,10 +576,10 @@
    "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
    "source_urls": [
     "http://@@ACCT_PE3@@/69200",
-    "http://@@ACCT_PE1@@/69200",
-    "http://@@ACCT_PE2@@/69200",
     "http://@@ACCT_PE3@@/30572",
+    "http://@@ACCT_PE1@@/69200",
     "http://@@ACCT_PE1@@/30572",
+    "http://@@ACCT_PE2@@/69200",
     "http://@@ACCT_PE2@@/30572"
    ],
    "logo": "/player/logos/channel19.png",
@@ -630,8 +630,8 @@
    "encode_resolution": "960x540",
    "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
    "source_urls": [
-    "http://@@ACCT_PE3@@/312515",
     "http://@@ACCT_PE1@@/312515",
+    "http://@@ACCT_PE3@@/312515",
     "http://@@ACCT_PE2@@/312515"
    ],
    "logo": "/player/logos/channel21.png",
@@ -1299,7 +1299,7 @@
   {
    "channel_name": "channel47",
    "display_name": "Canal 21 (Megavisión)",
-   "enabled": false,
+   "enabled": true,
    "source_url": "http://@@ACCT_LAT2@@/1028542",
    "hls_url": "https://stream.tv247on.com/hls/channel47/index.m3u8",
    "standby_file": "standby/standby.mp4",
@@ -1467,8 +1467,8 @@
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=[436884].",
    "source_urls": [
     "http://@@ACCT_LAT7@@/273291",
-    "http://@@ACCT_LAT8@@/273291",
     "http://@@ACCT_LAT7@@/436902",
+    "http://@@ACCT_LAT8@@/273291",
     "http://@@ACCT_LAT8@@/436902",
     "http://@@ACCT_LAT9@@/436902"
    ],
@@ -1555,10 +1555,10 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=[1412718].",
    "source_urls": [
-    "http://@@ACCT_LAT1@@/1084022",
-    "http://@@ACCT_LAT1@@/1412718",
     "http://@@ACCT_LAT2@@/1084022",
     "http://@@ACCT_LAT2@@/1412718",
+    "http://@@ACCT_LAT1@@/1084022",
+    "http://@@ACCT_LAT1@@/1412718",
     "http://@@ACCT_LAT3@@/1084022",
     "http://@@ACCT_LAT3@@/1412718"
    ],
@@ -1586,10 +1586,10 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=[30552].",
    "source_urls": [
-    "http://@@ACCT_LAT2@@/1248435",
-    "http://@@ACCT_LAT2@@/30552",
     "http://@@ACCT_LAT3@@/1248435",
     "http://@@ACCT_LAT3@@/30552",
+    "http://@@ACCT_LAT2@@/1248435",
+    "http://@@ACCT_LAT2@@/30552",
     "http://@@ACCT_LAT4@@/1248435",
     "http://@@ACCT_LAT4@@/30552"
    ],
@@ -1617,10 +1617,10 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=[190244].",
    "source_urls": [
-    "http://@@ACCT_LAT3@@/30701",
-    "http://@@ACCT_LAT3@@/190244",
     "http://@@ACCT_LAT4@@/30701",
     "http://@@ACCT_LAT4@@/190244",
+    "http://@@ACCT_LAT3@@/30701",
+    "http://@@ACCT_LAT3@@/190244",
     "http://@@ACCT_LAT5@@/30701",
     "http://@@ACCT_LAT5@@/190244"
    ],
@@ -1648,8 +1648,8 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
    "source_urls": [
-    "http://@@ACCT_LAT4@@/190252",
     "http://@@ACCT_LAT5@@/190252",
+    "http://@@ACCT_LAT4@@/190252",
     "http://@@ACCT_LAT6@@/190252"
    ],
    "logo": "/player/logos/channel58.png",
@@ -1676,10 +1676,10 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=[192830].",
    "source_urls": [
-    "http://@@ACCT_LAT5@@/69188",
-    "http://@@ACCT_LAT5@@/192830",
     "http://@@ACCT_LAT6@@/69188",
     "http://@@ACCT_LAT6@@/192830",
+    "http://@@ACCT_LAT5@@/69188",
+    "http://@@ACCT_LAT5@@/192830",
     "http://@@ACCT_LAT7@@/69188",
     "http://@@ACCT_LAT7@@/192830"
    ],
@@ -1707,10 +1707,10 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=[30706].",
    "source_urls": [
-    "http://@@ACCT_LAT6@@/190239",
-    "http://@@ACCT_LAT6@@/30706",
     "http://@@ACCT_LAT7@@/190239",
     "http://@@ACCT_LAT7@@/30706",
+    "http://@@ACCT_LAT6@@/190239",
+    "http://@@ACCT_LAT6@@/30706",
     "http://@@ACCT_LAT8@@/190239",
     "http://@@ACCT_LAT8@@/30706"
    ],
@@ -1738,10 +1738,10 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=[30702].",
    "source_urls": [
-    "http://@@ACCT_LAT7@@/190242",
-    "http://@@ACCT_LAT7@@/30702",
     "http://@@ACCT_LAT8@@/190242",
     "http://@@ACCT_LAT8@@/30702",
+    "http://@@ACCT_LAT7@@/190242",
+    "http://@@ACCT_LAT7@@/30702",
     "http://@@ACCT_LAT9@@/190242",
     "http://@@ACCT_LAT9@@/30702"
    ],
@@ -1769,8 +1769,8 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
    "source_urls": [
-    "http://@@ACCT_LAT8@@/190246",
     "http://@@ACCT_LAT9@@/190246",
+    "http://@@ACCT_LAT8@@/190246",
     "http://@@ACCT_LAT1@@/190246"
    ],
    "logo": "/player/logos/channel62.png",
@@ -1797,12 +1797,12 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=[190260, 30647].",
    "source_urls": [
-    "http://@@ACCT_LAT9@@/190259",
-    "http://@@ACCT_LAT9@@/190260",
-    "http://@@ACCT_LAT9@@/30647",
     "http://@@ACCT_LAT1@@/190259",
     "http://@@ACCT_LAT1@@/190260",
     "http://@@ACCT_LAT1@@/30647",
+    "http://@@ACCT_LAT9@@/190259",
+    "http://@@ACCT_LAT9@@/190260",
+    "http://@@ACCT_LAT9@@/30647",
     "http://@@ACCT_LAT2@@/190259",
     "http://@@ACCT_LAT2@@/190260",
     "http://@@ACCT_LAT2@@/30647"
@@ -1956,7 +1956,7 @@
   {
    "channel_name": "channel69",
    "display_name": "CANAL 6 HD",
-   "enabled": false,
+   "enabled": true,
    "source_url": "http://@@ACCT_LAT6@@/214635",
    "hls_url": "https://stream.tv247on.com/hls/channel69/index.m3u8",
    "standby_file": "standby/standby.mp4",
@@ -2068,7 +2068,7 @@
   {
    "channel_name": "channel73",
    "display_name": "CANAL 11 HD",
-   "enabled": false,
+   "enabled": true,
    "source_url": "http://@@ACCT_LAT1@@/214631",
    "hls_url": "https://stream.tv247on.com/hls/channel73/index.m3u8",
    "standby_file": "standby/standby.mp4",
@@ -2167,9 +2167,9 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
    "source_urls": [
+    "http://@@ACCT_LAT6@@/69075",
     "http://@@ACCT_LAT4@@/69075",
-    "http://@@ACCT_LAT5@@/69075",
-    "http://@@ACCT_LAT6@@/69075"
+    "http://@@ACCT_LAT5@@/69075"
    ],
    "logo": "/player/logos/channel76.png",
    "use_standby": true,
@@ -2223,8 +2223,8 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
    "source_urls": [
-    "http://@@ACCT_LAT6@@/187615",
     "http://@@ACCT_LAT7@@/187615",
+    "http://@@ACCT_LAT6@@/187615",
     "http://@@ACCT_LAT8@@/187615"
    ],
    "logo": "/player/logos/channel78.png",
@@ -2251,8 +2251,8 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
    "source_urls": [
-    "http://@@ACCT_LAT7@@/195247",
     "http://@@ACCT_LAT8@@/195247",
+    "http://@@ACCT_LAT7@@/195247",
     "http://@@ACCT_LAT9@@/195247"
    ],
    "logo": "/player/logos/channel79.png",

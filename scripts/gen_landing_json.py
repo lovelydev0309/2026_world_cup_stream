@@ -30,6 +30,12 @@ out = []
 for ch in cfg.get('channels', []):
     if not ch.get('enabled', True):
         continue
+    # Quarantined = the provider stopped broadcasting this feed, so it is hidden from the
+    # client lineup until it comes back (scripts/quarantine_manager.py sets/clears the flag).
+    # Showing a dead channel is worse than showing none: viewers get a standby slate and
+    # think the product is broken. This is SEPARATE from `enabled`, which is the human switch.
+    if ch.get('quarantined'):
+        continue
     name = ch['channel_name']
     logo = ch.get('logo', f'/player/logos/{name}.png')
     if logo.startswith('/'):          # emit an absolute URL so external sites can use it directly

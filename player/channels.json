@@ -322,6 +322,13 @@
     "hls": "https://stream.tv247on.com/hls/channel46/index.m3u8"
   },
   {
+    "name": "channel47",
+    "title": "Canal 21 (Megavisión)",
+    "country": "El Salvador",
+    "logo": "https://stream.tv247on.com/player/logos/channel47.png",
+    "hls": "https://stream.tv247on.com/hls/channel47/index.m3u8"
+  },
+  {
     "name": "channel48",
     "title": "Canal 10",
     "country": "El Salvador",
@@ -469,6 +476,13 @@
     "hls": "https://stream.tv247on.com/hls/channel68/index.m3u8"
   },
   {
+    "name": "channel69",
+    "title": "CANAL 6 HD",
+    "country": "Honduras",
+    "logo": "https://stream.tv247on.com/player/logos/channel69.png",
+    "hls": "https://stream.tv247on.com/hls/channel69/index.m3u8"
+  },
+  {
     "name": "channel70",
     "title": "CANAL 10 (TEN TV)",
     "country": "Honduras",
@@ -488,6 +502,13 @@
     "country": "Honduras",
     "logo": "https://stream.tv247on.com/player/logos/channel72.png",
     "hls": "https://stream.tv247on.com/hls/channel72/index.m3u8"
+  },
+  {
+    "name": "channel73",
+    "title": "CANAL 11 HD",
+    "country": "Honduras",
+    "logo": "https://stream.tv247on.com/player/logos/channel73.png",
+    "hls": "https://stream.tv247on.com/hls/channel73/index.m3u8"
   },
   {
     "name": "channel74",
