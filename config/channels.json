@@ -705,13 +705,16 @@
    "resolution": "1280x720",
    "fps": 30,
    "audio_bitrate": 128,
-   "_comment_source": "Peru package (tvon247 Latin+Spain+BR accounts). 69200 = PER - ATV+ (H264 480p30, MP2->AAC re-encoded). Added 2026-07-22.",
+   "_comment_source": "Swapped 2026-09-07: 187631 (vip) flaky/low-bitrate -> 30568 (regular Panamericana, stable 2MB); 187631 kept as failover.",
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
    "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
    "source_urls": [
+    "http://@@ACCT_PE2@@/30568",
+    "http://@@ACCT_PE3@@/30568",
+    "http://@@ACCT_PE1@@/30568",
     "http://@@ACCT_PE2@@/187631",
     "http://@@ACCT_PE3@@/187631",
     "http://@@ACCT_PE1@@/187631"
