@@ -579,7 +579,7 @@
    "quarantined": {
     "since": "2026-09-12T19:00:20Z",
     "reason": "provider-side: no source delivered >=300000 bytes (3 of 3 sources probed, best=0)",
-    "last_probe": "2026-09-12T20:40:01Z",
+    "last_probe": "2026-09-12T20:50:02Z",
     "good_probes": 0
    }
   },
@@ -722,27 +722,27 @@
   {
    "channel_name": "channel24",
    "display_name": "Panamericana (Perú)",
-   "enabled": false,
-   "source_url": "http://@@ACCT_PE3@@/187631",
+   "enabled": true,
+   "source_url": "http://@@ACCT_PE2@@/187631",
    "hls_url": "https://stream.tv247on.com/hls/channel24/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
    "resolution": "1280x720",
    "fps": 30,
    "audio_bitrate": 128,
-   "_comment_source": "Panamericana (Peru) 187631/30568. PAUSED 2026-09-12 per client: feed is INTERMITTENT (playlist 404s, watchdog kills, ~0.3x realtime) — it passes a lucky probe then flaps, which is worse than being hidden and burns a provider slot. Re-enable when source restored.",
+   "_comment_source": "Panamericana (Peru) 187631/30568. RESUMED 2026-09-12 after verification: 18/18 probes clean across all 6 sources over ~6 min (h264 1920x1080, mp2). Was paused same day for intermittency. Primary set to the Peru account with the most free connection slots. Re-enable when source restored.",
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
    "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
    "source_urls": [
-    "http://@@ACCT_PE1@@/187631",
-    "http://@@ACCT_PE1@@/30568",
+    "http://@@ACCT_PE2@@/187631",
+    "http://@@ACCT_PE2@@/30568",
     "http://@@ACCT_PE3@@/187631",
     "http://@@ACCT_PE3@@/30568",
-    "http://@@ACCT_PE2@@/187631",
-    "http://@@ACCT_PE2@@/30568"
+    "http://@@ACCT_PE1@@/187631",
+    "http://@@ACCT_PE1@@/30568"
    ],
    "logo": "/player/logos/channel24.png",
    "use_standby": true,
@@ -1993,13 +1993,7 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Guatemala",
-   "free_zone": false,
-   "quarantined": {
-    "since": "2026-09-12T20:37:47Z",
-    "reason": "provider-side: GT - GUATEVISION 215610 returns http=000 / 0 bytes on 5 LAT accounts that all had FREE slots (so not the connection cap). Only GUATEVISION feed in the 9378-entry catalog, so no alternate exists.",
-    "last_probe": "2026-09-12T20:40:15Z",
-    "good_probes": 1
-   }
+   "free_zone": false
   },
   {
    "channel_name": "channel69",
@@ -2031,7 +2025,7 @@
    "quarantined": {
     "since": "2026-09-08T07:34:07Z",
     "reason": "provider-side: 214635 delivers no video across LAT accounts; hidden until tvon247 restores this feed",
-    "last_probe": "2026-09-12T20:40:02Z",
+    "last_probe": "2026-09-12T20:50:02Z",
     "good_probes": 0
    }
   },
@@ -2151,7 +2145,7 @@
    "quarantined": {
     "since": "2026-09-08T07:34:07Z",
     "reason": "provider-side: 214631 delivers no video across LAT accounts; hidden until tvon247 restores this feed",
-    "last_probe": "2026-09-12T20:40:03Z",
+    "last_probe": "2026-09-12T20:50:03Z",
     "good_probes": 0
    }
   },
