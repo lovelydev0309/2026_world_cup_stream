@@ -2,6 +2,9 @@
 # run_channel.sh – Pull IPTV source → HLS with stale-segment watchdog.
 set -uo pipefail
 
+# RPA used to leave its flock fd inherited; close it so we never pin that lock.
+exec 8>&- 2>/dev/null || true
+
 CHANNEL="${1:-channel1}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -59,7 +62,7 @@ pkill -9 -f "hls/${CHANNEL}/[0-9%]" 2>/dev/null || true
 
 # ── Read config ───────────────────────────────────────────────
 # Scalar fields (standby/bitrate/fps/force_silent_audio) on one line …
-read -r STANDBY_REL BITRATE AUDIO_BR FPS FORCE_SILENT_AUDIO AUDIO_SYNC VIDEO_MODE ENC_RES USE_STANDBY SEGMENT_TYPE TOKEN_REFRESH_SECS < <(python3 -c "
+read -r STANDBY_REL BITRATE AUDIO_BR FPS FORCE_SILENT_AUDIO AUDIO_SYNC VIDEO_MODE ENC_RES USE_STANDBY SEGMENT_TYPE TOKEN_REFRESH_SECS HLS_TIME < <(python3 -c "
 import json, sys
 cfg = json.load(open('$CONFIG'))
 chs = [c for c in cfg['channels'] if c['channel_name'] == '$CHANNEL']
@@ -73,15 +76,19 @@ print(c.get('standby_file','standby/standby.mp4'),
       c.get('encode_resolution','960x540'),
       'true' if c.get('use_standby', True) else 'false',
       c.get('segment_type','mpegts'),
-      c.get('token_refresh_secs', 85))")
+      c.get('token_refresh_secs', 0),
+      c.get('hls_time', 4))")
+[ -z "$HLS_TIME" ] && HLS_TIME=4
+case "$HLS_TIME" in ''|*[!0-9]*) HLS_TIME=4 ;; esac
+[ "$HLS_TIME" -lt 2 ] && HLS_TIME=2
+[ "$HLS_TIME" -gt 6 ] && HLS_TIME=6
 # Proactive token refresh: tvon247's 302 token silently expires (socket goes quiet, no EOF),
 # and ffmpeg's -reconnect can't recover it — only a process RESTART re-resolves the 302 for a
-# FRESH token. Reactively that costs a ~15s watchdog gap; PROACTIVELY capping each ffmpeg run
-# just under the token's lifetime makes it exit and reconnect CLEANLY (~5s, no silent-socket
-# wait) BEFORE the token dies. 85s default sits at the cushion break-even (a ~5s gap every 85s
-# is fully rebuilt by the player's 0.94x maintainCushion) yet preempts the common 90-285s
-# tokens; short-token feeds (Azteca Uno) override it lower in channels.json. 0 disables it.
-[ -z "$TOKEN_REFRESH_SECS" ] && TOKEN_REFRESH_SECS=85
+# FRESH token. Reactively that costs a ~15s watchdog gap. A planned -t cap every 180s was
+# worse: each restart zeroed PTS, wrote #EXT-X-DISCONTINUITY, and hls.js looped 0×0 /
+# fragLoadTimeOut. Default 0 = run until the watchdog sees a true stall. Azteca Uno still
+# overrides token_refresh_secs=35 in channels.json because its token dies in ~15-45s.
+[ -z "$TOKEN_REFRESH_SECS" ] && TOKEN_REFRESH_SECS=0
 # Output resolution for re-encode mode (WxH). Default 960x540. Per-channel so the
 # marquee feeds can run 720p while the heavy 60fps one stays 540p for CPU.
 ENC_W=${ENC_RES%x*}; ENC_H=${ENC_RES#*x}
@@ -187,7 +194,7 @@ PY
     [ -n "$_out" ] && { OUT_FPS="${_out% *}"; OUT_GOP="${_out#* }"; }
 fi
 log "  output fps=$OUT_FPS gop=$OUT_GOP (source cadence ${_srcfps:-unknown})"
-STALE_KILL_SECS=10   # kill ffmpeg after this many seconds of ZERO write progress.
+STALE_KILL_SECS=8   # kill ffmpeg after this many seconds of ZERO write progress.
 # Root cause of the "buffer→0 on some channels" reports: the tvon247 sources are
 # 302-redirect tokenized feeds whose token expires every ~90-285s. On expiry the
 # upstream keeps the TCP socket OPEN but stops sending data (no EOF, no error), so
@@ -212,8 +219,13 @@ STALE_KILL_SECS=10   # kill ffmpeg after this many seconds of ZERO write progres
 # browser sees an empty buffer intersection → infinite "loading"/lag (observed on
 # channel1 after long uptime). Every MAX_SESSION_SECS we wipe the manifest to
 # zero-base the PTS again; well under the 13.2h ceiling, one brief reload apart.
-MAX_SESSION_SECS=21600          # 6h — ~2.2x margin below the hls.js 13.2h ceiling
+MAX_SESSION_SECS=39600          # 11h — under the hls.js 13.2h TS remux ceiling; 6h resets were QA “Other”
 SESSION_FILE="$PROJECT_DIR/cache/session_${CHANNEL}"
+# Carry the output timeline across token-refresh restarts. Each ffmpeg run used
+# to zero PTS (setpts=PTS-STARTPTS), so the HLS muxer wrote #EXT-X-DISCONTINUITY
+# every ~3 min. hls.js then jumps to the new period at the live edge, the next
+# .ts is not there yet, and the player loops fragLoadTimeOut / aborted.
+PTS_OFFSET_FILE="$PROJECT_DIR/cache/pts_offset_${CHANNEL}"
 mkdir -p "$PROJECT_DIR/cache" 2>/dev/null || true
 
 log "=== START $CHANNEL ==="
@@ -228,6 +240,55 @@ ensure_hls_dir() {
         || { mkdir -p "$HLS_DIR" && chmod 1777 "$HLS_DIR"; }
     fi
 }
+
+# Invariant: every published segment MUST contain a video stream.
+# Audio-only .ts appended onto a video playlist is what produced Imagen's
+# mediaError/bufferAppendError + 0×0 loop. Size is a fast hint; ffprobe is truth.
+MIN_VIDEO_SEG=200000
+
+wipe_hls() {
+    rm -f "$HLS_DIR"/*.ts "$HLS_DIR"/*.m4s "$HLS_DIR"/*.m3u8 "$HLS_DIR"/init.mp4 2>/dev/null
+    rm -f "$PTS_OFFSET_FILE" 2>/dev/null
+}
+
+completed_seg() {
+    ls -t "$HLS_DIR"/*.ts "$HLS_DIR"/*.m4s 2>/dev/null | sed -n 2p
+}
+
+segment_has_video() {
+    local f="$1" v
+    [ -n "$f" ] && [ -f "$f" ] || return 1
+    v=$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 "$f" 2>/dev/null | head -1)
+    [ -n "$v" ]
+}
+
+# Kill any OTHER ffmpeg still writing this channel's HLS dir (orphaned standby
+# after SIGKILL, or a second run_channel). Never use pkill -f "channel1" — it
+# matches channel10-19.
+reap_stray_ffmpeg() {
+    local keep="${1:-0}" pid cmd
+    for pid in $(ls -d /proc/[0-9]* 2>/dev/null | sed 's|.*/||'); do
+        [ "$pid" = "$keep" ] && continue
+        [ -r "/proc/$pid/cmdline" ] || continue
+        cmd=$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null)
+        case "$cmd" in
+            *ffmpeg*"hls/${CHANNEL}/"*) kill -9 "$pid" 2>/dev/null || true ;;
+        esac
+    done
+}
+
+playlist_is_novideo() {
+    local f
+    f=$(completed_seg)
+    [ -n "$f" ] || return 1
+    # Size is not truth: Telesur/news and 2s segs are often 200–600KB WITH video.
+    # Wiping those was a false novideo → playlist hole → QA “Other”.
+    if ! segment_has_video "$f"; then
+        return 0
+    fi
+    return 1
+}
+
 ensure_hls_dir
 
 # ── Stale-segment watchdog ────────────────────────────────────
@@ -249,6 +310,16 @@ stale_watchdog() {
     local last_num=-1 current_num race_count=0
     local interval=5
     local threshold=$(( STALE_KILL_SECS / interval ))
+    # First 4s encode segment often takes >10s wall-clock (1080p→540p, 70+ encoders).
+    # Leftover .ts from the previous ffmpeg also sits at a fixed size, so the old
+    # "newest file not growing" check false-kills a healthy new encode at ~15s and
+    # the channel looks like it "went down" even when the provider is fine.
+    local elapsed=0 seen_progress=0 tiny_count=0
+    local STARTUP_GRACE_SECS=25
+    local MIN_VIDEO_SEG=200000   # 540p 4s is ~1MB; AAC-only is ~90KB → player 0×0 / bufferAppendError
+    # Seed from leftover HLS so the first check does not treat an old .ts as "progress".
+    last_seg=$(ls -t "$HLS_DIR"/*.ts "$HLS_DIR"/*.m4s 2>/dev/null | head -1)
+    [ -n "$last_seg" ] && last_size=$(stat -c %s "$last_seg" 2>/dev/null || echo 0)
     # RACING guard: a runaway source clock (some IPTV feeds dump content many x
     # faster than realtime with bloated timestamps) makes ffmpeg emit segments in
     # a flood — the HLS live edge races away, the player can't keep up, and the
@@ -261,6 +332,7 @@ stale_watchdog() {
     local RACE_HITS=3     # ~15s sustained before acting
     while kill -0 "$ffpid" 2>/dev/null; do
         sleep "$interval"
+        elapsed=$((elapsed + interval))
         # Match BOTH mpegts (.ts) and fmp4/CMAF (.m4s) so this watchdog tracks write
         # progress regardless of segment_type (a .ts-only check would see no growth on
         # an fmp4 channel and kill ffmpeg every cycle).
@@ -270,16 +342,39 @@ stale_watchdog() {
         if [ -n "$current_seg" ] && { [ "$current_seg" != "$last_seg" ] || [ "$current_size" -gt "$last_size" ]; }; then
             # New segment rolled over, or the in-progress one is still being
             # written — ffmpeg is alive and making progress.
+            seen_progress=1
             stale_count=0
             last_seg="$current_seg"
             last_size="$current_size"
         else
             stale_count=$((stale_count + 1))
         fi
+        # Do not kill until this ffmpeg has written something, or startup grace expired.
+        if [ "$seen_progress" -eq 0 ] && [ "$elapsed" -lt "$STARTUP_GRACE_SECS" ]; then
+            stale_count=0
+            continue
+        fi
         if [ $stale_count -ge $threshold ]; then
             log "  [WATCHDOG] No write progress for ${STALE_KILL_SECS}s – killing ffmpeg PID $ffpid"
             kill -9 "$ffpid" 2>/dev/null
             break
+        fi
+        # Audio-only after warmup: source dropped video but audio still grows, so
+        # the stale timer never fires and the player loops 0×0 / bufferAppendError.
+        if [ "$seen_progress" -eq 1 ] && [ "$elapsed" -ge "$STARTUP_GRACE_SECS" ]; then
+            local done_seg
+            done_seg=$(completed_seg)
+            if [ -n "$done_seg" ] && ! segment_has_video "$done_seg"; then
+                tiny_count=$((tiny_count + 1))
+                if [ "$tiny_count" -ge 2 ]; then
+                    log "  [WATCHDOG] no video in $(basename "$done_seg") – wiping playlist and killing ffmpeg PID $ffpid"
+                    wipe_hls
+                    kill -9 "$ffpid" 2>/dev/null
+                    break
+                fi
+            else
+                tiny_count=0
+            fi
         fi
         # ── racing detection ──
         current_num=$(basename "${current_seg:-x}" 2>/dev/null); current_num=${current_num%.*}
@@ -391,6 +486,7 @@ detect_audio_ok() {
 # emit ZERO segments); we rely on -fflags +genpts plus the setpts reset instead.
 push_live() {
     ensure_hls_dir
+    reap_stray_ffmpeg
 
     # ── Periodic PTS reset (SEAMLESS – see MAX_SESSION_SECS note above) ──
     # hls.js remuxes TS→fMP4 and accumulates a 32-bit baseMediaDecodeTime that
@@ -438,6 +534,7 @@ push_live() {
             log "  PTS-RESET (seamless): #EXT-X-DISCONTINUITY at session ${_age}s ≥ ${MAX_SESSION_SECS}s – re-anchors hls.js, no viewer rebuffer"
             PTS_RESET_FLAGS="+discont_start"
             echo "$_now" > "$SESSION_FILE"; _age=0
+            echo 0 > "$PTS_OFFSET_FILE"
         fi
         SESSION_T=$(( MAX_SESSION_SECS - _age ))   # ffmpeg exits when the session hits MAX
         [ "$SESSION_T" -lt 60 ] && SESSION_T=60          # floor; never a 0/negative -t
@@ -450,6 +547,23 @@ push_live() {
     FFMPEG_CAP=$SESSION_T
     if [ "${TOKEN_REFRESH_SECS:-0}" -gt 0 ] && [ "$TOKEN_REFRESH_SECS" -lt "$FFMPEG_CAP" ]; then
         FFMPEG_CAP=$TOKEN_REFRESH_SECS
+    fi
+
+    # Seconds to add to this run's zero-based setpts so MPEG-TS time continues
+    # from the previous ffmpeg instead of jumping to 0 (which forces DISCONTINUITY).
+    local PTS_OFF=0
+    if [ -z "$PTS_RESET_FLAGS" ] && [ -f "$PTS_OFFSET_FILE" ]; then
+        PTS_OFF=$(awk '{v=$1+0; if (v<0 || v>39600) v=0; printf "%.6f", v}' "$PTS_OFFSET_FILE" 2>/dev/null || echo 0)
+    fi
+    [ -z "$PTS_OFF" ] && PTS_OFF=0
+    local pts_bsf=()
+    if awk -v o="$PTS_OFF" 'BEGIN{exit !(o>0.05)}'; then
+        log "  pts-continue +${PTS_OFF}s (no discontinuity on token refresh)"
+        # Shift encoded packet timestamps at the muxer. Putting the offset in
+        # setpts made -r fill the 0→offset gap with duplicate frames and ffmpeg
+        # exited in ~9s. -output_ts_offset is ignored by the HLS mpegts muxer.
+        pts_bsf=(-bsf:v "setts=pts=PTS+${PTS_OFF}/TB:dts=DTS+${PTS_OFF}/TB"
+                 -bsf:a "setts=pts=PTS+${PTS_OFF}/TB:dts=DTS+${PTS_OFF}/TB")
     fi
 
     # Pick the audio path. Source audio is used when valid (channel1/3); when the
@@ -469,6 +583,10 @@ push_live() {
         # aligned timestamps and just zero-base them (parallel to the video's
         # setpts=PTS-STARTPTS) instead of regenerating from sample count.
         aud_tail=(-af "asetpts=PTS-STARTPTS")
+        # Require a video stream. Without -map, a source that drops video keeps
+        # publishing AAC-only segments; hls.js then hits bufferAppendError / 0×0
+        # because the playlist still claims a video+audio rendition.
+        aud_map=(-map 0:v:0 -map 0:a:0)
     elif [ "$FORCE_SILENT_AUDIO" != "true" ] && detect_audio_ok; then
         log "→ LIVE (source audio, A/V realigned)"
         # Regenerate the audio PTS from the REAL decoded SAMPLE COUNT
@@ -479,7 +597,14 @@ push_live() {
         # timestamps themselves are unreliable. For aligned-but-over-delivering
         # feeds use audio_sync="preserve" instead (above).
         aud_tail=(-af "asetpts=N/SR/TB")
+        aud_map=(-map 0:v:0 -map 0:a:0)
     else
+        # Mute-on-air is a QA “Other”. If another account/feed exists, fail over
+        # instead of publishing silent stereo as if it were the live channel.
+        if [ "$FORCE_SILENT_AUDIO" != "true" ] && [ "${NUM_URLS:-0}" -gt 1 ] && [ "${LIVE_FAIL:-0}" -lt "$NUM_URLS" ]; then
+            log "→ LIVE skipped (no usable audio) – failover without mute slate"
+            return 75
+        fi
         log "→ LIVE (source audio broken – silent stereo)"
         aud_in=(-f lavfi -i "anullsrc=channel_layout=stereo:sample_rate=48000")
         aud_map=(-map 0:v:0 -map 1:a:0)
@@ -504,9 +629,9 @@ push_live() {
         [ ${#aud_in[@]} -eq 0 ] && aud_tail=()
     else
         vid_args=(-vf "scale=${ENC_W}:${ENC_H}:force_original_aspect_ratio=decrease,pad=${ENC_W}:${ENC_H}:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS" \
-                  -c:v libx264 -preset ultrafast -crf 24 -threads 2 \
+                  -c:v libx264 -preset ultrafast -crf 24 -maxrate 2000k -bufsize 4000k -threads 1 \
                   -r "$OUT_FPS" -g "$OUT_GOP" -keyint_min "$OUT_GOP" \
-                  -force_key_frames "expr:gte(t,n_forced*4)")
+                  -force_key_frames "expr:gte(t,n_forced*${HLS_TIME})")
     fi
 
     # Audio is encoded at 48kHz (-ar 48000, below) to MATCH the source: tvon247
@@ -527,6 +652,7 @@ push_live() {
         -re \
         -fflags +igndts+discardcorrupt+genpts \
         -err_detect ignore_err \
+        -analyzeduration 1000000 -probesize 1000000 \
         -user_agent "IPTV Smarters/1.0 Dalvik/2.1.0" \
         -reconnect 1 -reconnect_at_eof 1 \
         -reconnect_streamed 1 -reconnect_on_network_error 1 \
@@ -539,9 +665,10 @@ push_live() {
         -c:a aac -b:a "${AUDIO_BR}k" -ar 48000 -ac 2 \
         "${aud_tail[@]}" \
         -avoid_negative_ts make_zero -muxpreload 0 -muxdelay 0 \
+        "${pts_bsf[@]}" \
         -t "$FFMPEG_CAP" \
         -flush_packets 1 \
-        -f hls -hls_time 4 -hls_list_size 40 \
+        -f hls -hls_time "$HLS_TIME" -hls_list_size 40 \
         -hls_flags "${HLS_FLAGS}${PTS_RESET_FLAGS}" \
         "${HLS_SEG[@]}" \
         "$HLS_DIR/index.m3u8" \
@@ -553,14 +680,25 @@ push_live() {
     stale_watchdog "$FPID" 9>&- &
     WATCHDOG_PID=$!
     wait $FPID
+    local _frc=$?
     kill $WATCHDOG_PID 2>/dev/null; wait $WATCHDOG_PID 2>/dev/null
     rm -f "$FFMPEG_PID_FILE"
-    return $?
+    # Last packet PTS already includes this run's offset; next run continues from here.
+    local _last _pts
+    _last=$(ls -t "$HLS_DIR"/*.ts "$HLS_DIR"/*.m4s 2>/dev/null | head -1)
+    if [ -n "$_last" ] && [ -f "$_last" ]; then
+        _pts=$(ffprobe -v error -select_streams v:0 -show_entries packet=pts_time -of csv=p=0 "$_last" 2>/dev/null | awk 'NF{p=$1} END{print p}')
+        if [ -n "$_pts" ]; then
+            echo "$_pts" > "$PTS_OFFSET_FILE"
+        fi
+    fi
+    return $_frc
 }
 
 # ── Standby: 30s cycle of standby.mp4 ─────────────────────────
 push_standby() {
     ensure_hls_dir
+    reap_stray_ffmpeg
     log "→ STANDBY"
     # Scale standby to the channel's live output resolution (${ENC_W}x${ENC_H}).
     # standby.mp4 is 1080p; without this the standby segments differ in resolution
@@ -601,7 +739,7 @@ LIVE_FAIL=0
 # meant the failover gave up after only the first 3 accounts — never trying the other 3
 # (incl. the 2 new accounts), even if one of them had a working feed. Scaling to NUM_URLS
 # means a degraded feed on some accounts fails over across ALL of them before showing slate.
-MAX_FAILS=$NUM_URLS
+MAX_FAILS=$((NUM_URLS * 2))
 HEALTHY_RUN_SECS=45   # a run at least this long = healthy, resets the fail counter
 URL_IDX=0             # index into SOURCE_URLS of the currently-active source
 LAST_MODE=""          # "live"|"standby" — for fmp4, wipe on live↔standby transitions
@@ -635,9 +773,15 @@ while true; do
         # encode's, so wipe for a clean manifest+init. live→live token restarts keep
         # LAST_MODE=live and skip this (their init is byte-identical → append_list
         # continues seamlessly).
-        if [ "$SEGMENT_TYPE" = "fmp4" ] && [ "$LAST_MODE" = "standby" ]; then
-            log "  fmp4: standby→live – clearing dir for a clean init"
-            rm -f "$HLS_DIR"/*.m4s "$HLS_DIR"/init.mp4 "$HLS_DIR"/*.m3u8 2>/dev/null
+        # Never append_list across a mode or codec change. mpegts used to keep the
+        # old playlist; if the last run published audio-only (or standby SPS then
+        # a dead live), hls.js hits bufferAppendError / 0×0 on every channel.
+        if [ "$LAST_MODE" = "standby" ]; then
+            log "  standby→live – wiping HLS so codecs cannot mix"
+            wipe_hls
+        elif playlist_is_novideo; then
+            log "  wiping HLS – last completed segment has no video"
+            wipe_hls
         fi
         LAST_MODE="live"
         T_START=$(date +%s)
@@ -674,12 +818,12 @@ while true; do
             # from the copied native stream, so a live↔standby swap triggers hls.js
             # bufferAppendError. Instead just hold briefly and retry live (the source
             # is a stable mainstream feed; drops are rare and self-heal on reconnect).
-            log "Live unavailable – no-standby (copy) mode; brief hold, retrying live"
-            sleep 5
+            log "Live unavailable – no-standby; brief hold, retrying live (keep last playlist)"
+            sleep 2
         else
-            if [ "$SEGMENT_TYPE" = "fmp4" ] && [ "$LAST_MODE" != "standby" ]; then
-                log "  fmp4: live→standby – clearing dir for a clean init"
-                rm -f "$HLS_DIR"/*.m4s "$HLS_DIR"/init.mp4 "$HLS_DIR"/*.m3u8 2>/dev/null
+            if [ "$LAST_MODE" != "standby" ]; then
+                log "  live→standby – wiping HLS so slate cannot mix with live codecs"
+                wipe_hls
             fi
             LAST_MODE="standby"
             push_standby || true
@@ -689,5 +833,5 @@ while true; do
         URL_IDX=0   # after a standby/hold cycle, start over from the primary URL
         rm -f "$AUDIO_CACHE" 2>/dev/null   # source may have changed → re-probe audio
     fi
-    sleep 1
+    sleep 0.3
 done
