@@ -13,12 +13,29 @@
     min-height: 100vh;
     padding: 32px 16px;
   }
-  h1 { font-size: 1.4rem; letter-spacing: .06em; margin-bottom: 28px; color: #fff; }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 1.4rem; letter-spacing: .06em; margin-bottom: 6px; color: #fff; }
+  .sub { color: #777; font-size: .85rem; margin-bottom: 28px; }
+  /* country section */
+  .country { margin: 34px 0 14px; display: flex; align-items: center; gap: 10px; }
+  .country:first-of-type { margin-top: 10px; }
+  .country h2 {
+    font-size: 1.05rem; color: #fff; letter-spacing: .04em;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .country .flag { font-size: 1.4rem; line-height: 1; }
+  .country .count {
+    background: #232323; border: 1px solid #333; color: #9a9a9a;
+    font-size: .72rem; padding: 2px 9px; border-radius: 99px;
+  }
+  .country::after {
+    content: ""; flex: 1; height: 1px;
+    background: linear-gradient(to right, #2a2a2a, transparent);
+  }
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
-    max-width: 1000px;
   }
   .card {
     background: #1a1a1a;
@@ -42,7 +59,7 @@
   }
   .thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
   .info { padding: 14px 16px; }
-  .info h2 { font-size: .95rem; margin-bottom: 6px; }
+  .info h3 { font-size: .95rem; margin-bottom: 6px; font-weight: 600; }
   .badge {
     display: inline-block;
     background: #d00;
@@ -57,29 +74,71 @@
 </style>
 </head>
 <body>
-<h1>&#9654; Live Channels</h1>
-<div class="grid" id="grid"></div>
+<div class="wrap">
+  <h1>&#9654; Live Channels</h1>
+  <div class="sub" id="sub">Loading&hellip;</div>
+  <div id="out"></div>
+</div>
 <script>
 (function () {
-  var grid = document.getElementById('grid');
-  function esc(s){ return String(s).replace(/[&<>"']/g, function(c){
+  var out = document.getElementById('out');
+  var sub = document.getElementById('sub');
+
+  // Display order + flag per country. Anything not listed is appended alphabetically.
+  var ORDER = ['Mexico','Peru','US','El Salvador','Guatemala','Honduras','Colombia','Venezuela','Cuba'];
+  var FLAG = {
+    'Mexico':'🇲🇽', 'Peru':'🇵🇪',
+    'US':'🇺🇸', 'El Salvador':'🇸🇻',
+    'Guatemala':'🇬🇹', 'Honduras':'🇭🇳',
+    'Colombia':'🇨🇴', 'Venezuela':'🇻🇪',
+    'Cuba':'🇨🇺'
+  };
+  var LABEL = { 'US':'United States' };
+
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  function card(ch) {
+    return '<a class="card" href="/player/' + esc(ch.name) + '.html">'
+      + '<div class="thumb"><img src="' + esc(ch.logo) + '" alt="" loading="lazy"'
+      + ' onerror="this.style.display=\'none\'"></div>'
+      + '<div class="info"><h3>' + esc(ch.title) + '</h3>'
+      + '<span class="badge">LIVE</span>'
+      + '<div class="m3u8">' + esc(ch.hls) + '</div></div></a>';
+  }
+
   fetch('/player/channels.json', { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (list) {
       if (!Array.isArray(list) || !list.length) {
-        grid.innerHTML = '<p style="color:#888">No live channels.</p>'; return; }
-      grid.innerHTML = list.map(function (ch) {
-        return '<a class="card" href="/player/' + esc(ch.name) + '.html">'
-          + '<div class="thumb"><img src="' + esc(ch.logo) + '" alt="" loading="lazy"'
-          + ' onerror="this.style.display=\'none\'"></div>'
-          + '<div class="info"><h2>' + esc(ch.title) + '</h2>'
-          + '<span class="badge">LIVE</span>'
-          + '<div class="m3u8">' + esc(ch.hls) + '</div></div></a>';
+        sub.textContent = '';
+        out.innerHTML = '<p style="color:#888">No live channels.</p>'; return; }
+
+      // group by country
+      var by = {};
+      list.forEach(function (ch) {
+        var c = ch.country || 'Other';
+        (by[c] = by[c] || []).push(ch);
+      });
+
+      // known order first, then any remaining countries alphabetically
+      var rest = Object.keys(by).filter(function (c) { return ORDER.indexOf(c) < 0; }).sort();
+      var countries = ORDER.filter(function (c) { return by[c]; }).concat(rest);
+
+      sub.textContent = list.length + ' channels across ' + countries.length + ' countries';
+
+      out.innerHTML = countries.map(function (c) {
+        return '<div class="country">'
+             +   '<span class="flag">' + (FLAG[c] || '🌐') + '</span>'
+             +   '<h2>' + esc(LABEL[c] || c) + '</h2>'
+             +   '<span class="count">' + by[c].length + '</span>'
+             + '</div>'
+             + '<div class="grid">' + by[c].map(card).join('') + '</div>';
       }).join('');
     })
     .catch(function () {
-      grid.innerHTML = '<p style="color:#888">Could not load channel list.</p>'; });
+      sub.textContent = '';
+      out.innerHTML = '<p style="color:#888">Could not load channel list.</p>'; });
 })();
 </script>
 </body>
