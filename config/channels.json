@@ -579,7 +579,7 @@
    "quarantined": {
     "since": "2026-09-12T19:00:20Z",
     "reason": "provider-side: no source delivered >=300000 bytes (3 of 3 sources probed, best=0)",
-    "last_probe": "2026-09-12T20:00:02Z",
+    "last_probe": "2026-09-12T20:40:01Z",
     "good_probes": 0
    }
   },
@@ -1993,7 +1993,13 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Guatemala",
-   "free_zone": false
+   "free_zone": false,
+   "quarantined": {
+    "since": "2026-09-12T20:37:47Z",
+    "reason": "provider-side: GT - GUATEVISION 215610 returns http=000 / 0 bytes on 5 LAT accounts that all had FREE slots (so not the connection cap). Only GUATEVISION feed in the 9378-entry catalog, so no alternate exists.",
+    "last_probe": "2026-09-12T20:40:15Z",
+    "good_probes": 1
+   }
   },
   {
    "channel_name": "channel69",
@@ -2025,7 +2031,7 @@
    "quarantined": {
     "since": "2026-09-08T07:34:07Z",
     "reason": "provider-side: 214635 delivers no video across LAT accounts; hidden until tvon247 restores this feed",
-    "last_probe": "2026-09-12T20:00:03Z",
+    "last_probe": "2026-09-12T20:40:02Z",
     "good_probes": 0
    }
   },
@@ -2145,7 +2151,7 @@
    "quarantined": {
     "since": "2026-09-08T07:34:07Z",
     "reason": "provider-side: 214631 delivers no video across LAT accounts; hidden until tvon247 restores this feed",
-    "last_probe": "2026-09-12T20:00:04Z",
+    "last_probe": "2026-09-12T20:40:03Z",
     "good_probes": 0
    }
   },
