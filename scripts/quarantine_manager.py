@@ -72,13 +72,13 @@ ALERT_SH = os.path.join(PROJECT, "scripts", "send_alert.sh")
 
 # --- tuning -----------------------------------------------------------------
 QUARANTINE_AFTER = 3        # consecutive runs DOWN before we even consider quarantine
-RESTORE_GOOD_PROBES = 2     # consecutive healthy probes before a channel comes back
-PROBE_BUDGET = 4            # max source probes per run (serialized) — connection-cap safety
+RESTORE_GOOD_PROBES = 3     # 3 consecutive good probes (~15 min sustained) — 1 let intermittent feeds flap back on
+PROBE_BUDGET = 15           # probe every hidden channel each run so restores are not delayed
 PROBE_TIMEOUT = 12          # seconds per probe
 PROBE_MIN_BYTES = 300_000   # a real feed pushes MBs in 12s; an over-cap/dead one gives ~0
 MAX_PROBE_SOURCES = 3       # how many of a channel's sources to try before calling it dead
 SYSTEMIC_FRACTION = 0.25    # >25% of channels DOWN => our problem, suspend quarantine
-MAX_QUARANTINED = 15        # never hide more than this many channels at once
+MAX_QUARANTINED = 30        # never hide more than this many channels at once
 UA = "okhttp/4.9.3"         # provider is UA-filtered; must match what run_channel.sh sends
 
 

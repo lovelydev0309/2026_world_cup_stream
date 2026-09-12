@@ -44,11 +44,15 @@
     "http://@@ACCT1@@/1028364",
     "http://@@ACCT1@@/645999",
     "http://@@ACCT2@@/1028364",
+    "http://@@ACCT2@@/645999",
+    "http://@@ACCT5@@/1028364",
     "http://@@ACCT4@@/1028364",
+    "http://@@ACCT3@@/1028364",
     "http://@@ACCT6@@/1028364"
    ],
    "logo": "/player/logos/channel1.png",
-   "use_standby": true
+   "use_standby": true,
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel2",
@@ -84,13 +88,14 @@
    ],
    "logo": "/player/logos/channel2.png",
    "use_standby": true,
-   "_comment": "MX Canal 5 HD id 1028333 (HEVC, re-encoded 540p) primary + LATINO 30634 (H264 1080p) backup. Swapped 2026-07-12: old 1349033 (ES-VIX, mislabeled/dead) + 273253 (UY, dead) both went dead across all accounts."
+   "_comment": "MX Canal 5 HD id 1028333 (HEVC, re-encoded 540p) primary + LATINO 30634 (H264 1080p) backup. Swapped 2026-07-12: old 1349033 (ES-VIX, mislabeled/dead) + 273253 (UY, dead) both went dead across all accounts.",
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel3",
    "display_name": "ESPN HD",
    "enabled": true,
-   "source_url": "http://@@ACCT3@@/1028359",
+   "source_url": "http://@@ACCT5@@/1028359",
    "hls_url": "https://stream.tv247on.com/hls/channel3/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -105,22 +110,17 @@
    "video_mode": "encode",
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@ACCT3@@/1028359",
-    "http://@@ACCT3@@/30583",
     "http://@@ACCT5@@/1028359",
-    "http://@@ACCT5@@/30583",
-    "http://@@ACCT6@@/1028359",
-    "http://@@ACCT6@@/30583",
-    "http://@@ACCT2@@/1028359",
-    "http://@@ACCT2@@/30583",
-    "http://@@ACCT4@@/1028359",
-    "http://@@ACCT4@@/30583",
     "http://@@ACCT1@@/1028359",
-    "http://@@ACCT1@@/30583"
+    "http://@@ACCT4@@/1028359",
+    "http://@@ACCT2@@/1028359",
+    "http://@@ACCT3@@/1028359",
+    "http://@@ACCT6@@/1028359"
    ],
    "logo": "/player/logos/channel3.png",
    "use_standby": true,
-   "_comment": "tvon247 MX ESPN 1028359 + LATINO 30583 backup. Failover order reordered 2026-07-25 to lead with connection-HEADROOM accounts (ACCT3/5/6/2) and push the over-subscribed ACCT1 (6/5) and at-cap ACCT4 LAST — ESPN was churning failovers onto contended accounts = 'slight buffering'. Re-encoded 540p."
+   "_comment": "tvon247 MX ESPN 1028359 + LATINO 30583 backup. Failover order reordered 2026-07-25 to lead with connection-HEADROOM accounts (ACCT3/5/6/2) and push the over-subscribed ACCT1 (6/5) and at-cap ACCT4 LAST — ESPN was churning failovers onto contended accounts = 'slight buffering'. Re-encoded 540p.",
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel4",
@@ -141,13 +141,14 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@ACCT5@@/1028334",
     "http://@@ACCT3@@/1028334",
+    "http://@@ACCT5@@/1028334",
     "http://@@ACCT2@@/1028334",
     "http://@@ACCT1@@/1028334",
     "http://@@ACCT4@@/1028334",
     "http://@@ACCT6@@/1028334"
-   ]
+   ],
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel5",
@@ -168,14 +169,14 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@ACCT6@@/1028329",
+    "http://@@ACCT4@@/1028329",
     "http://@@ACCT3@@/1028329",
+    "http://@@ACCT6@@/1028329",
     "http://@@ACCT5@@/1028329",
     "http://@@ACCT_PE1@@/1028329",
     "http://@@ACCT_PE2@@/1028329",
     "http://@@ACCT_PE3@@/1028329",
     "http://@@ACCT2@@/1028329",
-    "http://@@ACCT4@@/1028329",
     "http://@@ACCT1@@/1028329"
    ],
    "_comment_token": "Azteca Uno feed (1028329) has an unusually short 302-token TTL (~30-110s) on ALL accounts and no alternate stream ID exists; refresh proactively at 45s to preempt the silent-socket stall (buffer->0 cause). Other channels use the 85s script default.",
@@ -185,7 +186,7 @@
    "channel_name": "channel6",
    "display_name": "Discovery Channel HD",
    "enabled": true,
-   "source_url": "http://@@ACCT1@@/1028342",
+   "source_url": "http://@@ACCT_LAT10@@/30606",
    "hls_url": "https://stream.tv247on.com/hls/channel6/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -200,8 +201,7 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@ACCT4@@/1028342",
-    "http://@@ACCT4@@/30606",
+    "http://@@ACCT_LAT10@@/30606",
     "http://@@ACCT1@@/1028342",
     "http://@@ACCT1@@/30606",
     "http://@@ACCT2@@/1028342",
@@ -211,14 +211,17 @@
     "http://@@ACCT5@@/1028342",
     "http://@@ACCT5@@/30606",
     "http://@@ACCT6@@/1028342",
-    "http://@@ACCT6@@/30606"
-   ]
+    "http://@@ACCT6@@/30606",
+    "http://@@ACCT4@@/1028342",
+    "http://@@ACCT4@@/30606"
+   ],
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel7",
    "display_name": "Azteca 7 HD",
    "enabled": true,
-   "source_url": "http://@@ACCT3@@/1028328",
+   "source_url": "http://@@ACCT4@@/1028328",
    "hls_url": "https://stream.tv247on.com/hls/channel7/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -233,13 +236,14 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@ACCT1@@/1028328",
-    "http://@@ACCT3@@/1028328",
-    "http://@@ACCT5@@/1028328",
     "http://@@ACCT6@@/1028328",
+    "http://@@ACCT4@@/1028328",
+    "http://@@ACCT1@@/1028328",
+    "http://@@ACCT5@@/1028328",
     "http://@@ACCT2@@/1028328",
-    "http://@@ACCT4@@/1028328"
-   ]
+    "http://@@ACCT3@@/1028328"
+   ],
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel8",
@@ -272,13 +276,15 @@
     "http://@@ACCT1@@/30580",
     "http://@@ACCT4@@/140278",
     "http://@@ACCT4@@/30580"
-   ]
+   ],
+   "token_refresh_secs": 0,
+   "hls_time": 2
   },
   {
    "channel_name": "channel9",
    "display_name": "ESPN 2 HD",
    "enabled": true,
-   "source_url": "http://@@ACCT4@@/1028360",
+   "source_url": "http://@@ACCT1@@/1028360",
    "hls_url": "https://stream.tv247on.com/hls/channel9/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -290,22 +296,24 @@
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
-   "use_standby": true,
+   "use_standby": false,
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@ACCT4@@/1028360",
     "http://@@ACCT1@@/1028360",
+    "http://@@ACCT4@@/1028360",
+    "http://@@ACCT5@@/1028360",
     "http://@@ACCT2@@/1028360",
     "http://@@ACCT3@@/1028360",
-    "http://@@ACCT5@@/1028360",
     "http://@@ACCT6@@/1028360"
-   ]
+   ],
+   "token_refresh_secs": 0,
+   "hls_time": 2
   },
   {
    "channel_name": "channel10",
    "display_name": "TUDN",
    "enabled": true,
-   "source_url": "http://@@ACCT4@@/140336",
+   "source_url": "http://@@ACCT5@@/140336",
    "hls_url": "https://stream.tv247on.com/hls/channel10/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -321,20 +329,19 @@
    "encode_resolution": "960x540",
    "source_urls": [
     "http://@@ACCT5@@/140336",
-    "http://@@ACCT4@@/140336",
-    "http://@@ACCT4@@/200868",
     "http://@@ACCT6@@/140336",
+    "http://@@ACCT6@@/200868",
     "http://@@ACCT1@@/140336",
     "http://@@ACCT1@@/200868",
-    "http://@@ACCT3@@/140336",
     "http://@@ACCT2@@/140336"
-   ]
+   ],
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel11",
    "display_name": "Fox Sports 2 HD",
    "enabled": true,
-   "source_url": "http://@@ACCT6@@/1028353",
+   "source_url": "http://@@ACCT1@@/1028353",
    "hls_url": "https://stream.tv247on.com/hls/channel11/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -344,26 +351,26 @@
    "logo": "/player/logos/channel11.png",
    "_comment": "tvon247 MX FOX SPORTS 2 (1028353, h264 1080p, AAC). REPLACED Cartoon Network 2026-07-25 (client request; MX Cartoon feed 1028338 had died provider-side). Re-encoded 540p. PER 312520 appended as cross-package deep backup.",
    "audio_sync": "preserve",
-   "force_silent_audio": false,
+   "force_silent_audio": true,
    "video_mode": "encode",
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@ACCT6@@/1028353",
     "http://@@ACCT4@@/1028353",
-    "http://@@ACCT5@@/1028353",
-    "http://@@ACCT2@@/1028353",
-    "http://@@ACCT3@@/1028353",
     "http://@@ACCT1@@/1028353",
-    "http://@@ACCT_PE1@@/312520",
-    "http://@@ACCT_PE2@@/312520"
-   ]
+    "http://@@ACCT6@@/1028353",
+    "http://@@ACCT2@@/1028353",
+    "http://@@ACCT5@@/1028353",
+    "http://@@ACCT3@@/1028353"
+   ],
+   "token_refresh_secs": 0,
+   "_comment_audio": "2026-09-12: sources deliver video but no usable audio -> was being rejected and channel stayed dead. Silent-audio fallback so video still airs."
   },
   {
    "channel_name": "channel12",
    "display_name": "TNT México HD",
    "enabled": true,
-   "source_url": "http://@@ACCT2@@/140344",
+   "source_url": "http://@@ACCT2@@/30723",
    "hls_url": "https://stream.tv247on.com/hls/channel12/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -380,8 +387,8 @@
    "source_urls": [
     "http://@@ACCT3@@/140344",
     "http://@@ACCT3@@/30723",
-    "http://@@ACCT2@@/140344",
     "http://@@ACCT2@@/30723",
+    "http://@@ACCT2@@/140344",
     "http://@@ACCT6@@/140344",
     "http://@@ACCT6@@/30723",
     "http://@@ACCT4@@/140344",
@@ -390,7 +397,9 @@
     "http://@@ACCT5@@/30723",
     "http://@@ACCT1@@/140344",
     "http://@@ACCT1@@/30723"
-   ]
+   ],
+   "token_refresh_secs": 0,
+   "hls_time": 2
   },
   {
    "channel_name": "channel13",
@@ -408,22 +417,24 @@
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
-   "use_standby": true,
+   "use_standby": false,
    "encode_resolution": "960x540",
    "source_urls": [
+    "http://@@ACCT6@@/1028326",
+    "http://@@ACCT5@@/1028326",
+    "http://@@ACCT4@@/1028326",
     "http://@@ACCT2@@/1028326",
     "http://@@ACCT1@@/1028326",
-    "http://@@ACCT3@@/1028326",
-    "http://@@ACCT4@@/1028326",
-    "http://@@ACCT5@@/1028326",
-    "http://@@ACCT6@@/1028326"
-   ]
+    "http://@@ACCT3@@/1028326"
+   ],
+   "token_refresh_secs": 0,
+   "hls_time": 2
   },
   {
    "channel_name": "channel14",
    "display_name": "Space HD",
    "enabled": true,
-   "source_url": "http://@@ACCT6@@/140329",
+   "source_url": "http://@@ACCT1@@/30619",
    "hls_url": "https://stream.tv247on.com/hls/channel14/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -438,13 +449,16 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
+    "http://@@ACCT1@@/30619",
     "http://@@ACCT1@@/140329",
+    "http://@@ACCT5@@/30619",
+    "http://@@ACCT2@@/30619",
+    "http://@@ACCT6@@/30619",
     "http://@@ACCT6@@/140329",
-    "http://@@ACCT2@@/140329",
-    "http://@@ACCT3@@/140329",
-    "http://@@ACCT4@@/140329",
-    "http://@@ACCT5@@/140329"
-   ]
+    "http://@@ACCT4@@/30619",
+    "http://@@ACCT3@@/30619"
+   ],
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel15",
@@ -465,10 +479,10 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@ACCT1@@/140259",
-    "http://@@ACCT1@@/30581",
     "http://@@ACCT2@@/140259",
     "http://@@ACCT2@@/30581",
+    "http://@@ACCT1@@/140259",
+    "http://@@ACCT1@@/30581",
     "http://@@ACCT5@@/140259",
     "http://@@ACCT5@@/30581",
     "http://@@ACCT3@@/140259",
@@ -477,13 +491,15 @@
     "http://@@ACCT4@@/30581",
     "http://@@ACCT6@@/140259",
     "http://@@ACCT6@@/30581"
-   ]
+   ],
+   "token_refresh_secs": 0,
+   "hls_time": 2
   },
   {
    "channel_name": "channel16",
    "display_name": "Canal N (Perú)",
    "enabled": true,
-   "source_url": "http://@@ACCT_PE2@@/187653",
+   "source_url": "http://@@ACCT_PE1@@/187634",
    "hls_url": "https://stream.tv247on.com/hls/channel16/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -503,39 +519,42 @@
    ],
    "logo": "/player/logos/channel16.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel17",
    "display_name": "Latina HD (Perú)",
    "enabled": true,
-   "source_url": "http://@@ACCT_PE2@@/187628",
+   "source_url": "http://@@ACCT_PE3@@/187628",
    "hls_url": "https://stream.tv247on.com/hls/channel17/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
    "resolution": "1280x720",
    "fps": 30,
    "audio_bitrate": 128,
-   "_comment_source": "Peru package (tvon247 Latin+Spain+BR accounts). 187628 = PER - LATINA HD (H264 1080p30, AAC 48k stereo). Added 2026-07-22.",
+   "_comment_source": "Main LATINA HD 187628/30570 dead 2026-09-08; LATINA NOTICIAS 1456327 is the only live Latina-branded feed.",
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
    "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
    "source_urls": [
-    "http://@@ACCT_PE2@@/187628",
     "http://@@ACCT_PE3@@/187628",
-    "http://@@ACCT_PE1@@/187628"
+    "http://@@ACCT_PE3@@/1456327",
+    "http://@@ACCT_PE2@@/187628",
+    "http://@@ACCT_PE2@@/1456327",
+    "http://@@ACCT_PE1@@/187628",
+    "http://@@ACCT_PE1@@/1456327"
    ],
    "logo": "/player/logos/channel17.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel18",
    "display_name": "Movistar Deportes (Perú)",
    "enabled": true,
-   "source_url": "http://@@ACCT_PE2@@/187629",
+   "source_url": "http://@@ACCT_PE3@@/187629",
    "hls_url": "https://stream.tv247on.com/hls/channel18/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -549,48 +568,51 @@
    "encode_resolution": "960x540",
    "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
    "source_urls": [
+    "http://@@ACCT_PE2@@/187629",
     "http://@@ACCT_PE3@@/187629",
-    "http://@@ACCT_PE1@@/187629",
-    "http://@@ACCT_PE2@@/187629"
+    "http://@@ACCT_PE1@@/187629"
    ],
    "logo": "/player/logos/channel18.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 0,
+   "quarantined": {
+    "since": "2026-09-12T19:00:20Z",
+    "reason": "provider-side: no source delivered >=300000 bytes (3 of 3 sources probed, best=0)",
+    "last_probe": "2026-09-12T19:00:20Z",
+    "good_probes": 0
+   }
   },
   {
    "channel_name": "channel19",
    "display_name": "ATV (Perú)",
    "enabled": true,
-   "source_url": "http://@@ACCT_PE3@@/69200",
+   "source_url": "http://@@ACCT_PE2@@/69200",
    "hls_url": "https://stream.tv247on.com/hls/channel19/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
    "resolution": "1280x720",
    "fps": 30,
    "audio_bitrate": 128,
-   "_comment_source": "ATV (Peru). FIXED 2026-09-05: primary had been 30575, which is an Xtream CATEGORY DIVIDER ROW (catalog name \"##### PERU - GENERAL #####\"), not a channel - it was serving Brazilian content under a Peruvian label; the only backup 187639 is PER - IPE HD, a DIFFERENT channel. Both removed. Real ATV 30572 tests dead (0 bytes) on all 3 Peru accounts, so primary is now ATV+ 69200 (verified alive on ACCT_PE3, ~18MB/14s) with 30572 kept as backup. RE-TEST 30572 periodically and promote it back to primary when it recovers, for label accuracy (same pattern as ch12/ch14).",
+   "_comment_source": "ATV+ 69200 is the only usable matching feed. ATV 30572 remains dead across all Peru accounts and was removed from active rotation 2026-09-07 to shorten outage recovery.",
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
    "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
    "source_urls": [
-    "http://@@ACCT_PE3@@/69200",
-    "http://@@ACCT_PE3@@/30572",
-    "http://@@ACCT_PE1@@/69200",
-    "http://@@ACCT_PE1@@/30572",
     "http://@@ACCT_PE2@@/69200",
-    "http://@@ACCT_PE2@@/30572"
+    "http://@@ACCT_PE1@@/69200",
+    "http://@@ACCT_PE3@@/69200"
    ],
    "logo": "/player/logos/channel19.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel20",
    "display_name": "Liga1 Max (Perú)",
    "enabled": true,
-   "source_url": "http://@@ACCT_PE3@@/312518",
+   "source_url": "http://@@ACCT_PE1@@/1158792",
    "hls_url": "https://stream.tv247on.com/hls/channel20/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -604,13 +626,13 @@
    "encode_resolution": "960x540",
    "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
    "source_urls": [
-    "http://@@ACCT_PE2@@/1158792",
     "http://@@ACCT_PE1@@/1158792",
+    "http://@@ACCT_PE2@@/1158792",
     "http://@@ACCT_PE3@@/1158792"
    ],
    "logo": "/player/logos/channel20.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel21",
@@ -630,19 +652,19 @@
    "encode_resolution": "960x540",
    "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
    "source_urls": [
-    "http://@@ACCT_PE1@@/312515",
     "http://@@ACCT_PE3@@/312515",
-    "http://@@ACCT_PE2@@/312515"
+    "http://@@ACCT_PE2@@/312515",
+    "http://@@ACCT_PE1@@/312515"
    ],
    "logo": "/player/logos/channel21.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel22",
    "display_name": "América TV HD (Perú)",
    "enabled": true,
-   "source_url": "http://@@ACCT_PE1@@/187630",
+   "source_url": "http://@@ACCT_PE3@@/187630",
    "hls_url": "https://stream.tv247on.com/hls/channel22/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -656,23 +678,24 @@
    "encode_resolution": "960x540",
    "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
    "source_urls": [
-    "http://@@ACCT_PE1@@/187630",
-    "http://@@ACCT_PE1@@/30574",
+    "http://@@ACCT_PE3@@/187630",
+    "http://@@ACCT_PE3@@/30574",
     "http://@@ACCT_PE2@@/187630",
     "http://@@ACCT_PE2@@/30574",
-    "http://@@ACCT_PE3@@/187630",
-    "http://@@ACCT_PE3@@/30574"
+    "http://@@ACCT_PE1@@/187630",
+    "http://@@ACCT_PE1@@/30574"
    ],
    "logo": "/player/logos/channel22.png",
-   "use_standby": true,
+   "use_standby": false,
    "_comment": "tvon247 PER AMERICA TV: 187630 (VIP) primary + 30574 (base América Televisión) as 2nd feed variant across the 3 Peru accounts. 2026-07-27: BOTH feeds degrading provider-side (Connection reset by peer / ~10s bursts + broken audio) = source outage, auto-recovers when provider restores. Encode 540p.",
-   "token_refresh_secs": 180
+   "token_refresh_secs": 0,
+   "hls_time": 2
   },
   {
    "channel_name": "channel23",
    "display_name": "Perú Mágico",
    "enabled": true,
-   "source_url": "http://@@ACCT_PE1@@/187632",
+   "source_url": "http://@@ACCT_PE2@@/187632",
    "hls_url": "https://stream.tv247on.com/hls/channel23/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -684,50 +707,51 @@
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
-   "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
+   "_comment_failover": "PE2 primary because it has spare connection capacity; PE1/PE3 backups. Upstream 187632 intermittently fails across all accounts.",
    "source_urls": [
+    "http://@@ACCT_PE2@@/187632",
     "http://@@ACCT_PE3@@/187632",
-    "http://@@ACCT_PE1@@/187632",
-    "http://@@ACCT_PE2@@/187632"
+    "http://@@ACCT_PE1@@/187632"
    ],
    "logo": "/player/logos/channel23.png",
-   "use_standby": true,
-   "token_refresh_secs": 180
+   "use_standby": false,
+   "token_refresh_secs": 0,
+   "hls_time": 2
   },
   {
    "channel_name": "channel24",
    "display_name": "Panamericana (Perú)",
    "enabled": false,
-   "source_url": "http://@@ACCT_PE3@@/69200",
+   "source_url": "http://@@ACCT_PE3@@/187631",
    "hls_url": "https://stream.tv247on.com/hls/channel24/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
    "resolution": "1280x720",
    "fps": 30,
    "audio_bitrate": 128,
-   "_comment_source": "PAUSED 2026-09-07 per client: both Panamericana feeds (30568 + 187631 vip) unstable/intermittent at provider. Re-enable when source restored.",
+   "_comment_source": "Panamericana (Peru) 187631/30568. PAUSED 2026-09-12 per client: feed is INTERMITTENT (playlist 404s, watchdog kills, ~0.3x realtime) — it passes a lucky probe then flaps, which is worse than being hidden and burns a provider slot. Re-enable when source restored.",
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
    "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
    "source_urls": [
-    "http://@@ACCT_PE2@@/187631",
-    "http://@@ACCT_PE3@@/187631",
     "http://@@ACCT_PE1@@/187631",
-    "http://@@ACCT_PE2@@/30568",
+    "http://@@ACCT_PE1@@/30568",
+    "http://@@ACCT_PE3@@/187631",
     "http://@@ACCT_PE3@@/30568",
-    "http://@@ACCT_PE1@@/30568"
+    "http://@@ACCT_PE2@@/187631",
+    "http://@@ACCT_PE2@@/30568"
    ],
    "logo": "/player/logos/channel24.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel25",
    "display_name": "TV Perú HD",
    "enabled": true,
-   "source_url": "http://@@ACCT_PE1@@/187633",
+   "source_url": "http://@@ACCT_PE3@@/187633",
    "hls_url": "https://stream.tv247on.com/hls/channel25/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -739,21 +763,21 @@
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
-   "_comment_failover": "Same stream ID across all 3 Peru accounts; primary rotated to balance ~4 primaries/account. Only one URL active at a time.",
+   "_comment_failover": "Rebalanced 2026-09-07: PE2 primary, PE1/PE3 backups; relieves saturated PE1.",
    "source_urls": [
-    "http://@@ACCT_PE1@@/187633",
+    "http://@@ACCT_PE3@@/187633",
     "http://@@ACCT_PE2@@/187633",
-    "http://@@ACCT_PE3@@/187633"
+    "http://@@ACCT_PE1@@/187633"
    ],
    "logo": "/player/logos/channel25.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel26",
    "display_name": "DTV Sports Plus (Perú)",
    "enabled": true,
-   "source_url": "http://@@ACCT_PE2@@/197713",
+   "source_url": "http://@@ACCT_PE1@@/197713",
    "hls_url": "https://stream.tv247on.com/hls/channel26/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -767,19 +791,19 @@
    "encode_resolution": "960x540",
    "_comment_failover": "Same stream ID across all 3 Peru accounts; primary rotated to balance ~4 primaries/account. Only one URL active at a time.",
    "source_urls": [
+    "http://@@ACCT_PE1@@/197713",
     "http://@@ACCT_PE2@@/197713",
-    "http://@@ACCT_PE3@@/197713",
-    "http://@@ACCT_PE1@@/197713"
+    "http://@@ACCT_PE3@@/197713"
    ],
    "logo": "/player/logos/channel26.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel27",
    "display_name": "ESPN 2 HD (Perú)",
    "enabled": true,
-   "source_url": "http://@@ACCT_PE3@@/312516",
+   "source_url": "http://@@ACCT_PE1@@/312516",
    "hls_url": "https://stream.tv247on.com/hls/channel27/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -793,13 +817,13 @@
    "encode_resolution": "960x540",
    "_comment_failover": "Same stream ID across all 3 Peru accounts; primary rotated to balance ~4 primaries/account. Only one URL active at a time.",
    "source_urls": [
-    "http://@@ACCT_PE3@@/312516",
+    "http://@@ACCT_PE2@@/312516",
     "http://@@ACCT_PE1@@/312516",
-    "http://@@ACCT_PE2@@/312516"
+    "http://@@ACCT_PE3@@/312516"
    ],
    "logo": "/player/logos/channel27.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel28",
@@ -825,7 +849,8 @@
     "http://@@KOZEE4@@/71862",
     "http://@@KOZEE5@@/71862"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel29",
@@ -851,7 +876,8 @@
     "http://@@KOZEE5@@/71853",
     "http://@@KOZEE1@@/71853"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel30",
@@ -877,7 +903,8 @@
     "http://@@KOZEE1@@/71855",
     "http://@@KOZEE2@@/71855"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel31",
@@ -903,7 +930,8 @@
     "http://@@KOZEE2@@/71330",
     "http://@@KOZEE3@@/71330"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel32",
@@ -929,7 +957,8 @@
     "http://@@KOZEE3@@/71335",
     "http://@@KOZEE4@@/71335"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel33",
@@ -955,7 +984,8 @@
     "http://@@KOZEE4@@/1060173",
     "http://@@KOZEE5@@/1060173"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel34",
@@ -981,7 +1011,8 @@
     "http://@@KOZEE5@@/1427912",
     "http://@@KOZEE1@@/1427912"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel35",
@@ -1007,7 +1038,8 @@
     "http://@@KOZEE1@@/71324",
     "http://@@KOZEE2@@/71324"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel36",
@@ -1033,7 +1065,8 @@
     "http://@@KOZEE2@@/71904",
     "http://@@KOZEE3@@/71904"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel37",
@@ -1059,7 +1092,8 @@
     "http://@@KOZEE3@@/685809",
     "http://@@KOZEE4@@/685809"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel38",
@@ -1085,7 +1119,8 @@
     "http://@@KOZEE4@@/71935",
     "http://@@KOZEE5@@/71935"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel39",
@@ -1111,7 +1146,8 @@
     "http://@@KOZEE5@@/71951",
     "http://@@KOZEE1@@/71951"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel40",
@@ -1137,7 +1173,8 @@
     "http://@@KOZEE1@@/72383",
     "http://@@KOZEE2@@/72383"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel41",
@@ -1163,7 +1200,8 @@
     "http://@@KOZEE2@@/71989",
     "http://@@KOZEE3@@/71989"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel42",
@@ -1189,13 +1227,14 @@
     "http://@@KOZEE3@@/71964",
     "http://@@KOZEE4@@/71964"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel43",
    "display_name": "NBC Golf",
    "enabled": true,
-   "source_url": "http://@@KOZEE1@@/71944",
+   "source_url": "http://@@KOZEE2@@/71944",
    "hls_url": "https://stream.tv247on.com/hls/channel43/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -1203,19 +1242,20 @@
    "fps": 30,
    "audio_bitrate": 128,
    "logo": "/player/logos/channel43.png",
-   "_comment_source": "kozeetv US bouquet (host tvon247.com; creds KOZEE1-5 in config/accounts.env). stream_id 71944 = US - NBC GOLF HD (H264 1280x720, AAC). Added 2026-07-28. 5-account failover; primary KOZEE1.",
+   "_comment_source": "Rebalanced 2026-09-07 to KOZEE2 primary because KOZEE1 reached its 5-connection limit.",
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@KOZEE1@@/71944",
     "http://@@KOZEE2@@/71944",
     "http://@@KOZEE3@@/71944",
     "http://@@KOZEE4@@/71944",
-    "http://@@KOZEE5@@/71944"
+    "http://@@KOZEE5@@/71944",
+    "http://@@KOZEE1@@/71944"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel44",
@@ -1237,12 +1277,16 @@
    "_comment_failover": "Backups are the SAME feed (655604) on ACCT2/ACCT3/ACCT4 - a dropped primary fails over to another account instead of going to a standby gap.",
    "source_urls": [
     "http://@@ACCT2@@/1349035",
+    "http://@@ACCT6@@/1349035",
     "http://@@ACCT3@@/1349035",
     "http://@@ACCT4@@/1349035"
    ],
    "logo": "/player/logos/channel44.png",
-   "use_standby": true,
-   "country": "Mexico"
+   "use_standby": false,
+   "country": "Mexico",
+   "source_url": "http://@@ACCT6@@/1349035",
+   "token_refresh_secs": 0,
+   "hls_time": 2
   },
   {
    "channel_name": "channel45",
@@ -1261,7 +1305,7 @@
    "_comment_video": "encode @ 540p - the box re-encodes every channel to H.264 960x540 (see channel1 for the full rationale).",
    "video_mode": "encode",
    "encode_resolution": "960x540",
-   "_comment_failover": "Backups are the SAME feed (1278974) on ACCT3/ACCT2/ACCT4 - a dropped primary fails over to another account instead of going to a standby gap.",
+   "_comment_failover": "Rebalanced 2026-09-07: ACCT2 primary, ACCT3/ACCT4 backups; ACCT3 is limited to 3 connections.",
    "source_urls": [
     "http://@@ACCT3@@/1278974",
     "http://@@ACCT2@@/1278974",
@@ -1269,13 +1313,15 @@
    ],
    "logo": "/player/logos/channel45.png",
    "use_standby": true,
-   "country": "Mexico"
+   "country": "Mexico",
+   "source_url": "http://@@ACCT2@@/1278974",
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel46",
    "display_name": "Canal 12 (TUTV)",
    "enabled": true,
-   "source_url": "http://@@ACCT_LAT1@@/436890",
+   "source_url": "http://@@ACCT_LAT8@@/436890",
    "hls_url": "https://stream.tv247on.com/hls/channel46/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -1289,13 +1335,14 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
    "source_urls": [
+    "http://@@ACCT_LAT8@@/436890",
+    "http://@@ACCT_LAT4@@/436890",
     "http://@@ACCT_LAT1@@/436890",
-    "http://@@ACCT_LAT2@@/436890",
     "http://@@ACCT_LAT3@@/436890"
    ],
    "logo": "/player/logos/channel46.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "El Salvador",
    "free_zone": true
   },
@@ -1323,7 +1370,7 @@
    ],
    "logo": "/player/logos/channel47.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "El Salvador",
    "free_zone": true
   },
@@ -1351,7 +1398,7 @@
    ],
    "logo": "/player/logos/channel48.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "El Salvador",
    "free_zone": true
   },
@@ -1379,7 +1426,7 @@
    ],
    "logo": "/player/logos/channel49.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "El Salvador",
    "free_zone": false
   },
@@ -1402,15 +1449,13 @@
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=[1028540].",
    "source_urls": [
     "http://@@ACCT_LAT5@@/436899",
-    "http://@@ACCT_LAT5@@/1028540",
-    "http://@@ACCT_LAT6@@/436899",
-    "http://@@ACCT_LAT6@@/1028540",
-    "http://@@ACCT_LAT7@@/436899",
-    "http://@@ACCT_LAT7@@/1028540"
+    "http://@@ACCT_LAT8@@/436899",
+    "http://@@ACCT_LAT3@@/436899",
+    "http://@@ACCT_LAT9@@/436899"
    ],
    "logo": "/player/logos/channel50.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "El Salvador",
    "free_zone": false
   },
@@ -1418,7 +1463,7 @@
    "channel_name": "channel51",
    "display_name": "Canal 6 (TCS)",
    "enabled": true,
-   "source_url": "http://@@ACCT_LAT6@@/436897",
+   "source_url": "http://@@ACCT_LAT5@@/1028541",
    "hls_url": "https://stream.tv247on.com/hls/channel51/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -1432,22 +1477,14 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=[1028541].",
    "source_urls": [
-    "http://@@ACCT_LAT6@@/1028541",
-    "http://@@ACCT_LAT6@@/1028541",
-    "http://@@ACCT_LAT6@@/436897",
-    "http://@@ACCT_LAT6@@/1028541",
-    "http://@@ACCT_LAT7@@/1028541",
-    "http://@@ACCT_LAT7@@/1028541",
-    "http://@@ACCT_LAT7@@/436897",
-    "http://@@ACCT_LAT7@@/1028541",
+    "http://@@ACCT_LAT9@@/1028541",
     "http://@@ACCT_LAT8@@/1028541",
-    "http://@@ACCT_LAT8@@/1028541",
-    "http://@@ACCT_LAT8@@/436897",
-    "http://@@ACCT_LAT8@@/1028541"
+    "http://@@ACCT_LAT5@@/1028541",
+    "http://@@ACCT_LAT3@@/1028541"
    ],
    "logo": "/player/logos/channel51.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "El Salvador",
    "free_zone": false
   },
@@ -1477,7 +1514,7 @@
    ],
    "logo": "/player/logos/channel52.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "El Salvador",
    "free_zone": false
   },
@@ -1499,13 +1536,13 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
    "source_urls": [
-    "http://@@ACCT_LAT8@@/1248434",
+    "http://@@ACCT_LAT1@@/1248434",
     "http://@@ACCT_LAT9@@/1248434",
-    "http://@@ACCT_LAT1@@/1248434"
+    "http://@@ACCT_LAT8@@/1248434"
    ],
    "logo": "/player/logos/channel53.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Venezuela",
    "free_zone": true
   },
@@ -1536,15 +1573,16 @@
    ],
    "logo": "/player/logos/channel54.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Venezuela",
-   "free_zone": true
+   "free_zone": true,
+   "hls_time": 2
   },
   {
    "channel_name": "channel55",
    "display_name": "Venevisión",
    "enabled": true,
-   "source_url": "http://@@ACCT_LAT1@@/1084022",
+   "source_url": "http://@@ACCT_LAT10@@/1084022",
    "hls_url": "https://stream.tv247on.com/hls/channel55/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -1556,18 +1594,18 @@
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
-   "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=[1412718].",
+   "_comment_failover": "Rebalanced 2026-09-07: ACCT_LAT10 primary (3-connection plan), with LAT1/LAT3 backups. Alts=[1412718].",
    "source_urls": [
-    "http://@@ACCT_LAT2@@/1084022",
-    "http://@@ACCT_LAT2@@/1412718",
     "http://@@ACCT_LAT1@@/1084022",
     "http://@@ACCT_LAT1@@/1412718",
+    "http://@@ACCT_LAT10@@/1084022",
+    "http://@@ACCT_LAT10@@/1412718",
     "http://@@ACCT_LAT3@@/1084022",
     "http://@@ACCT_LAT3@@/1412718"
    ],
    "logo": "/player/logos/channel55.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Venezuela",
    "free_zone": false
   },
@@ -1575,7 +1613,7 @@
    "channel_name": "channel56",
    "display_name": "Televen",
    "enabled": true,
-   "source_url": "http://@@ACCT_LAT2@@/1248435",
+   "source_url": "http://@@ACCT_LAT10@@/1248435",
    "hls_url": "https://stream.tv247on.com/hls/channel56/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -1587,20 +1625,21 @@
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
-   "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=[30552].",
+   "_comment_failover": "Rebalanced 2026-09-07: ACCT_LAT10 primary (3-connection plan), with LAT2/LAT4 backups. Alts=[30552].",
    "source_urls": [
-    "http://@@ACCT_LAT3@@/1248435",
-    "http://@@ACCT_LAT3@@/30552",
     "http://@@ACCT_LAT2@@/1248435",
     "http://@@ACCT_LAT2@@/30552",
+    "http://@@ACCT_LAT10@@/1248435",
+    "http://@@ACCT_LAT10@@/30552",
     "http://@@ACCT_LAT4@@/1248435",
     "http://@@ACCT_LAT4@@/30552"
    ],
    "logo": "/player/logos/channel56.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Venezuela",
-   "free_zone": false
+   "free_zone": false,
+   "hls_time": 2
   },
   {
    "channel_name": "channel57",
@@ -1629,7 +1668,7 @@
    ],
    "logo": "/player/logos/channel57.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Colombia",
    "free_zone": true
   },
@@ -1637,7 +1676,7 @@
    "channel_name": "channel58",
    "display_name": "TELECARIBE VP",
    "enabled": true,
-   "source_url": "http://@@ACCT_LAT4@@/190252",
+   "source_url": "http://@@ACCT_LAT9@@/190252",
    "hls_url": "https://stream.tv247on.com/hls/channel58/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -1649,15 +1688,15 @@
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
-   "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
+   "_comment_failover": "Rebalanced 2026-09-07: LAT9 primary, LAT6/LAT2 backups; keeps active accounts below their connection limits.",
    "source_urls": [
-    "http://@@ACCT_LAT5@@/190252",
-    "http://@@ACCT_LAT4@@/190252",
-    "http://@@ACCT_LAT6@@/190252"
+    "http://@@ACCT_LAT6@@/190252",
+    "http://@@ACCT_LAT9@@/190252",
+    "http://@@ACCT_LAT2@@/190252"
    ],
    "logo": "/player/logos/channel58.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Colombia",
    "free_zone": true
   },
@@ -1688,7 +1727,7 @@
    ],
    "logo": "/player/logos/channel59.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Colombia",
    "free_zone": true
   },
@@ -1719,7 +1758,7 @@
    ],
    "logo": "/player/logos/channel60.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Colombia",
    "free_zone": false
   },
@@ -1741,16 +1780,15 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=[30702].",
    "source_urls": [
-    "http://@@ACCT_LAT8@@/190242",
-    "http://@@ACCT_LAT8@@/30702",
     "http://@@ACCT_LAT7@@/190242",
-    "http://@@ACCT_LAT7@@/30702",
+    "http://@@ACCT_LAT7@@/30703",
     "http://@@ACCT_LAT9@@/190242",
-    "http://@@ACCT_LAT9@@/30702"
+    "http://@@ACCT_LAT9@@/30703",
+    "http://@@ACCT_LAT6@@/190242"
    ],
    "logo": "/player/logos/channel61.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Colombia",
    "free_zone": false
   },
@@ -1772,13 +1810,13 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
    "source_urls": [
-    "http://@@ACCT_LAT9@@/190246",
     "http://@@ACCT_LAT8@@/190246",
-    "http://@@ACCT_LAT1@@/190246"
+    "http://@@ACCT_LAT1@@/190246",
+    "http://@@ACCT_LAT9@@/190246"
    ],
    "logo": "/player/logos/channel62.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Colombia",
    "free_zone": false
   },
@@ -1800,19 +1838,19 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=[190260, 30647].",
    "source_urls": [
-    "http://@@ACCT_LAT1@@/190259",
-    "http://@@ACCT_LAT1@@/190260",
-    "http://@@ACCT_LAT1@@/30647",
     "http://@@ACCT_LAT9@@/190259",
     "http://@@ACCT_LAT9@@/190260",
     "http://@@ACCT_LAT9@@/30647",
+    "http://@@ACCT_LAT1@@/190259",
+    "http://@@ACCT_LAT1@@/190260",
+    "http://@@ACCT_LAT1@@/30647",
     "http://@@ACCT_LAT2@@/190259",
     "http://@@ACCT_LAT2@@/190260",
     "http://@@ACCT_LAT2@@/30647"
    ],
    "logo": "/player/logos/channel63.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Colombia",
    "free_zone": false
   },
@@ -1834,13 +1872,13 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
    "source_urls": [
+    "http://@@ACCT_LAT3@@/215606",
     "http://@@ACCT_LAT1@@/215606",
-    "http://@@ACCT_LAT2@@/215606",
-    "http://@@ACCT_LAT3@@/215606"
+    "http://@@ACCT_LAT2@@/215606"
    ],
    "logo": "/player/logos/channel64.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Guatemala",
    "free_zone": true
   },
@@ -1868,7 +1906,7 @@
    ],
    "logo": "/player/logos/channel65.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Guatemala",
    "free_zone": true
   },
@@ -1890,13 +1928,13 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
    "source_urls": [
+    "http://@@ACCT_LAT5@@/215611",
     "http://@@ACCT_LAT3@@/215611",
-    "http://@@ACCT_LAT4@@/215611",
-    "http://@@ACCT_LAT5@@/215611"
+    "http://@@ACCT_LAT4@@/215611"
    ],
    "logo": "/player/logos/channel66.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Guatemala",
    "free_zone": true
   },
@@ -1924,7 +1962,7 @@
    ],
    "logo": "/player/logos/channel67.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Guatemala",
    "free_zone": false
   },
@@ -1952,7 +1990,7 @@
    ],
    "logo": "/player/logos/channel68.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Guatemala",
    "free_zone": false
   },
@@ -1980,15 +2018,21 @@
    ],
    "logo": "/player/logos/channel69.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Honduras",
-   "free_zone": true
+   "free_zone": true,
+   "quarantined": {
+    "since": "2026-09-08T07:34:07Z",
+    "reason": "provider-side: 214635 delivers no video across LAT accounts; hidden until tvon247 restores this feed",
+    "last_probe": "2026-09-12T19:00:21Z",
+    "good_probes": 0
+   }
   },
   {
    "channel_name": "channel70",
    "display_name": "CANAL 10 (TEN TV)",
    "enabled": true,
-   "source_url": "http://@@ACCT_LAT7@@/214642",
+   "source_url": "http://@@ACCT_LAT8@@/214642",
    "hls_url": "https://stream.tv247on.com/hls/channel70/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -2000,23 +2044,23 @@
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
-   "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
+   "_comment_failover": "Rebalanced 2026-09-07: LAT9 primary, LAT4/LAT8 backups; restores spare capacity on saturated LAT4 and LAT8.",
    "source_urls": [
-    "http://@@ACCT_LAT7@@/214642",
     "http://@@ACCT_LAT8@@/214642",
+    "http://@@ACCT_LAT4@@/214642",
     "http://@@ACCT_LAT9@@/214642"
    ],
    "logo": "/player/logos/channel70.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Honduras",
    "free_zone": true
   },
   {
    "channel_name": "channel71",
    "display_name": "AME 47 TV (TSI)",
-   "enabled": true,
-   "source_url": "http://@@ACCT_LAT8@@/214639",
+   "enabled": false,
+   "source_url": "http://@@ACCT_LAT9@@/214639",
    "hls_url": "https://stream.tv247on.com/hls/channel71/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -2028,23 +2072,24 @@
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
-   "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
+   "_comment_failover": "Rebalanced 2026-09-07: LAT9 primary, LAT1/LAT8 backups; restores spare capacity on saturated LAT8.",
    "source_urls": [
-    "http://@@ACCT_LAT8@@/214639",
     "http://@@ACCT_LAT9@@/214639",
-    "http://@@ACCT_LAT1@@/214639"
+    "http://@@ACCT_LAT1@@/214639",
+    "http://@@ACCT_LAT8@@/214639"
    ],
    "logo": "/player/logos/channel71.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Honduras",
-   "free_zone": true
+   "free_zone": true,
+   "_disabled_reason": "2026-09-12: provider feed 214639 returns no data and is the ONLY AME 47 TV id in the catalog; retry loop was burning connection slots. Re-enable when the provider restores it."
   },
   {
    "channel_name": "channel72",
    "display_name": "CANAL 5 HD (El Líder)",
    "enabled": true,
-   "source_url": "http://@@ACCT_LAT9@@/214633",
+   "source_url": "http://@@ACCT_LAT3@@/214633",
    "hls_url": "https://stream.tv247on.com/hls/channel72/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -2058,13 +2103,14 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
    "source_urls": [
-    "http://@@ACCT_LAT9@@/214633",
+    "http://@@ACCT_LAT3@@/214633",
+    "http://@@ACCT_LAT8@@/214633",
     "http://@@ACCT_LAT1@@/214633",
-    "http://@@ACCT_LAT2@@/214633"
+    "http://@@ACCT_LAT9@@/214633"
    ],
    "logo": "/player/logos/channel72.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Honduras",
    "free_zone": false
   },
@@ -2087,14 +2133,20 @@
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
    "source_urls": [
     "http://@@ACCT_LAT1@@/214631",
-    "http://@@ACCT_LAT2@@/214631",
-    "http://@@ACCT_LAT3@@/214631"
+    "http://@@ACCT_LAT3@@/214631",
+    "http://@@ACCT_LAT2@@/214631"
    ],
    "logo": "/player/logos/channel73.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Honduras",
-   "free_zone": false
+   "free_zone": false,
+   "quarantined": {
+    "since": "2026-09-08T07:34:07Z",
+    "reason": "provider-side: 214631 delivers no video across LAT accounts; hidden until tvon247 restores this feed",
+    "last_probe": "2026-09-12T19:00:22Z",
+    "good_probes": 0
+   }
   },
   {
    "channel_name": "channel74",
@@ -2112,15 +2164,16 @@
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
-   "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
+   "_comment_failover": "Rebalanced 2026-09-07: LAT9 primary, LAT2/LAT3 backups; moves a failover session off saturated LAT4.",
    "source_urls": [
     "http://@@ACCT_LAT2@@/30695",
-    "http://@@ACCT_LAT3@@/30695",
-    "http://@@ACCT_LAT4@@/30695"
+    "http://@@ACCT_LAT2@@/187616",
+    "http://@@ACCT_LAT4@@/187616",
+    "http://@@ACCT_LAT9@@/1359967"
    ],
    "logo": "/player/logos/channel74.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Cuba",
    "free_zone": true
   },
@@ -2128,7 +2181,7 @@
    "channel_name": "channel75",
    "display_name": "CUBAVISION INTERNACIONAL",
    "enabled": true,
-   "source_url": "http://@@ACCT_LAT3@@/30694",
+   "source_url": "http://@@ACCT_LAT5@@/30694",
    "hls_url": "https://stream.tv247on.com/hls/channel75/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -2142,13 +2195,13 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
    "source_urls": [
-    "http://@@ACCT_LAT3@@/30694",
-    "http://@@ACCT_LAT4@@/30694",
-    "http://@@ACCT_LAT5@@/30694"
+    "http://@@ACCT_LAT8@@/30694",
+    "http://@@ACCT_LAT5@@/30694",
+    "http://@@ACCT_LAT9@@/30694"
    ],
    "logo": "/player/logos/channel75.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Cuba",
    "free_zone": true
   },
@@ -2176,7 +2229,7 @@
    ],
    "logo": "/player/logos/channel76.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Cuba",
    "free_zone": true
   },
@@ -2184,7 +2237,7 @@
    "channel_name": "channel77",
    "display_name": "CUBAVISION vip",
    "enabled": true,
-   "source_url": "http://@@ACCT_LAT5@@/187616",
+   "source_url": "http://@@ACCT_LAT10@@/187616",
    "hls_url": "https://stream.tv247on.com/hls/channel77/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -2198,13 +2251,15 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
    "source_urls": [
+    "http://@@ACCT_LAT10@@/187616",
     "http://@@ACCT_LAT5@@/187616",
-    "http://@@ACCT_LAT6@@/187616",
-    "http://@@ACCT_LAT7@@/187616"
+    "http://@@ACCT_LAT8@@/187616",
+    "http://@@ACCT_LAT9@@/187616",
+    "http://@@ACCT_LAT3@@/187616"
    ],
    "logo": "/player/logos/channel77.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Cuba",
    "free_zone": false
   },
@@ -2212,27 +2267,27 @@
    "channel_name": "channel78",
    "display_name": "CUBAVISIONINTER vip",
    "enabled": true,
-   "source_url": "http://@@ACCT_LAT6@@/187615",
+   "source_url": "http://@@ACCT_LAT8@@/30694",
    "hls_url": "https://stream.tv247on.com/hls/channel78/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
    "resolution": "1280x720",
    "fps": 30,
    "audio_bitrate": 128,
-   "_comment_source": "tvon247 Cuba stream 187615 (Premium). Added 2026-08-29 per client majotv sheet (AM|LATINO / AM|SALVADOR).",
+   "_comment_source": "CUBAVISIONINTER VIP 187615 failed on all LAT accounts 2026-09-07; stable CUBAVISION INTERNACIONAL 30694 is primary, VIP retained as deep backup.",
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
-   "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
+   "_comment_failover": "Stable 30694 across low-load LAT5/LAT2/LAT9; dead VIP 187615 retained last for provider recovery.",
    "source_urls": [
-    "http://@@ACCT_LAT7@@/187615",
-    "http://@@ACCT_LAT6@@/187615",
-    "http://@@ACCT_LAT8@@/187615"
+    "http://@@ACCT_LAT4@@/30694",
+    "http://@@ACCT_LAT8@@/30694",
+    "http://@@ACCT_LAT3@@/30694"
    ],
    "logo": "/player/logos/channel78.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Cuba",
    "free_zone": false
   },
@@ -2240,7 +2295,7 @@
    "channel_name": "channel79",
    "display_name": "CUBAMAX vip",
    "enabled": true,
-   "source_url": "http://@@ACCT_LAT7@@/195247",
+   "source_url": "http://@@ACCT_LAT10@@/195247",
    "hls_url": "https://stream.tv247on.com/hls/channel79/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -2254,13 +2309,14 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
    "source_urls": [
-    "http://@@ACCT_LAT8@@/195247",
     "http://@@ACCT_LAT7@@/195247",
+    "http://@@ACCT_LAT10@@/195247",
+    "http://@@ACCT_LAT8@@/195247",
     "http://@@ACCT_LAT9@@/195247"
    ],
    "logo": "/player/logos/channel79.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
+   "token_refresh_secs": 0,
    "country": "Cuba",
    "free_zone": false
   }
