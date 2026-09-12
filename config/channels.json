@@ -284,7 +284,7 @@
    "channel_name": "channel9",
    "display_name": "ESPN 2 HD",
    "enabled": true,
-   "source_url": "http://@@ACCT1@@/1028360",
+   "source_url": "http://@@ACCT1@@/30582",
    "hls_url": "https://stream.tv247on.com/hls/channel9/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -299,15 +299,16 @@
    "use_standby": false,
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@ACCT1@@/1028360",
-    "http://@@ACCT4@@/1028360",
-    "http://@@ACCT5@@/1028360",
-    "http://@@ACCT2@@/1028360",
-    "http://@@ACCT3@@/1028360",
-    "http://@@ACCT6@@/1028360"
+    "http://@@ACCT1@@/30582",
+    "http://@@ACCT1@@/325563",
+    "http://@@ACCT4@@/30582",
+    "http://@@ACCT4@@/325565",
+    "http://@@ACCT2@@/30582",
+    "http://@@ACCT2@@/325598"
    ],
    "token_refresh_secs": 0,
-   "hls_time": 2
+   "hls_time": 2,
+   "_comment_source": "ESPN 2: MX - ESPN 2 HD 1028360 went fully dead 2026-09-12 (http=000, 0 bytes on all 6 MX accounts while ACCT1 had 4 free slots, so NOT the connection cap). Swapped to LATINO - ESPN 2. 30582 (h264 720p + AAC 48k, 30.9MB/12s) with LAT - ESPN 2 HD 325563/325565/325598 as deeper backups. Placed on ACCT1/4/2 which had free slots; ACCT3/5/6 were at their max of 3."
   },
   {
    "channel_name": "channel10",
@@ -578,7 +579,7 @@
    "quarantined": {
     "since": "2026-09-12T19:00:20Z",
     "reason": "provider-side: no source delivered >=300000 bytes (3 of 3 sources probed, best=0)",
-    "last_probe": "2026-09-12T19:00:20Z",
+    "last_probe": "2026-09-12T20:00:02Z",
     "good_probes": 0
    }
   },
@@ -765,9 +766,9 @@
    "encode_resolution": "960x540",
    "_comment_failover": "Rebalanced 2026-09-07: PE2 primary, PE1/PE3 backups; relieves saturated PE1.",
    "source_urls": [
+    "http://@@ACCT_PE1@@/187633",
     "http://@@ACCT_PE3@@/187633",
-    "http://@@ACCT_PE2@@/187633",
-    "http://@@ACCT_PE1@@/187633"
+    "http://@@ACCT_PE2@@/187633"
    ],
    "logo": "/player/logos/channel25.png",
    "use_standby": true,
@@ -2024,7 +2025,7 @@
    "quarantined": {
     "since": "2026-09-08T07:34:07Z",
     "reason": "provider-side: 214635 delivers no video across LAT accounts; hidden until tvon247 restores this feed",
-    "last_probe": "2026-09-12T19:00:21Z",
+    "last_probe": "2026-09-12T20:00:03Z",
     "good_probes": 0
    }
   },
@@ -2144,7 +2145,7 @@
    "quarantined": {
     "since": "2026-09-08T07:34:07Z",
     "reason": "provider-side: 214631 delivers no video across LAT accounts; hidden until tvon247 restores this feed",
-    "last_probe": "2026-09-12T19:00:22Z",
+    "last_probe": "2026-09-12T20:00:04Z",
     "good_probes": 0
    }
   },

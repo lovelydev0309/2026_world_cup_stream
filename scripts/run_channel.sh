@@ -399,6 +399,15 @@ WATCHDOG_PID=0
 # Falls back to cached value if probe times out (source temporarily down).
 CODEC_CACHE="$PROJECT_DIR/cache/codec_${CHANNEL}"
 AUDIO_CACHE="$PROJECT_DIR/cache/audio_${CHANNEL}"
+# Counts consecutive DEFINITIVE no-audio failovers. Deliberately NOT reset by standby or
+# by a "healthy" short run the way LIVE_FAIL is (lines ~797/802/832) — that reset is what
+# let the audio cascade restart forever and take channels off air. Cleared only when real
+# audio is confirmed.
+AUDIO_REJECTS="$PROJECT_DIR/cache/audioreject_${CHANNEL}"
+# MUST be initialised here: the script runs `set -u`, and force_silent_audio=true
+# short-circuits detect_audio_ok, so without this the first read of AUDIO_VERDICT is an
+# unbound-variable fatal and the producer dies silently before it ever reaches "→ LIVE".
+AUDIO_VERDICT="unknown"
 mkdir -p "$PROJECT_DIR/cache" 2>/dev/null || true
 detect_codec() {
     local result
@@ -441,7 +450,12 @@ detect_audio_ok() {
     # cycle. The OLD code cached "no" and only re-probed after a STANDBY cycle, so an
     # audio-broken feed that healed while staying LIVE (no standby) stayed muted for HOURS —
     # the "Imagen: video ok, audio silent for a long time" bug. Now silence self-heals.
+    # AUDIO_VERDICT distinguishes "the source really has no audio" from "we could not
+    # tell". They are NOT the same: an over-cap account returns an EMPTY probe, and
+    # treating that as silence is what sent healthy channels into an endless cascade.
+    AUDIO_VERDICT="unknown"
     if [ -f "$AUDIO_CACHE" ] && [ "$(cat "$AUDIO_CACHE" 2>/dev/null)" = "ok" ]; then
+        AUDIO_VERDICT="ok"
         return 0
     fi
     # Not yet confirmed (no cache, or a prior silent verdict): probe, retrying a few times so a
@@ -456,9 +470,12 @@ detect_audio_ok() {
             -select_streams a:0 -show_entries stream=channels \
             -of csv=p=0 "$SOURCE_URL" 2>/dev/null | head -1)
         if [ -n "$chans" ] && [ "$chans" -ge 1 ] 2>/dev/null; then
-            echo ok > "$AUDIO_CACHE" 2>/dev/null; return 0   # real audio → cached + trusted
+            echo ok > "$AUDIO_CACHE" 2>/dev/null                # real audio → cached + trusted
+            rm -f "$AUDIO_REJECTS" 2>/dev/null                  # audio proven → clear the cascade guard
+            AUDIO_VERDICT="ok"; return 0
         fi
-        [ -n "$chans" ] && break     # probe returned "0" → genuine no-audio, don't retry
+        # probe returned "0" → genuine no-audio, don't retry. Empty → stays "unknown".
+        [ -n "$chans" ] && { AUDIO_VERDICT="none"; break; }
         sleep 1                       # probe returned nothing (transient) → retry
     done
     # Genuine 0-channel audio, or the probe failed every retry: serve silent THIS attempt only.
@@ -601,11 +618,29 @@ push_live() {
     else
         # Mute-on-air is a QA “Other”. If another account/feed exists, fail over
         # instead of publishing silent stereo as if it were the live channel.
-        if [ "$FORCE_SILENT_AUDIO" != "true" ] && [ "${NUM_URLS:-0}" -gt 1 ] && [ "${LIVE_FAIL:-0}" -lt "$NUM_URLS" ]; then
-            log "→ LIVE skipped (no usable audio) – failover without mute slate"
+        #
+        # BUT only on a DEFINITIVE 0-channel answer. An empty probe is not proof of
+        # silence — it is exactly what an over-cap account returns — and each rejection
+        # opens another probe + another connection, so treating "unknown" as "no audio"
+        # is self-amplifying: it took ch3/ch9/ch11 fully off air while their feeds were
+        # fine. Bound it to ONE pass through the sources using a counter that survives
+        # the standby/healthy resets that LIVE_FAIL suffers; anything else airs video
+        # with silent stereo, which self-heals on the next reconnect because the audio
+        # cache latches only "ok".
+        local _rej=0
+        [ -f "$AUDIO_REJECTS" ] && _rej=$(cat "$AUDIO_REJECTS" 2>/dev/null)
+        case "$_rej" in ''|*[!0-9]*) _rej=0 ;; esac
+        if [ "$FORCE_SILENT_AUDIO" != "true" ] && [ "${AUDIO_VERDICT:-unknown}" = "none" ] \
+           && [ "${NUM_URLS:-0}" -gt 1 ] && [ "$_rej" -lt "${NUM_URLS:-0}" ]; then
+            echo $((_rej + 1)) > "$AUDIO_REJECTS" 2>/dev/null
+            log "→ LIVE skipped (no usable audio) – failover without mute slate ($((_rej + 1))/$NUM_URLS)"
             return 75
         fi
-        log "→ LIVE (source audio broken – silent stereo)"
+        if [ "${AUDIO_VERDICT:-unknown}" = "unknown" ]; then
+            log "→ LIVE (audio probe inconclusive – silent stereo, re-probes on reconnect)"
+        else
+            log "→ LIVE (source audio broken – silent stereo)"
+        fi
         aud_in=(-f lavfi -i "anullsrc=channel_layout=stereo:sample_rate=48000")
         aud_map=(-map 0:v:0 -map 1:a:0)
         aud_tail=(-shortest)
