@@ -82,6 +82,17 @@ print(c.get('standby_file','standby/standby.mp4'),
 case "$HLS_TIME" in ''|*[!0-9]*) HLS_TIME=4 ;; esac
 [ "$HLS_TIME" -lt 2 ] && HLS_TIME=2
 [ "$HLS_TIME" -gt 6 ] && HLS_TIME=6
+
+# Playlist WINDOW depth, in seconds, is what the player actually needs — the client
+# players run liveMaxLatencyDuration:120 and snap at latency>120, so a window shorter
+# than that lets hls.js target a live-sync position that has already fallen off the
+# playlist: every fragment load then aborts and the buffer never fills. hls_list_size
+# was hardcoded to 40, so the 10 channels on hls_time=2 served only an 80s window
+# while the 65 on hls_time=4 served 160s — which is exactly why those 10 misbehaved
+# in players that were fine everywhere else. Derive the count from the window instead.
+HLS_WINDOW_SECS=160
+HLS_LIST_SIZE=$(( HLS_WINDOW_SECS / HLS_TIME ))
+[ "$HLS_LIST_SIZE" -lt 20 ] && HLS_LIST_SIZE=20
 # Proactive token refresh: tvon247's 302 token silently expires (socket goes quiet, no EOF),
 # and ffmpeg's -reconnect can't recover it — only a process RESTART re-resolves the 302 for a
 # FRESH token. Reactively that costs a ~15s watchdog gap. A planned -t cap every 180s was
@@ -440,7 +451,23 @@ detect_codec() {
 # realtime (the live edge runs away and the player can't keep up) AND the output
 # audio is undecodable by browsers. Returns success only if the source has at
 # least one real audio channel; otherwise push_live swaps in clean silent stereo.
+# Memoized wrapper. The two call sites below (preserve vs A/V-realign) each used to pay
+# the FULL probe budget, so an inconclusive probe cost ~2x. On a short-token feed that
+# meant ~38s of a ~56s connection was spent probing instead of streaming, and the channel
+# could never build a playlist (ch10/ch21/ch34 sat at a frozen live edge while their feeds
+# were fine). Probe once per attempt; _ATTEMPT_AUDIO_* is cleared at the top of each attempt.
 detect_audio_ok() {
+    if [ -n "${_ATTEMPT_AUDIO_RC:-}" ]; then
+        AUDIO_VERDICT="${_ATTEMPT_AUDIO_VERDICT:-unknown}"
+        return "$_ATTEMPT_AUDIO_RC"
+    fi
+    _detect_audio_ok_probe
+    _ATTEMPT_AUDIO_RC=$?
+    _ATTEMPT_AUDIO_VERDICT="${AUDIO_VERDICT:-unknown}"
+    return "$_ATTEMPT_AUDIO_RC"
+}
+
+_detect_audio_ok_probe() {
     # Only a confirmed-OK result is cached AND trusted. A source's audio config is stable, so
     # once we have SEEN real audio we never re-probe — that avoids the mid-reconnect probe miss
     # (source between tokens) that used to cut good sound out.
@@ -463,8 +490,8 @@ detect_audio_ok() {
     # 0-channel answer breaks immediately (no wasted retries / extra connections); only an
     # EMPTY probe result (the truly transient case) is retried.
     local chans i
-    for i in 1 2 3; do
-        chans=$(timeout 8 ffprobe -v quiet -hide_banner \
+    for i in 1 2; do
+        chans=$(timeout 5 ffprobe -v quiet -hide_banner \
             -user_agent "IPTV Smarters/1.0 Dalvik/2.1.0" \
             -analyzeduration 3000000 -probesize 3000000 \
             -select_streams a:0 -show_entries stream=channels \
@@ -588,6 +615,7 @@ push_live() {
     # both breaks browser audio AND makes -re race at ~22x), discard it and feed
     # clean silent stereo from anullsrc instead so the channel still plays 1x.
     local aud_in=() aud_map=() aud_tail=()
+    _ATTEMPT_AUDIO_RC=""; _ATTEMPT_AUDIO_VERDICT=""   # fresh probe per attempt
     if [ "$FORCE_SILENT_AUDIO" != "true" ] && detect_audio_ok && [ "$AUDIO_SYNC" = "preserve" ]; then
         log "→ LIVE (source audio, timestamps PRESERVED)"
         # PRESERVE mode — for sources whose A/V is ALIGNED at the source but which
@@ -703,7 +731,7 @@ push_live() {
         "${pts_bsf[@]}" \
         -t "$FFMPEG_CAP" \
         -flush_packets 1 \
-        -f hls -hls_time "$HLS_TIME" -hls_list_size 40 \
+        -f hls -hls_time "$HLS_TIME" -hls_list_size "$HLS_LIST_SIZE" \
         -hls_flags "${HLS_FLAGS}${PTS_RESET_FLAGS}" \
         "${HLS_SEG[@]}" \
         "$HLS_DIR/index.m3u8" \
