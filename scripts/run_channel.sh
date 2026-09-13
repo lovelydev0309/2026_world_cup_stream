@@ -797,6 +797,9 @@ push_standby() {
 # drop (e.g. HTTP 509 from the IPTV provider) is NOT a crash-loop; it should
 # reconnect immediately with no standby blackout.
 LIVE_FAIL=0
+# Consecutive times we have burned through EVERY source without a healthy run. Drives the
+# backoff below. Reset the moment any source streams healthily.
+CYCLE_FAIL=0
 # Try EVERY source once before dropping to standby. Was a fixed 3 (set when channels had
 # ~3 sources); with the 6-account expansion a channel now has 6+ sources, and a hard-coded 3
 # meant the failover gave up after only the first 3 accounts — never trying the other 3
@@ -804,6 +807,15 @@ LIVE_FAIL=0
 # means a degraded feed on some accounts fails over across ALL of them before showing slate.
 MAX_FAILS=$((NUM_URLS * 2))
 HEALTHY_RUN_SECS=45   # a run at least this long = healthy, resets the fail counter
+# A run that STREAMED for a while and then stalled is a different failure from one that
+# never established. Failing over helps only the second kind (dead edge / bad account); for a
+# source that stalls mid-stream, hopping to another ACCOUNT does nothing about the stall and
+# just opens another provider connection — which is how ch51/ch23 burned 60+ slots in 30 min
+# (watchdog kill at ~26-35s, under HEALTHY_RUN_SECS, so every stall counted as a failover).
+# So: reconnect to the SAME source a couple of times first, and only then rotate.
+STALL_RUN_SECS=12     # ran at least this long => it was streaming; treat as a stall, not a dead edge
+MAX_SAME_RETRY=2      # same-source reconnects before we give up and rotate accounts
+SAME_RETRY=0
 URL_IDX=0             # index into SOURCE_URLS of the currently-active source
 LAST_MODE=""          # "live"|"standby" — for fmp4, wipe on live↔standby transitions
                       # (their init.mp4 differ; a fixed-name init would mismatch)
@@ -858,20 +870,31 @@ while true; do
             # is below HEALTHY_RUN_SECS. This is the whole point: pull a new token cleanly
             # (~5s gap) BEFORE the old one silently dies (which would cost a ~15s watchdog gap).
             LIVE_FAIL=0
+            CYCLE_FAIL=0        # a planned refresh is not a failure
+            SAME_RETRY=0
             log "Live exited (code=$EXIT) ran=${T_RUN}s on source[$URL_IDX] – planned token refresh, reconnecting"
         elif [[ $T_RUN -ge $HEALTHY_RUN_SECS ]]; then
             # Healthy stream hit a transient drop – reconnect to the SAME working
             # URL immediately, no penalty and no failover.
             LIVE_FAIL=0
+            CYCLE_FAIL=0        # a healthy run means the sources are fine again
+            SAME_RETRY=0
             log "Live exited (code=$EXIT) ran=${T_RUN}s on source[$URL_IDX] – healthy, reconnecting"
         else
             # Fast failure (likely HTTP 509 / dead edge): rotate to the next
             # backup URL so the next attempt hits a different upstream node.
             LIVE_FAIL=$((LIVE_FAIL + 1))
-            if [[ $NUM_URLS -gt 1 ]]; then
+            if [[ $T_RUN -ge $STALL_RUN_SECS ]] && [[ ${SAME_RETRY:-0} -lt $MAX_SAME_RETRY ]]; then
+                # It WAS streaming, then stalled. Same source, fresh token — do not spend a
+                # slot on another account for a fault that is not the account's.
+                SAME_RETRY=$((SAME_RETRY + 1))
+                log "Live exited (code=$EXIT) ran=${T_RUN}s fail=$LIVE_FAIL/$MAX_FAILS – stalled after streaming, retrying SAME source[$URL_IDX] (${SAME_RETRY}/${MAX_SAME_RETRY})"
+            elif [[ $NUM_URLS -gt 1 ]]; then
+                SAME_RETRY=0
                 URL_IDX=$(( (URL_IDX + 1) % NUM_URLS ))
                 log "Live exited (code=$EXIT) ran=${T_RUN}s fail=$LIVE_FAIL/$MAX_FAILS – failover to source[$URL_IDX]"
             else
+                SAME_RETRY=0
                 log "Live exited (code=$EXIT) ran=${T_RUN}s fail=$LIVE_FAIL/$MAX_FAILS"
             fi
         fi
@@ -893,8 +916,34 @@ while true; do
             log "Standby ended – resetting to primary, retrying live"
         fi
         LIVE_FAIL=0
+        SAME_RETRY=0
         URL_IDX=0   # after a standby/hold cycle, start over from the primary URL
         rm -f "$AUDIO_CACHE" 2>/dev/null   # source may have changed → re-probe audio
+
+        # BACK OFF before hammering every account again. Without this the loop retried
+        # instantly (sleep 0.3) forever, so a channel whose feed is dead opened NUM_URLS
+        # provider connections every few seconds. The provider holds a stale session for a
+        # while after each drop, so one such channel occupies several slots at once, pushes
+        # accounts OVER max_connections, and then the provider serves corrupt/empty data to
+        # everyone else on those accounts — which our failover reads as a bad feed, so the
+        # HEALTHY channels start cycling too. That is the stampede: one dead channel taking
+        # out its neighbours. Measured 2026-09-13: ch51 did 62 failovers in 30 min while 27
+        # channels the client saw as Down were cycling on the same accounts.
+        # Viewers keep the standby slate / last playlist while we wait, and any healthy run
+        # clears CYCLE_FAIL instantly, so recovery is not delayed.
+        CYCLE_FAIL=$((CYCLE_FAIL + 1))
+        case "$CYCLE_FAIL" in
+            1) BACKOFF=0 ;;
+            2) BACKOFF=10 ;;
+            3) BACKOFF=30 ;;
+            4) BACKOFF=60 ;;
+            5) BACKOFF=120 ;;
+            *) BACKOFF=300 ;;
+        esac
+        if [ "${BACKOFF:-0}" -gt 0 ]; then
+            log "  all $NUM_URLS sources failed ${CYCLE_FAIL}x in a row – backing off ${BACKOFF}s so this channel stops burning provider slots"
+            sleep "$BACKOFF"
+        fi
     fi
     sleep 0.3
 done

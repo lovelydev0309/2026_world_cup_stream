@@ -342,7 +342,7 @@
    "channel_name": "channel11",
    "display_name": "Fox Sports 2 HD",
    "enabled": true,
-   "source_url": "http://@@ACCT1@@/1028353",
+   "source_url": "http://@@ACCT6@@/1028353",
    "hls_url": "https://stream.tv247on.com/hls/channel11/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -357,9 +357,9 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
+    "http://@@ACCT6@@/1028353",
     "http://@@ACCT4@@/1028353",
     "http://@@ACCT1@@/1028353",
-    "http://@@ACCT6@@/1028353",
     "http://@@ACCT2@@/1028353",
     "http://@@ACCT5@@/1028353",
     "http://@@ACCT3@@/1028353"
@@ -421,9 +421,9 @@
    "use_standby": false,
    "encode_resolution": "960x540",
    "source_urls": [
+    "http://@@ACCT4@@/1028326",
     "http://@@ACCT6@@/1028326",
     "http://@@ACCT5@@/1028326",
-    "http://@@ACCT4@@/1028326",
     "http://@@ACCT2@@/1028326",
     "http://@@ACCT1@@/1028326",
     "http://@@ACCT3@@/1028326"
@@ -1465,7 +1465,7 @@
    "resolution": "1280x720",
    "fps": 30,
    "audio_bitrate": 128,
-   "_comment_source": "Swapped 2026-08-31: 436897 had no audio -> 1028541 (SV - CANAL 6, has AAC audio); 436897 kept as video-only failover.",
+   "_comment_source": "SV - CANAL 6 1028541. QUARANTINED 2026-09-13: dead/broken on every account. Alternates checked: 436897 'SV - CANAL 6 EL SALVADOR HD' and 436884 'SV - TCS HD' are BOTH dead (000/0). 436880 'SV - EL SALVADOR' IS healthy (h264 720p+aac, 12-13MB/20s) but it is a DIFFERENT channel - do not swap it in under the Canal 6 label without the client's say-so (wrong-content trap).",
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
@@ -1481,7 +1481,13 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "El Salvador",
-   "free_zone": false
+   "free_zone": false,
+   "quarantined": {
+    "since": "2026-09-13T10:32:25Z",
+    "reason": "provider-side: SV - CANAL 6 (1028541) dead on 3 of 4 accounts (000/0 bytes); the 4th delivers 2.9MB then drops at 17s and carries TWO video streams and NO audio",
+    "last_probe": "2026-09-13T10:32:25Z",
+    "good_probes": 0
+   }
   },
   {
    "channel_name": "channel52",
