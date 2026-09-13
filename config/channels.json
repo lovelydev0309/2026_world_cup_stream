@@ -559,7 +559,7 @@
    "channel_name": "channel19",
    "display_name": "ATV (Perú)",
    "enabled": true,
-   "source_url": "http://@@ACCT_PE1@@/187639",
+   "source_url": "http://@@ACCT_PE2@@/30572",
    "hls_url": "https://stream.tv247on.com/hls/channel19/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -573,13 +573,17 @@
    "encode_resolution": "960x540",
    "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
    "source_urls": [
-    "http://@@ACCT_PE1@@/30572",
     "http://@@ACCT_PE2@@/30572",
-    "http://@@ACCT_PE3@@/30572"
+    "http://@@ACCT_PE3@@/30572",
+    "http://@@ACCT_PE1@@/30572",
+    "http://@@ACCT_PE2@@/69200",
+    "http://@@ACCT_PE3@@/69200",
+    "http://@@ACCT_PE1@@/69200"
    ],
    "logo": "/player/logos/channel19.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 180,
+   "_comment": "ATV (Peru). Primary 30572 'PER - ATV' — the correctly-labelled feed, which RECOVERED (16.6MB/18s, h264 1920x1080 + aac on PE1/PE3) after previously testing 0 bytes on all Peru accounts. Backup 69200 'PER - ATV+' is a DIFFERENT channel, so it is a last resort, not a peer. Had no failover at all before 2026-09-13."
   },
   {
    "channel_name": "channel20",
@@ -1228,13 +1232,18 @@
    "encode_resolution": "960x540",
    "_comment_failover": "Backups are the same World Cup match on DAZN MUNDIAL FHD/HD2 — a dropped primary fails over instantly instead of going to a standby gap.",
    "source_urls": [
-    "http://@@ACCT2@@/655604",
-    "http://@@ACCT3@@/655604",
-    "http://@@ACCT4@@/655604"
+    "http://@@ACCT4@@/1349035",
+    "http://@@ACCT1@@/1349035",
+    "http://@@ACCT5@@/1349035",
+    "http://@@ACCT6@@/1349035",
+    "http://@@ACCT2@@/1349035",
+    "http://@@ACCT3@@/1349035"
    ],
    "logo": "/player/logos/channel44.png",
    "use_standby": true,
-   "country": "Mexico"
+   "country": "Mexico",
+   "source_url": "http://@@ACCT4@@/1349035",
+   "_comment": "VIX Premium. 2026-09-13: swapped OFF 655604, which is the '#### ES - VIX ####' CATEGORY DIVIDER row — it streams and decodes fine (so monitors report OK) but a decoded frame is the provider's multilingual 'Thank you for being our loyal customers' filler slate, NOT VIX content. Now 1349035 'ES - VIX - CANAL VIX MX', frame-verified as real VIX programming (CanalVIX watermark). The provider has no single 'VIX Premium' channel — ~205 themed 'ES - VIX - *' exist, so this slot is a client choice. NEVER source from a catalog name starting with '#'."
   },
   {
    "channel_name": "channel45",
