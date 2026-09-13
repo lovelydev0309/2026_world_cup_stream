@@ -1262,6 +1262,40 @@
    "logo": "/player/logos/channel45.png",
    "use_standby": true,
    "country": "Mexico"
+  },
+  {
+   "channel_name": "channel46",
+   "display_name": "FOROtv",
+   "enabled": true,
+   "source_url": "http://@@ACCT1@@/1279016",
+   "hls_url": "https://stream.tv247on.com/hls/channel46/index.m3u8",
+   "standby_file": "standby/standby.mp4",
+   "bitrate": 2500,
+   "resolution": "1280x720",
+   "fps": 30,
+   "audio_bitrate": 128,
+   "logo": "/player/logos/channel46.png",
+   "country": "Mexico",
+   "_comment": "Added 2026-09-13 per client MEXICO sheet row 9 (marked Added). Primary 1279016 'MX - ForoTV' verified 12.3-12.9MB/20s, h264 1280x720 + aac on ACCT1/ACCT4. This feed was dead across all 6 accounts on 2026-07-08 (that outage is why ch7 became Azteca 7) and has now RECOVERED — re-test before assuming it is stable. Backup 30672 'LATINO - FORO TV' is 640x480 but in a different package, so it survives an MX-only outage. NOT using 1349082 'ES - VIX - N+ FORO': VIX variants are mislabeled/flaky here.",
+   "audio_sync": "preserve",
+   "force_silent_audio": false,
+   "video_mode": "encode",
+   "use_standby": true,
+   "encode_resolution": "960x540",
+   "source_urls": [
+    "http://@@ACCT1@@/1279016",
+    "http://@@ACCT2@@/1279016",
+    "http://@@ACCT4@@/1279016",
+    "http://@@ACCT5@@/1279016",
+    "http://@@ACCT6@@/1279016",
+    "http://@@ACCT3@@/1279016",
+    "http://@@ACCT1@@/30672",
+    "http://@@ACCT2@@/30672",
+    "http://@@ACCT4@@/30672",
+    "http://@@ACCT5@@/30672",
+    "http://@@ACCT6@@/30672",
+    "http://@@ACCT3@@/30672"
+   ]
   }
  ]
 }
