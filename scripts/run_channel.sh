@@ -205,7 +205,14 @@ PY
     [ -n "$_out" ] && { OUT_FPS="${_out% *}"; OUT_GOP="${_out#* }"; }
 fi
 log "  output fps=$OUT_FPS gop=$OUT_GOP (source cadence ${_srcfps:-unknown})"
-STALE_KILL_SECS=8   # kill ffmpeg after this many seconds of ZERO write progress.
+STALE_KILL_SECS=14  # kill ffmpeg after this many seconds of ZERO write progress.
+# Raised 8 -> 14 (2026-09-13). 8s was killing streams that were merely PAUSING: ch23 Peru
+# Magico stalled every 11-36s under ffmpeg while plain curl pulled its SAME sources for a
+# full 25s without a hiccup (12-14MB each, all three accounts), and 187632 is the only
+# PeruMagico in the catalog so there was nothing to fail over TO. Each false kill costs a
+# restart, a gap, and — before the retry-discipline work — another account slot. The client
+# players carry a ~60s cushion, so detecting a real stall at 14s instead of 8s is still far
+# inside budget, while brief source pauses now ride through on ffmpeg's own reconnect.
 # Root cause of the "buffer→0 on some channels" reports: the tvon247 sources are
 # 302-redirect tokenized feeds whose token expires every ~90-285s. On expiry the
 # upstream keeps the TCP socket OPEN but stops sending data (no EOF, no error), so
@@ -720,7 +727,7 @@ push_live() {
         -reconnect 1 -reconnect_at_eof 1 \
         -reconnect_streamed 1 -reconnect_on_network_error 1 \
         -reconnect_delay_max 2 \
-        -rw_timeout 8000000 \
+        -rw_timeout 12000000 \
         -i "$SOURCE_URL" \
         "${aud_in[@]}" \
         "${aud_map[@]}" \
