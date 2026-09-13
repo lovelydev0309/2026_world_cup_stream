@@ -897,6 +897,14 @@ while true; do
                 SAME_RETRY=0
                 log "Live exited (code=$EXIT) ran=${T_RUN}s fail=$LIVE_FAIL/$MAX_FAILS"
             fi
+            # A sub-STALL_RUN_SECS exit means the provider refused almost immediately —
+            # typically because it is still holding the session we just dropped. Retrying
+            # instantly just burns the next account the same way: ch16 spent 5 sources in
+            # 9 seconds doing exactly that. A short pause lets the session clear, and it is
+            # invisible to viewers against the player's ~60s cushion.
+            if [[ $T_RUN -lt $STALL_RUN_SECS ]]; then
+                sleep 3
+            fi
         fi
     else
         if [ "$USE_STANDBY" = "false" ]; then
