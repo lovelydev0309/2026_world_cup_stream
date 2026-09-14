@@ -34,6 +34,13 @@ STATE = os.path.join(PROJECT, "cache", "live_state.json")
 
 STALL_FACTOR = 3        # newest segment older than this many target-durations => STALLED
 SLOW_RATIO = 0.55       # advancing slower than this fraction of realtime => SLOW
+RATE_BASELINE = 30      # seconds of history a rate is measured over (see below)
+
+# Freshness (age) is sampled every run, but ADVANCEMENT cannot be: over a 5s interval a
+# 4s-segment channel advances 0, 1 or 2 segments, so the rate quantises to 0.0 / 0.8 / 1.6
+# and "SLOW" fires on pure sampling noise. So the rate is measured against a baseline at
+# least RATE_BASELINE seconds old (~7 segments, fine resolution) and carried forward between
+# baseline rolls, while age keeps updating every 5s.
 
 
 def read_playlist(ch):
@@ -103,10 +110,13 @@ def main():
     except Exception:
         prev = {}
     prev_ch = prev.get("channels", {})
-    prev_at = prev.get("at", 0)
+    base = prev.get("base", {})
+    base_ch = base.get("channels", {})
+    base_at = base.get("at", 0)
 
     now = time.time()
-    dt = now - prev_at if prev_at else 0
+    dt = now - base_at if base_at else 0
+    roll = dt >= RATE_BASELINE          # baseline old enough to measure against, then reset
     out, state = [], {}
     counts = {"LIVE": 0, "SLATE": 0, "SLOW": 0, "STALLED": 0, "OFF": 0}
 
@@ -119,20 +129,31 @@ def main():
             st, rate = "OFF", None
         else:
             td = max(pl["td"], 1)
-            rate = None
-            p = prev_ch.get(ch)
-            # Only trust a rate when the previous sample is recent enough to be meaningful
-            # and the sequence went FORWARD (a restart resets it and reads as negative).
-            if p and dt >= 4 and p.get("seq") is not None:
-                d = pl["seq"] - p["seq"]
-                if d >= 0:
-                    rate = (d * td) / dt
+            # Carry the last computed rate forward until the baseline rolls, so the value
+            # on screen is stable rather than flickering with sampling noise.
+            rate = (prev_ch.get(ch) or {}).get("rate")
+            if roll:
+                b = base_ch.get(ch)
+                # A restart resets MEDIA-SEQUENCE, so a negative delta means "no measurement"
+                # rather than "slow" -- drop the rate instead of reporting a false 0.
+                rate = None
+                if b is not None and pl["seq"] is not None:
+                    d = pl["seq"] - b
+                    if d >= 0:
+                        rate = (d * td) / dt
 
             if age > td * STALL_FACTOR:
                 st = "STALLED"
             elif last_transition(ch) == "standby":
                 st = "SLATE"
-            elif rate is not None and rate < SLOW_RATIO:
+            elif (rate is not None and rate < SLOW_RATIO
+                  and age > td and pl["seq"] > 0):
+                # Three guards, because a freshly (re)started channel looks slow when it is
+                # not: MEDIA-SEQUENCE sits at 0 until the window fills and the first segments
+                # roll off, so the delta is legitimately 0 while segments land normally.
+                #   seq > 0   the window has actually rolled, so the delta means something
+                #   age > td  a segment landed within one segment-duration IS realtime,
+                #             whatever the sequence says
                 st = "SLOW"
             else:
                 st = "LIVE"
@@ -149,19 +170,24 @@ def main():
             "seg": pl["td"] if pl else None,
             "window": (pl["td"] * pl["count"]) if pl else None,
         })
-        state[ch] = {"seq": pl["seq"] if pl else None}
+        state[ch] = {"seq": pl["seq"] if pl else None,
+                     "rate": round(rate, 2) if rate is not None else None}
 
     out.sort(key=lambda c: c["ch"])
     doc = {
         "updated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now)),
         "interval": round(dt, 1),
+        "rate_window": RATE_BASELINE,
         "counts": counts,
         "up": counts["LIVE"],
         "total": len(out),
         "channels": out,
     }
 
-    for path, data in ((OUT, doc), (STATE, {"at": now, "channels": state})):
+    new_base = ({"at": now, "channels": {c: v["seq"] for c, v in state.items()}}
+                if roll or not base_at else base)
+    for path, data in ((OUT, doc),
+                       (STATE, {"at": now, "channels": state, "base": new_base})):
         try:
             os.makedirs(os.path.dirname(path), exist_ok=True)
             tmp = path + ".tmp"
