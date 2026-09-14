@@ -2147,9 +2147,7 @@
    "token_refresh_secs": 0,
    "country": "Cuba",
    "free_zone": true,
-   "_comment": "CUBAVISION. 2026-09-13: primary reordered to 1359967 'ES - CUBAVISION SD', the only source that renders a CLEAN picture. 30695 'CUB - CUBAVISION' and 187616 'CUB - CUBAVISION vip' both deliver full byte volume and report ZERO ffmpeg decode errors, but an extracted frame is green horizontal banding / macroblock garbage — so byte counts and error counts BOTH miss it and only a frame catches it. Failover had already walked to 1359967 on its own; this just stops it starting on a corrupt feed.",
-   "hidden": true,
-   "_comment_hidden": "Hidden from the published lineup 2026-09-14 at client request. The channel keeps RUNNING and its hls url still works -- this only removes it from player/channels.json. Set hidden=false to list it again."
+   "_comment": "CUBAVISION. 2026-09-13: primary reordered to 1359967 'ES - CUBAVISION SD', the only source that renders a CLEAN picture. 30695 'CUB - CUBAVISION' and 187616 'CUB - CUBAVISION vip' both deliver full byte volume and report ZERO ffmpeg decode errors, but an extracted frame is green horizontal banding / macroblock garbage — so byte counts and error counts BOTH miss it and only a frame catches it. Failover had already walked to 1359967 on its own; this just stops it starting on a corrupt feed."
   },
   {
    "channel_name": "channel75",
@@ -2177,9 +2175,7 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Cuba",
-   "free_zone": true,
-   "hidden": true,
-   "_comment_hidden": "Hidden from the published lineup 2026-09-14 at client request. The channel keeps RUNNING and its hls url still works -- this only removes it from player/channels.json. Set hidden=false to list it again."
+   "free_zone": true
   },
   {
    "channel_name": "channel76",
@@ -2237,9 +2233,7 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Cuba",
-   "free_zone": false,
-   "hidden": true,
-   "_comment_hidden": "Hidden from the published lineup 2026-09-14 at client request. The channel keeps RUNNING and its hls url still works -- this only removes it from player/channels.json. Set hidden=false to list it again."
+   "free_zone": false
   },
   {
    "channel_name": "channel78",
@@ -2267,9 +2261,7 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Cuba",
-   "free_zone": false,
-   "hidden": true,
-   "_comment_hidden": "Hidden from the published lineup 2026-09-14 at client request. The channel keeps RUNNING and its hls url still works -- this only removes it from player/channels.json. Set hidden=false to list it again."
+   "free_zone": false
   },
   {
    "channel_name": "channel79",
@@ -2298,9 +2290,7 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Cuba",
-   "free_zone": false,
-   "hidden": true,
-   "_comment_hidden": "Hidden from the published lineup 2026-09-14 at client request. The channel keeps RUNNING and its hls url still works -- this only removes it from player/channels.json. Set hidden=false to list it again."
+   "free_zone": false
   },
   {
    "channel_name": "channel80",
