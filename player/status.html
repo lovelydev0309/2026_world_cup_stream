@@ -5,52 +5,96 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Channel Health — live3</title>
 <style>
-  :root{ --bg:#0d1117; --card:#161b22; --line:#30363d; --tx:#e6edf3; --dim:#8b949e;
-         --ok:#2ea043; --warn:#d29922; --bad:#da3633; }
-  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--tx);
-    font:14px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-  header{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;
-    align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;background:var(--bg);z-index:5}
-  h1{font-size:18px;margin:0;font-weight:600}
-  .summary{font-size:13px;color:var(--dim)}
-  .pill{padding:2px 10px;border-radius:20px;font-weight:600;font-size:12px}
-  .pill.ok{background:rgba(46,160,67,.15);color:var(--ok)}
-  .pill.bad{background:rgba(218,54,51,.15);color:var(--bad)}
-  .pill.warn{background:rgba(210,153,34,.15);color:var(--warn)}
-  main{padding:20px}
-  .country{margin:0 0 26px}
+  /* Deliberately single-theme: this is a control-room wallboard, read in a dark room and
+     often left open on a spare screen. Every colour is set explicitly so it never borrows
+     a host background. */
+  :root{
+    --bg:#0d1117; --card:#161b22; --card-2:#1c232c; --line:#30363d;
+    --tx:#e6edf3; --dim:#8b949e; --faint:#6e7681;
+    --live:#3fb950; --slate:#6e9fe8; --slow:#d29922; --stall:#db6d28; --off:#f85149;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);
+    font:14px/1.5 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+
+  header{padding:14px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;
+    background:var(--bg);z-index:5;display:flex;flex-direction:column;gap:10px}
+  .hrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  h1{font-size:17px;margin:0;font-weight:600;letter-spacing:-.01em}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--live);flex:none;
+    box-shadow:0 0 0 0 rgba(63,185,80,.7);animation:pulse 2s infinite}
+  @keyframes pulse{70%{box-shadow:0 0 0 7px rgba(63,185,80,0)}100%{box-shadow:0 0 0 0 rgba(63,185,80,0)}}
+  @media (prefers-reduced-motion:reduce){ .dot{animation:none} }
+  .realtime{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--dim)}
+
+  /* state totals — the summary a wallboard is read for */
+  .totals{display:flex;gap:7px;flex-wrap:wrap}
+  .tot{display:flex;align-items:baseline;gap:6px;padding:4px 10px;border-radius:6px;
+    background:var(--card);border:1px solid var(--line);font-size:12px}
+  .tot b{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+  .tot.LIVE b{color:var(--live)} .tot.SLATE b{color:var(--slate)}
+  .tot.SLOW b{color:var(--slow)} .tot.STALLED b{color:var(--stall)} .tot.OFF b{color:var(--off)}
+  .tot.zero{opacity:.4}
+  .ages{font-size:11.5px;color:var(--faint);display:flex;gap:14px;flex-wrap:wrap}
+  .warn{color:var(--slow)}
+
+  main{padding:18px 20px 40px}
+  .country{margin:0 0 24px}
   .chead{display:flex;align-items:center;gap:10px;margin:0 0 10px;
     padding-bottom:6px;border-bottom:1px solid var(--line)}
-  .chead h2{font-size:15px;margin:0;font-weight:600}
-  .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
-  .ch{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--dim);
-    border-radius:10px;padding:12px 14px}
-  .ch.OK{border-left-color:var(--ok)}
-  .ch.SILENT,.ch.NO_AUDIO{border-left-color:var(--warn)}
-  .ch.DOWN,.ch.NO_VIDEO,.ch.STALE,.ch.ENDED,.ch.DEGRADED{border-left-color:var(--bad)}
-  .ch .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-  .ch .name{font-weight:600}
-  .ch .num{color:var(--dim);font-size:12px}
-  .st{font-size:12px;font-weight:700;letter-spacing:.03em;margin:6px 0 2px}
-  .st.OK{color:var(--ok)} .st.SILENT,.st.NO_AUDIO{color:var(--warn)}
-  .st.DOWN,.st.NO_VIDEO,.st.STALE,.st.ENDED,.st.DEGRADED{color:var(--bad)}
-  .detail{color:var(--dim);font-size:12px}
-  footer{padding:14px 22px;color:var(--dim);font-size:12px;border-top:1px solid var(--line)}
-  .stale-warn{color:var(--warn)}
-  @media(max-width:480px){ main{padding:14px} header{padding:14px} }
+  .chead h2{font-size:14px;margin:0;font-weight:600}
+  .score{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;
+    padding:1px 8px;border-radius:20px;background:var(--card);border:1px solid var(--line)}
+  .score.all{color:var(--live)} .score.some{color:var(--slow)} .score.none{color:var(--off)}
+
+  .grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(212px,1fr))}
+  .ch{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--faint);
+    border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:5px}
+  .ch.LIVE{border-left-color:var(--live)}
+  .ch.SLATE{border-left-color:var(--slate)}
+  .ch.SLOW{border-left-color:var(--slow)}
+  .ch.STALLED{border-left-color:var(--stall)}
+  .ch.OFF{border-left-color:var(--off);background:var(--card-2)}
+
+  .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .name{font-weight:600;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .num{color:var(--faint);font-size:11.5px;font-variant-numeric:tabular-nums;flex:none}
+
+  .state{display:flex;align-items:center;gap:7px}
+  .badge{font-size:11px;font-weight:700;letter-spacing:.05em}
+  .badge.LIVE{color:var(--live)} .badge.SLATE{color:var(--slate)}
+  .badge.SLOW{color:var(--slow)} .badge.STALLED{color:var(--stall)} .badge.OFF{color:var(--off)}
+  .metrics{font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .detail{font-size:11.5px;color:var(--faint);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .detail.bad{color:var(--slow)}
+
+  footer{padding:14px 20px;color:var(--faint);font-size:11.5px;border-top:1px solid var(--line);
+    max-width:78ch}
+  @media(max-width:480px){ main{padding:14px} header{padding:12px 14px} }
 </style>
 </head>
 <body>
   <header>
-    <h1>📺 Channel Health</h1>
-    <span id="pill" class="pill">…</span>
-    <span class="summary" id="updated">loading…</span>
+    <div class="hrow">
+      <h1>📺 Channel Health</h1>
+      <span class="realtime"><span class="dot" id="dot"></span><span id="beat">live</span></span>
+      <div class="totals" id="totals"></div>
+    </div>
+    <div class="ages" id="ages">loading…</div>
   </header>
+
   <main id="out"></main>
-  <footer>
-    Synthetic viewer monitor — each channel is fetched through the CDN and its video+audio
-    decoded, exactly as a viewer receives it. Monitor runs every 5 min (a full pass over 77 channels takes ~4.5 min); this page auto-refreshes every 30s.
+
+  <footer id="foot">
+    <b>Live state</b> (LIVE / SLATE / SLOW / STALLED / OFF) is read from the server's own HLS
+    output every 5s — it answers "is this channel putting segments out right now".
+    <b>Picture and sound</b> detail comes from the synthetic viewer, which pulls a segment
+    through the CDN and decodes it exactly as a viewer receives it; a full pass over all
+    channels takes ~4.5 min, so that line is minutes old by design.
+    <b>SLATE</b> means the channel is producing but showing the standby card, not the programme.
   </footer>
+
 <script>
   var OUT = document.getElementById('out');
   // Country order matches the landing page; anything unknown is appended alphabetically.
@@ -58,71 +102,105 @@
   var FLAG  = {'Mexico':'🇲🇽','Peru':'🇵🇪','US':'🇺🇸','El Salvador':'🇸🇻','Venezuela':'🇻🇪',
                'Colombia':'🇨🇴','Guatemala':'🇬🇹','Honduras':'🇭🇳','Cuba':'🇨🇺'};
   var LABEL = {'US':'United States'};
-  function esc(s){ return (s||'').replace(/[&<>]/g, function(c){
+  var STATES = ['LIVE','SLATE','SLOW','STALLED','OFF'];
+
+  var decoded = {};       // ch number -> synthetic-monitor entry (slow tier)
+  var decodedAt = null;
+
+  function esc(s){ return (s==null?'':String(s)).replace(/[&<>]/g, function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+  function ago(iso){
+    if(!iso) return null;
+    return Math.max(0, Math.round((Date.now() - new Date(iso).getTime())/1000));
+  }
+  function human(s){
+    if(s==null) return '—';
+    if(s < 90) return s + 's';
+    if(s < 5400) return Math.round(s/60) + 'm';
+    return Math.round(s/3600) + 'h';
+  }
 
   function card(c){
-    var meanTxt = (c.mean===null||c.mean===undefined) ? '' : (Math.round(c.mean)+' dB');
-    var bits = [c.video, c.sr ? c.sr+' Hz' : '', meanTxt].filter(Boolean).join(' · ');
-    return '<div class="ch '+esc(c.status)+'">'
-      + '<div class="top"><span class="name">'+esc(c.name)+'</span>'
-      + '<span class="num">ch'+c.ch+'</span></div>'
-      + '<div class="st '+esc(c.status)+'">'+esc(c.status)+'</div>'
-      + '<div class="detail">'+esc(c.detail)+'</div>'
-      + (bits ? '<div class="detail">'+esc(bits)+'</div>' : '')
+    var d = decoded[c.ch];
+    // Real-time metrics: how stale the newest segment is, and whether the playlist is
+    // advancing at realtime. Both come from the fast tier.
+    var m = [];
+    if(c.age != null) m.push('seg ' + c.age.toFixed(1) + 's');
+    if(c.rate != null) m.push(c.rate.toFixed(2) + '×');
+    // Quality line from the decode pass. Only surfaced when it disagrees or adds detail.
+    var det = '', bad = false;
+    if(d){
+      if(d.status && d.status !== 'OK'){ det = d.status + ' — ' + (d.detail||''); bad = true; }
+      else { det = [d.video, d.sr ? d.sr + ' Hz' : ''].filter(Boolean).join(' · '); }
+    }
+    return '<div class="ch ' + esc(c.state) + '">'
+      + '<div class="top"><span class="name" title="' + esc(c.title) + '">' + esc(c.title) + '</span>'
+      + '<span class="num">ch' + c.ch + '</span></div>'
+      + '<div class="state"><span class="badge ' + esc(c.state) + '">' + esc(c.state) + '</span>'
+      + '<span class="metrics">' + esc(m.join(' · ')) + '</span></div>'
+      + (det ? '<div class="detail' + (bad ? ' bad' : '') + '">' + esc(det) + '</div>' : '')
       + '</div>';
   }
 
-  async function tick(){
+  function render(live){
+    var counts = live.counts || {};
+    document.getElementById('totals').innerHTML = STATES.map(function(s){
+      var n = counts[s] || 0;
+      return '<span class="tot ' + s + (n ? '' : ' zero') + '"><b>' + n + '</b>' + s.toLowerCase() + '</span>';
+    }).join('');
+
+    var la = ago(live.updated), da = ago(decodedAt);
+    // The fast tier runs every 5s; past ~30s it has stopped, which is itself a fault.
+    document.getElementById('ages').innerHTML =
+      '<span' + (la != null && la > 30 ? ' class="warn"' : '') + '>live state: ' + human(la) + ' ago</span>'
+      + '<span>picture/sound check: ' + (da == null ? 'not yet run' : human(da) + ' ago') + '</span>'
+      + '<span>' + (live.total||0) + ' channels</span>';
+    document.getElementById('dot').style.background =
+      (la != null && la > 30) ? 'var(--slow)' : 'var(--live)';
+
+    var by = {};
+    (live.channels||[]).forEach(function(c){
+      (by[c.country || 'Other'] = by[c.country || 'Other'] || []).push(c);
+    });
+    var rest = Object.keys(by).filter(function(k){ return ORDER.indexOf(k) < 0; }).sort();
+    var order = ORDER.filter(function(k){ return by[k]; }).concat(rest);
+
+    OUT.innerHTML = order.map(function(k){
+      var list = by[k].sort(function(a,b){ return a.ch - b.ch; });
+      var ok = list.filter(function(c){ return c.state === 'LIVE'; }).length;
+      var cls = ok === list.length ? 'all' : (ok === 0 ? 'none' : 'some');
+      return '<section class="country"><div class="chead">'
+        + '<h2>' + (FLAG[k] ? FLAG[k] + ' ' : '') + esc(LABEL[k] || k) + '</h2>'
+        + '<span class="score ' + cls + '">' + ok + ' / ' + list.length + '</span>'
+        + '</div><div class="grid">' + list.map(card).join('') + '</div></section>';
+    }).join('');
+  }
+
+  async function fast(){
     try{
-      // status.json carries health; channels.json carries country. Join on channel number so
-      // the monitor does not have to change when the lineup grows.
-      var res = await Promise.all([
-        fetch('status.json?_='+Date.now(), {cache:'no-store'}).then(function(r){ return r.json(); }),
-        fetch('channels.json?_='+Date.now(), {cache:'no-store'})
-          .then(function(r){ return r.json(); }).catch(function(){ return []; })
-      ]);
-      var d = res[0], lineup = res[1] || [];
-      var countryOf = {};
-      lineup.forEach(function(x){
-        var n = parseInt(String(x.name||'').replace(/\D/g,''),10);
-        if(n) countryOf[n] = x.country || '';
-      });
-
-      var pill = document.getElementById('pill');
-      pill.textContent = d.ok + ' / ' + d.total + ' healthy';
-      pill.className = 'pill ' + (d.ok === d.total ? 'ok' : 'bad');
-      var age = Math.round((Date.now() - new Date(d.updated).getTime())/1000);
-      // A full run over 77 channels measures ~273s and the cron is */5, so a healthy
-      // dashboard is routinely 5-9 min old. Warn only past two missed cycles.
-      document.getElementById('updated').innerHTML = 'updated ' + esc(d.updated) +
-        (age > 900 ? ' <span class="stale-warn">(monitor may be stalled — '+age+'s ago)</span>'
-                   : ' ('+age+'s ago)');
-
-      var by = {};
-      d.channels.forEach(function(c){
-        var k = countryOf[c.ch] || 'Other';
-        (by[k] = by[k] || []).push(c);
-      });
-      var rest = Object.keys(by).filter(function(k){ return ORDER.indexOf(k) < 0; }).sort();
-      var order = ORDER.filter(function(k){ return by[k]; }).concat(rest);
-
-      OUT.innerHTML = order.map(function(k){
-        var list = by[k].sort(function(a,b){ return a.ch - b.ch; });
-        var ok = list.filter(function(c){ return c.status === 'OK'; }).length;
-        var cls = ok === list.length ? 'ok' : (ok === 0 ? 'bad' : 'warn');
-        return '<section class="country">'
-          + '<div class="chead">'
-          + '<h2>' + (FLAG[k] ? FLAG[k]+' ' : '') + esc(LABEL[k] || k) + '</h2>'
-          + '<span class="pill '+cls+'">'+ok+' / '+list.length+'</span>'
-          + '</div><div class="grid">' + list.map(card).join('') + '</div></section>';
-      }).join('');
+      var r = await fetch('live.json?_=' + Date.now(), {cache:'no-store'});
+      render(await r.json());
     }catch(e){
-      document.getElementById('updated').innerHTML =
-        '<span class="stale-warn">status.json unavailable — monitor not yet run?</span>';
+      document.getElementById('ages').innerHTML =
+        '<span class="warn">live.json unavailable — is live-status.service running?</span>';
+      document.getElementById('dot').style.background = 'var(--off)';
     }
   }
-  tick(); setInterval(tick, 30000);
+
+  async function slow(){
+    try{
+      var r = await fetch('status.json?_=' + Date.now(), {cache:'no-store'});
+      var d = await r.json();
+      decodedAt = d.updated;
+      var map = {};
+      (d.channels||[]).forEach(function(c){ map[c.ch] = c; });
+      decoded = map;
+    }catch(e){ /* keep whatever we had; the fast tier still drives the page */ }
+  }
+
+  slow().then(fast);
+  setInterval(fast, 5000);
+  setInterval(slow, 30000);
 </script>
 </body>
 </html>
