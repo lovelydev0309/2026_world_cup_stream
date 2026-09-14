@@ -178,8 +178,8 @@
     "http://@@ACCT4@@/1028329",
     "http://@@ACCT1@@/1028329"
    ],
-   "_comment_token": "Azteca Uno feed (1028329) has an unusually short 302-token TTL (~30-110s) on ALL accounts and no alternate stream ID exists; refresh proactively at 45s to preempt the silent-socket stall (buffer->0 cause). Other channels use the 85s script default.",
-   "token_refresh_secs": 35
+   "_comment_token": "2026-09-13/14: forced 35s refresh removed AGAIN (the 32f5499 rollback restored it). It fires ~95 times/hour, each a 1-2s gap, on a source measured LONG-LIVED: three pulls each ran the full 120s test ceiling delivering 47-52MB. The stale watchdog already covers a real token stall, so the pre-emptive refresh is pure self-inflicted churn. NOTE: the Peru channels' 180s refresh is NOT this bug - Peru tokens measure 147-197s, so 180s is correctly tuned and must stay.",
+   "token_refresh_secs": 0
   },
   {
    "channel_name": "channel6",
@@ -670,7 +670,7 @@
   {
    "channel_name": "channel23",
    "display_name": "Perú Mágico",
-   "enabled": false,
+   "enabled": true,
    "source_url": "http://@@ACCT_PE1@@/187632",
    "hls_url": "https://stream.tv247on.com/hls/channel23/index.m3u8",
    "standby_file": "standby/standby.mp4",
@@ -691,7 +691,8 @@
    ],
    "logo": "/player/logos/channel23.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 180,
+   "_comment": "Peru Magico 187632. RE-ENABLED 2026-09-13: feed verified healthy (7.2MB/14s on ACCT_PE1). The 403s seen on PE2/PE3 are CONNECTION-CAP rejections, not a dead feed — Peru runs 11 producers against 15 slots. Left disabled by the 32f5499 rollback, hence reported Down. "
   },
   {
    "channel_name": "channel24",
@@ -774,7 +775,7 @@
   {
    "channel_name": "channel27",
    "display_name": "ESPN 2 HD (Perú)",
-   "enabled": false,
+   "enabled": true,
    "source_url": "http://@@ACCT_PE3@@/312516",
    "hls_url": "https://stream.tv247on.com/hls/channel27/index.m3u8",
    "standby_file": "standby/standby.mp4",
@@ -795,7 +796,8 @@
    ],
    "logo": "/player/logos/channel27.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 180,
+   "_comment": "ESPN 2 HD (Peru) 312516. RE-ENABLED 2026-09-13: feed verified healthy on ALL THREE Peru accounts (9.7-10.6MB/14s). It was left disabled by the 32f5499 rollback, so the client's monitoring correctly reported it Down — it simply was not in the lineup. "
   },
   {
    "channel_name": "channel28",

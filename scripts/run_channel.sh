@@ -187,7 +187,7 @@ PY
     [ -n "$_out" ] && { OUT_FPS="${_out% *}"; OUT_GOP="${_out#* }"; }
 fi
 log "  output fps=$OUT_FPS gop=$OUT_GOP (source cadence ${_srcfps:-unknown})"
-STALE_KILL_SECS=10   # kill ffmpeg after this many seconds of ZERO write progress.
+STALE_KILL_SECS=14   # kill ffmpeg after this many seconds of ZERO write progress.
 # Root cause of the "buffer→0 on some channels" reports: the tvon247 sources are
 # 302-redirect tokenized feeds whose token expires every ~90-285s. On expiry the
 # upstream keeps the TCP socket OPEN but stops sending data (no EOF, no error), so
@@ -531,7 +531,7 @@ push_live() {
         -reconnect 1 -reconnect_at_eof 1 \
         -reconnect_streamed 1 -reconnect_on_network_error 1 \
         -reconnect_delay_max 2 \
-        -rw_timeout 8000000 \
+        -rw_timeout 12000000 \
         -i "$SOURCE_URL" \
         "${aud_in[@]}" \
         "${aud_map[@]}" \
@@ -596,6 +596,13 @@ push_standby() {
 # drop (e.g. HTTP 509 from the IPTV provider) is NOT a crash-loop; it should
 # reconnect immediately with no standby blackout.
 LIVE_FAIL=0
+# Consecutive full sweeps of every source with no healthy run -> drives the backoff below.
+CYCLE_FAIL=0
+# A run that STREAMED then stalled is not a dead edge; hopping ACCOUNTS cannot fix a stalling
+# source and just spends another provider slot. Reconnect to the same source first.
+STALL_RUN_SECS=12
+MAX_SAME_RETRY=2
+SAME_RETRY=0
 # Try EVERY source once before dropping to standby. Was a fixed 3 (set when channels had
 # ~3 sources); with the 6-account expansion a channel now has 6+ sources, and a hard-coded 3
 # meant the failover gave up after only the first 3 accounts — never trying the other 3
@@ -651,22 +658,34 @@ while true; do
             # is below HEALTHY_RUN_SECS. This is the whole point: pull a new token cleanly
             # (~5s gap) BEFORE the old one silently dies (which would cost a ~15s watchdog gap).
             LIVE_FAIL=0
+            CYCLE_FAIL=0
+            SAME_RETRY=0
             log "Live exited (code=$EXIT) ran=${T_RUN}s on source[$URL_IDX] – planned token refresh, reconnecting"
         elif [[ $T_RUN -ge $HEALTHY_RUN_SECS ]]; then
             # Healthy stream hit a transient drop – reconnect to the SAME working
             # URL immediately, no penalty and no failover.
             LIVE_FAIL=0
+            CYCLE_FAIL=0
+            SAME_RETRY=0
             log "Live exited (code=$EXIT) ran=${T_RUN}s on source[$URL_IDX] – healthy, reconnecting"
         else
             # Fast failure (likely HTTP 509 / dead edge): rotate to the next
             # backup URL so the next attempt hits a different upstream node.
             LIVE_FAIL=$((LIVE_FAIL + 1))
-            if [[ $NUM_URLS -gt 1 ]]; then
+            if [[ $T_RUN -ge $STALL_RUN_SECS ]] && [[ ${SAME_RETRY:-0} -lt $MAX_SAME_RETRY ]]; then
+                SAME_RETRY=$((SAME_RETRY + 1))
+                log "Live exited (code=$EXIT) ran=${T_RUN}s fail=$LIVE_FAIL/$MAX_FAILS – stalled after streaming, retrying SAME source[$URL_IDX] (${SAME_RETRY}/${MAX_SAME_RETRY})"
+            elif [[ $NUM_URLS -gt 1 ]]; then
+                SAME_RETRY=0
                 URL_IDX=$(( (URL_IDX + 1) % NUM_URLS ))
                 log "Live exited (code=$EXIT) ran=${T_RUN}s fail=$LIVE_FAIL/$MAX_FAILS – failover to source[$URL_IDX]"
             else
+                SAME_RETRY=0
                 log "Live exited (code=$EXIT) ran=${T_RUN}s fail=$LIVE_FAIL/$MAX_FAILS"
             fi
+            # Instant refusal usually means the provider still holds the session we just dropped;
+            # retrying at once burns the next account identically.
+            if [[ $T_RUN -lt $STALL_RUN_SECS ]]; then sleep 3; fi
         fi
     else
         if [ "$USE_STANDBY" = "false" ]; then
@@ -685,8 +704,22 @@ while true; do
             push_standby || true
             log "Standby ended – resetting to primary, retrying live"
         fi
+
         LIVE_FAIL=0
         URL_IDX=0   # after a standby/hold cycle, start over from the primary URL
+        SAME_RETRY=0
+        # Back off before hammering every account again; without this the loop retried instantly
+        # forever, so one dead channel held slots across accounts and pushed them over cap, which
+        # made the provider feed corrupt data to HEALTHY channels there. Any healthy run clears it.
+        CYCLE_FAIL=$((CYCLE_FAIL + 1))
+        case "$CYCLE_FAIL" in
+            1) BACKOFF=0 ;; 2) BACKOFF=10 ;; 3) BACKOFF=30 ;;
+            4) BACKOFF=60 ;; 5) BACKOFF=120 ;; *) BACKOFF=300 ;;
+        esac
+        if [ "${BACKOFF:-0}" -gt 0 ]; then
+            log "  all $NUM_URLS sources failed ${CYCLE_FAIL}x in a row – backing off ${BACKOFF}s so this channel stops burning provider slots"
+            sleep "$BACKOFF"
+        fi
         rm -f "$AUDIO_CACHE" 2>/dev/null   # source may have changed → re-probe audio
     fi
     sleep 1
