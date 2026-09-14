@@ -504,7 +504,7 @@ push_live() {
         [ ${#aud_in[@]} -eq 0 ] && aud_tail=()
     else
         vid_args=(-vf "scale=${ENC_W}:${ENC_H}:force_original_aspect_ratio=decrease,pad=${ENC_W}:${ENC_H}:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS" \
-                  -c:v libx264 -preset ultrafast -crf 24 -threads 2 \
+                  -c:v libx264 -preset ultrafast -crf 24 -maxrate 1400k -bufsize 2800k -threads 2 \
                   -r "$OUT_FPS" -g "$OUT_GOP" -keyint_min "$OUT_GOP" \
                   -force_key_frames "expr:gte(t,n_forced*4)")
     fi
