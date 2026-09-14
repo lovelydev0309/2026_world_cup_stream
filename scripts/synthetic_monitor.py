@@ -20,6 +20,7 @@ Run from cron every 60s (flock-guarded so runs never overlap):
   * * * * * flock -n /tmp/synmon.lock /opt/streaming-stack/scripts/synthetic_monitor.py
 """
 import json, subprocess, urllib.request, time, os, re
+import tempfile
 
 CDN        = os.environ.get("SYNMON_CDN", "https://stream.tv247on.com/hls")
 STATUS     = "/opt/streaming-stack/player/status.json"
@@ -81,28 +82,49 @@ def probe_manifest(n):
     return (None, seg, m)
 
 def decode_segment(n, seg):
-    """Download newest segment via CDN and decode: returns dict with v/a facts."""
+    """Download the newest segment ONCE via CDN, then probe the local copy.
+
+    Previously this handed the CDN url to ffprobe twice and ffmpeg once, i.e. three
+    downloads of the same segment per channel. With 77 channels that was ~231 CDN
+    requests and a 239s run against a */2 cron, and the tail of the run returned empty
+    probes that classify() reported as NO_VIDEO on healthy channels.
+    """
     url = "%s/channel%d/%s" % (CDN, n, seg)
     out = {"video": "", "sr": "", "mean": None, "v_ok": False, "a_ok": False}
+    tmp = None
     try:
+        data = fetch(url, timeout=20, binary=True)
+        if not data:
+            out["err"] = "empty segment body"
+            return out
+        fd, tmp = tempfile.mkstemp(prefix="synmon_%d_" % n, suffix=".ts")
+        with os.fdopen(fd, "wb") as f:
+            f.write(data)
+
         v = ffprobe(["-select_streams", "v:0", "-show_entries",
-                     "stream=codec_name,width,height", "-of", "csv=p=0", url])
+                     "stream=codec_name,width,height", "-of", "csv=p=0", tmp])
         if v:
-            p = v.splitlines()[0].split(",")   # first stream only, no stray newlines
+            p_ = v.splitlines()[0].split(",")   # first stream only, no stray newlines
             out["v_ok"] = True
-            if len(p) >= 3: out["video"] = "%sx%s" % (p[1].strip(), p[2].strip())
+            if len(p_) >= 3: out["video"] = "%sx%s" % (p_[1].strip(), p_[2].strip())
         a = ffprobe(["-select_streams", "a:0", "-show_entries",
-                     "stream=sample_rate,channels", "-of", "csv=p=0", url])
+                     "stream=sample_rate,channels", "-of", "csv=p=0", tmp])
         if a:
             out["a_ok"] = True
             out["sr"] = a.splitlines()[0].split(",")[0].strip()
-        vd = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-user_agent", UA,
-                             "-i", url, "-map", "a:0", "-af", "volumedetect", "-f", "null", "-"],
-                            capture_output=True, text=True, timeout=25).stderr
-        mm = re.search(r"mean_volume:\s*([-0-9.]+)", vd)
-        if mm: out["mean"] = float(mm.group(1))
+        if out["a_ok"]:
+            vd = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-nostdin",
+                                 "-i", tmp, "-map", "a:0", "-af", "volumedetect",
+                                 "-f", "null", "-"],
+                                capture_output=True, text=True, timeout=25).stderr
+            mm = re.search(r"mean_volume:\s*([-0-9.]+)", vd)
+            if mm: out["mean"] = float(mm.group(1))
     except Exception as e:
         out["err"] = str(e)[:60]
+    finally:
+        if tmp:
+            try: os.unlink(tmp)
+            except Exception: pass
     return out
 
 def classify(advancing, dec):

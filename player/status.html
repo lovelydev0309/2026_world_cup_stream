@@ -49,7 +49,7 @@
   <main id="out"></main>
   <footer>
     Synthetic viewer monitor — each channel is fetched through the CDN and its video+audio
-    decoded, exactly as a viewer receives it. Auto-refreshes every 30s.
+    decoded, exactly as a viewer receives it. Monitor runs every 5 min (a full pass over 77 channels takes ~4.5 min); this page auto-refreshes every 30s.
   </footer>
 <script>
   var OUT = document.getElementById('out');
@@ -93,8 +93,10 @@
       pill.textContent = d.ok + ' / ' + d.total + ' healthy';
       pill.className = 'pill ' + (d.ok === d.total ? 'ok' : 'bad');
       var age = Math.round((Date.now() - new Date(d.updated).getTime())/1000);
+      // A full run over 77 channels measures ~273s and the cron is */5, so a healthy
+      // dashboard is routinely 5-9 min old. Warn only past two missed cycles.
       document.getElementById('updated').innerHTML = 'updated ' + esc(d.updated) +
-        (age > 180 ? ' <span class="stale-warn">(monitor may be stalled — '+age+'s ago)</span>'
+        (age > 900 ? ' <span class="stale-warn">(monitor may be stalled — '+age+'s ago)</span>'
                    : ' ('+age+'s ago)');
 
       var by = {};
