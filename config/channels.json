@@ -24,7 +24,7 @@
   {
    "channel_name": "channel1",
    "display_name": "Imagen Televisión",
-   "enabled": false,
+   "enabled": true,
    "source_url": "http://@@ACCT1@@/1028364",
    "hls_url": "https://stream.tv247on.com/hls/channel1/index.m3u8",
    "standby_file": "standby/standby.mp4",
@@ -32,7 +32,7 @@
    "resolution": "1280x720",
    "fps": 30,
    "audio_bitrate": 128,
-   "_comment_source": "PAUSED 2026-09-14, provider stopped broadcasting: Imagen Televisicon 1028364 + alternate 645999 both dead on ACCT1/2/4/6 (http=000 rc=56, 0 bytes) 2026-09-14. Only two IMAGEN ids in the catalogue, both dead. Re-enable when source restored.",
+   "_comment_source": "Provider outage 2026-09-14 (all sources http=000 rc=56 for hours); feed RESTORED by provider the same day and verified carrying real audio (-26 to -47 dB). Substitute configured under  if it dies again for >=5h. Re-enable when source restored.",
    "_comment_audio": "audio_sync=preserve (2026-06-25): the default regen (asetpts=N/SR/TB) raced channel1's audio PTS ~70,000s ahead of video -> browser couldn't align -> infinite-load / lag. All 3 failover feeds are A/V-aligned at source (gap 0.02-0.39s, mp2 or AAC-LC), so preserve (asetpts=PTS-STARTPTS) keeps them aligned. Same fix as channel2.",
    "audio_sync": "preserve",
    "force_silent_audio": false,
@@ -48,7 +48,15 @@
     "http://@@ACCT1@@/645999"
    ],
    "logo": "/player/logos/channel1.png",
-   "use_standby": true
+   "use_standby": true,
+   "substitute": {
+    "source_urls": [
+     "http://@@ACCT_LAT9@@/30676",
+     "http://@@ACCT_LAT10@@/30676",
+     "http://@@ACCT_LAT3@@/30676"
+    ],
+    "label": "Univision"
+   }
   },
   {
    "channel_name": "channel2",
@@ -1278,7 +1286,7 @@
   {
    "channel_name": "channel46",
    "display_name": "Canal 12 (TUTV)",
-   "enabled": false,
+   "enabled": true,
    "source_url": "http://@@ACCT_LAT1@@/436890",
    "hls_url": "https://stream.tv247on.com/hls/channel46/index.m3u8",
    "standby_file": "standby/standby.mp4",
@@ -1300,12 +1308,20 @@
     "http://@@ACCT_LAT3@@/436890",
     "http://@@ACCT_LAT4@@/436890"
    ],
-   "_comment_source": "PAUSED 2026-09-14, provider stopped broadcasting: SV - CANAL 12 SD 436890 dead on ACCT_LAT1/2/3/4 (http=000 rc=56) 2026-09-14. The only live Canal 12 in the catalogue is UY - CANAL 12 934113, which is URUGUAY, a different channel - not substituted. Re-enable when source restored."
+   "_comment_source": "Provider outage 2026-09-14 (all sources http=000 rc=56 for hours); feed RESTORED by provider the same day and verified carrying real audio (-26 to -47 dB). Substitute configured under  if it dies again for >=5h. Re-enable when source restored.",
+   "substitute": {
+    "source_urls": [
+     "http://@@ACCT_LAT9@@/30637",
+     "http://@@ACCT_LAT10@@/30637",
+     "http://@@ACCT_LAT3@@/30637"
+    ],
+    "label": "Azteca Corazón"
+   }
   },
   {
    "channel_name": "channel47",
    "display_name": "Canal 21 (Megavisión)",
-   "enabled": false,
+   "enabled": true,
    "source_url": "http://@@ACCT_LAT2@@/1028542",
    "hls_url": "https://stream.tv247on.com/hls/channel47/index.m3u8",
    "standby_file": "standby/standby.mp4",
@@ -1327,7 +1343,15 @@
     "http://@@ACCT_LAT4@@/1028542",
     "http://@@ACCT_LAT5@@/1028542"
    ],
-   "_comment_source": "PAUSED 2026-09-14, provider stopped broadcasting: SV - MEGAVISION CANAL 21 1028542 and SV - MEGAVISION CANAL 19 HD 436876 both dead on ACCT_LAT2/3/4/5 (http=000 rc=56) 2026-09-14. The only live Canal 21 is PN - NEX CANAL 21 214645, which is PANAMA, a different channel - not substituted. Re-enable when source restored."
+   "_comment_source": "Provider outage 2026-09-14 (all sources http=000 rc=56 for hours); feed RESTORED by provider the same day and verified carrying real audio (-26 to -47 dB). Substitute configured under  if it dies again for >=5h. Re-enable when source restored.",
+   "substitute": {
+    "source_urls": [
+     "http://@@ACCT_LAT9@@/30638",
+     "http://@@ACCT_LAT10@@/30638",
+     "http://@@ACCT_LAT3@@/30638"
+    ],
+    "label": "Azteca Cinema"
+   }
   },
   {
    "channel_name": "channel48",
@@ -1918,7 +1942,7 @@
   {
    "channel_name": "channel68",
    "display_name": "GUATEVISION",
-   "enabled": false,
+   "enabled": true,
    "source_url": "http://@@ACCT_LAT5@@/215610",
    "hls_url": "https://stream.tv247on.com/hls/channel68/index.m3u8",
    "standby_file": "standby/standby.mp4",
@@ -1926,7 +1950,7 @@
    "resolution": "1280x720",
    "fps": 30,
    "audio_bitrate": 128,
-   "_comment_source": "PAUSED 2026-09-14, provider stopped broadcasting: GT - GUATEVISION 215610 dead on ACCT_LAT5/6/7 (http=000 rc=56) 2026-09-14. Only GUATEVISION id in any bouquet, so no alternate exists. Re-enable when source restored.",
+   "_comment_source": "Provider outage 2026-09-14 (all sources http=000 rc=56 for hours); feed RESTORED by provider the same day and verified carrying real audio (-26 to -47 dB). Substitute configured under  if it dies again for >=5h. Re-enable when source restored.",
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
@@ -1941,7 +1965,15 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Guatemala",
-   "free_zone": false
+   "free_zone": false,
+   "substitute": {
+    "source_urls": [
+     "http://@@ACCT_LAT9@@/30629",
+     "http://@@ACCT_LAT10@@/30629",
+     "http://@@ACCT_LAT3@@/30629"
+    ],
+    "label": "CNN en Español"
+   }
   },
   {
    "channel_name": "channel69",

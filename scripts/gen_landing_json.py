@@ -34,9 +34,16 @@ for ch in cfg.get('channels', []):
     logo = ch.get('logo', f'/player/logos/{name}.png')
     if logo.startswith('/'):          # emit an absolute URL so external sites can use it directly
         logo = BASE + logo
+    # A channel running a stand-in is labelled, so the client and their viewers can see
+    # what is actually on air. Silently passing a substitute off as the real channel would
+    # mean nobody ever chases the provider for the real feed.
+    title = ch.get('display_name', name)
+    sub = ch.get('substituted')
+    if sub:
+        title = '%s · temporarily %s' % (title, sub.get('label', 'alternate channel'))
     out.append({
         'name':    name,
-        'title':   ch.get('display_name', name),
+        'title':   title,
         'country': ch.get('country') or country_of(name),
         'logo':    logo,
         'hls':     ch.get('hls_url', f'{BASE}/hls/{name}/index.m3u8'),
