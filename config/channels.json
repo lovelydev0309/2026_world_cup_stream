@@ -24,7 +24,7 @@
   {
    "channel_name": "channel1",
    "display_name": "Imagen Televisión",
-   "enabled": true,
+   "enabled": false,
    "source_url": "http://@@ACCT1@@/1028364",
    "hls_url": "https://stream.tv247on.com/hls/channel1/index.m3u8",
    "standby_file": "standby/standby.mp4",
@@ -32,7 +32,7 @@
    "resolution": "1280x720",
    "fps": 30,
    "audio_bitrate": 128,
-   "_comment_source": "MX - IMAGEN TV FHD (1028364; 645999 backup). Replaced FIFA World Cup 2026 (1027109 dead, tournament ended) 2026-08-16.",
+   "_comment_source": "PAUSED 2026-09-14, provider stopped broadcasting: Imagen Televisicon 1028364 + alternate 645999 both dead on ACCT1/2/4/6 (http=000 rc=56, 0 bytes) 2026-09-14. Only two IMAGEN ids in the catalogue, both dead. Re-enable when source restored.",
    "_comment_audio": "audio_sync=preserve (2026-06-25): the default regen (asetpts=N/SR/TB) raced channel1's audio PTS ~70,000s ahead of video -> browser couldn't align -> infinite-load / lag. All 3 failover feeds are A/V-aligned at source (gap 0.02-0.39s, mp2 or AAC-LC), so preserve (asetpts=PTS-STARTPTS) keeps them aligned. Same fix as channel2.",
    "audio_sync": "preserve",
    "force_silent_audio": false,
@@ -342,7 +342,7 @@
    "logo": "/player/logos/channel11.png",
    "_comment": "tvon247 MX FOX SPORTS 2 (1028353, h264 1080p, AAC). REPLACED Cartoon Network 2026-07-25 (client request; MX Cartoon feed 1028338 had died provider-side). Re-encoded 540p. PER 312520 appended as cross-package deep backup.",
    "audio_sync": "preserve",
-   "force_silent_audio": false,
+   "force_silent_audio": true,
    "video_mode": "encode",
    "use_standby": true,
    "encode_resolution": "960x540",
@@ -355,7 +355,8 @@
     "http://@@ACCT1@@/1028353",
     "http://@@ACCT_PE1@@/312520",
     "http://@@ACCT_PE2@@/312520"
-   ]
+   ],
+   "_comment_audio": "2026-09-14: all 8 sources deliver 7-49MB of VIDEO but carry NO audio stream at all, so our output had no audio track either (monitor: NO_AUDIO) which breaks players expecting a constant track set. Silent stereo so the video still airs."
   },
   {
    "channel_name": "channel12",
@@ -1277,7 +1278,7 @@
   {
    "channel_name": "channel46",
    "display_name": "Canal 12 (TUTV)",
-   "enabled": true,
+   "enabled": false,
    "source_url": "http://@@ACCT_LAT1@@/436890",
    "hls_url": "https://stream.tv247on.com/hls/channel46/index.m3u8",
    "standby_file": "standby/standby.mp4",
@@ -1298,12 +1299,13 @@
     "http://@@ACCT_LAT2@@/436890",
     "http://@@ACCT_LAT3@@/436890",
     "http://@@ACCT_LAT4@@/436890"
-   ]
+   ],
+   "_comment_source": "PAUSED 2026-09-14, provider stopped broadcasting: SV - CANAL 12 SD 436890 dead on ACCT_LAT1/2/3/4 (http=000 rc=56) 2026-09-14. The only live Canal 12 in the catalogue is UY - CANAL 12 934113, which is URUGUAY, a different channel - not substituted. Re-enable when source restored."
   },
   {
    "channel_name": "channel47",
    "display_name": "Canal 21 (Megavisión)",
-   "enabled": true,
+   "enabled": false,
    "source_url": "http://@@ACCT_LAT2@@/1028542",
    "hls_url": "https://stream.tv247on.com/hls/channel47/index.m3u8",
    "standby_file": "standby/standby.mp4",
@@ -1324,7 +1326,8 @@
     "http://@@ACCT_LAT3@@/1028542",
     "http://@@ACCT_LAT4@@/1028542",
     "http://@@ACCT_LAT5@@/1028542"
-   ]
+   ],
+   "_comment_source": "PAUSED 2026-09-14, provider stopped broadcasting: SV - MEGAVISION CANAL 21 1028542 and SV - MEGAVISION CANAL 19 HD 436876 both dead on ACCT_LAT2/3/4/5 (http=000 rc=56) 2026-09-14. The only live Canal 21 is PN - NEX CANAL 21 214645, which is PANAMA, a different channel - not substituted. Re-enable when source restored."
   },
   {
    "channel_name": "channel48",
@@ -1915,7 +1918,7 @@
   {
    "channel_name": "channel68",
    "display_name": "GUATEVISION",
-   "enabled": true,
+   "enabled": false,
    "source_url": "http://@@ACCT_LAT5@@/215610",
    "hls_url": "https://stream.tv247on.com/hls/channel68/index.m3u8",
    "standby_file": "standby/standby.mp4",
@@ -1923,7 +1926,7 @@
    "resolution": "1280x720",
    "fps": 30,
    "audio_bitrate": 128,
-   "_comment_source": "tvon247 Guatemala stream 215610 (Premium). Added 2026-08-29 per client majotv sheet (AM|LATINO / AM|SALVADOR).",
+   "_comment_source": "PAUSED 2026-09-14, provider stopped broadcasting: GT - GUATEVISION 215610 dead on ACCT_LAT5/6/7 (http=000 rc=56) 2026-09-14. Only GUATEVISION id in any bouquet, so no alternate exists. Re-enable when source restored.",
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
