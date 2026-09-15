@@ -49,7 +49,12 @@ LOGDIR = os.path.join(PROJECT, "logs")
 
 DEAD_HOURS = 5           # client rule: five hours down before a stand-in goes on
 PROBE_SECS = 8           # per-source pull; a live feed delivers MBs in this time
-PROBE_MIN_BYTES = 300_000
+PROBE_MIN_BYTES = 1_200_000  # ~150 KB/s over PROBE_SECS. NOT just "some bytes arrived":
+                             # ch23 Peru Magico trickled 851 KB in 25s (22 of 25 seconds idle,
+                             # ~34 KB/s) which is unwatchable but sailed past the old 300 KB bar,
+                             # so a starved feed read as healthy and never qualified for a
+                             # stand-in. Healthy feeds here deliver 375-1250 KB/s, so this
+                             # separates them cleanly from a trickle.
 RESTORE_PROBES = 3       # consecutive healthy reads of the ORIGINAL before switching back
 UA = "okhttp/4.9.3"      # the provider is UA-filtered
 
