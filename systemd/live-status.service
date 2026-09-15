@@ -1,13 +1,15 @@
 [Unit]
-Description=Real-time channel liveness -> player/live.json (fast tier of the health dashboard)
+Description=Real-time channel liveness -> player/live.json + health-aware published lineup
 After=streaming-rpa.service
 PartOf=streaming-rpa.service
 
 [Service]
 Type=simple
 # A loop rather than a timer: cron/systemd timers are minute-granular and this needs ~5s.
-# The scan is ~0.04s of stat() calls over the local HLS dirs, so the duty cycle is ~1%.
-ExecStart=/bin/bash -c 'while true; do /usr/bin/python3 /opt/streaming-stack/scripts/live_status.py || true; sleep 5; done'
+# live_status.py writes player/live.json (the dashboard's fast tier); gen_landing_json.py
+# then rebuilds player/channels.json from it, so the PUBLISHED LINEUP tracks health in ~5s
+# instead of lagging up to a minute behind the dashboard. Both are cheap local file work.
+ExecStart=/bin/bash -c 'while true; do /usr/bin/python3 /opt/streaming-stack/scripts/live_status.py || true; /usr/bin/python3 /opt/streaming-stack/scripts/gen_landing_json.py || true; sleep 5; done'
 Restart=always
 RestartSec=5
 # Never let the dashboard compete with the encoders for CPU.

@@ -33,6 +33,8 @@ OUT = os.path.join(PROJECT, "player", "live.json")
 STATE = os.path.join(PROJECT, "cache", "live_state.json")
 
 STALL_FACTOR = 3        # newest segment older than this many target-durations => STALLED
+STALL_FLOOR = 12        # ...but never below this many seconds: 3x a 2s segment is only 6s,
+                        # which flags an ordinary token-refresh reconnect as a stall.
 SLOW_RATIO = 0.55       # advancing slower than this fraction of realtime => SLOW
 RATE_BASELINE = 30      # seconds of history a rate is measured over (see below)
 
@@ -142,7 +144,7 @@ def main():
                     if d >= 0:
                         rate = (d * td) / dt
 
-            if age > td * STALL_FACTOR:
+            if age > max(td * STALL_FACTOR, STALL_FLOOR):
                 st = "STALLED"
             elif last_transition(ch) == "standby":
                 st = "SLATE"
