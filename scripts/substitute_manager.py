@@ -55,7 +55,15 @@ PROBE_MIN_BYTES = 1_200_000  # ~150 KB/s over PROBE_SECS. NOT just "some bytes a
                              # so a starved feed read as healthy and never qualified for a
                              # stand-in. Healthy feeds here deliver 375-1250 KB/s, so this
                              # separates them cleanly from a trickle.
-RESTORE_PROBES = 3       # consecutive healthy reads of the ORIGINAL before switching back
+RESTORE_PROBES = 6       # consecutive healthy reads of the ORIGINAL before switching back.
+                         # Was 3 (~30 min at the 10-min cron). ch23's feed recovered just long
+                         # enough to clear that bar, took its channel back, then died again --
+                         # so viewers returned to the standby slate AND the full 5h wait
+                         # restarted. 6 (~1h sustained) is far harder to clear by luck.
+REPEAT_DEAD_HOURS = 0.5  # a channel that has ALREADY needed a stand-in has proven its feed
+                         # unreliable, so making viewers watch a holding card for another five
+                         # hours serves nobody. The first outage honours the client's 5h rule;
+                         # every later one swaps back in after 30 min.
 UA = "okhttp/4.9.3"      # the provider is UA-filtered
 
 
@@ -247,8 +255,12 @@ def main():
             continue
 
         down_h = (now() - st["dead_since"]) / 3600.0
-        if down_h < DEAD_HOURS:
-            log("%s: down %.1fh of %.1fh" % (ch, down_h, DEAD_HOURS))
+        need = DEAD_HOURS if not st.get("fails") else REPEAT_DEAD_HOURS
+        if down_h < need:
+            tag = ""
+            if st.get("fails"):
+                tag = " (repeat outage #%d)" % st["fails"]
+            log("%s: down %.1fh of %.1fh%s" % (ch, down_h, need, tag))
             continue
 
         # Five hours down -> put the stand-in on air.
@@ -259,8 +271,9 @@ def main():
         c["_original_source_urls"] = originals
         c["source_urls"] = list(sub["source_urls"])
         c["source_url"] = sub["source_urls"][0]
+        st["fails"] = st.get("fails", 0) + 1
         c["substituted"] = {"since": stamp(), "label": sub.get("label", "alternate channel"),
-                            "after_hours": round(down_h, 1)}
+                            "after_hours": round(down_h, 1), "outage": st["fails"]}
         c["enabled"] = True
         changed = True
         restarts.append(ch)

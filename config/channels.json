@@ -340,7 +340,7 @@
    "channel_name": "channel11",
    "display_name": "Fox Sports 2 HD",
    "enabled": true,
-   "source_url": "http://@@ACCT6@@/1028353",
+   "source_url": "http://@@ACCT_PE1@@/312520",
    "hls_url": "https://stream.tv247on.com/hls/channel11/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -350,21 +350,21 @@
    "logo": "/player/logos/channel11.png",
    "_comment": "tvon247 MX FOX SPORTS 2 (1028353, h264 1080p, AAC). REPLACED Cartoon Network 2026-07-25 (client request; MX Cartoon feed 1028338 had died provider-side). Re-encoded 540p. PER 312520 appended as cross-package deep backup.",
    "audio_sync": "preserve",
-   "force_silent_audio": true,
+   "force_silent_audio": false,
    "video_mode": "encode",
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
+    "http://@@ACCT_PE1@@/312520",
+    "http://@@ACCT_PE2@@/312520",
     "http://@@ACCT6@@/1028353",
     "http://@@ACCT3@@/1028353",
     "http://@@ACCT5@@/1028353",
     "http://@@ACCT1@@/1028353",
     "http://@@ACCT2@@/1028353",
-    "http://@@ACCT_PE1@@/312520",
-    "http://@@ACCT_PE2@@/312520",
     "http://@@ACCT4@@/1028353"
    ],
-   "_comment_audio": "2026-09-14: all 8 sources deliver 7-49MB of VIDEO but carry NO audio stream at all, so our output had no audio track either (monitor: NO_AUDIO) which breaks players expecting a constant track set. Silent stereo so the video still airs."
+   "_comment_audio": "2026-09-15: force_silent_audio REMOVED. It was applied 09-14 after verifying MX 1028353 carried no audio track, but the PE alternate 312520 — already in this list — does carry audio (15.3MB, -22.5 dB), and 1028353 has since gone 403 on every MX account. Promoted 312520 so the channel gets REAL sound."
   },
   {
    "channel_name": "channel12",
@@ -680,7 +680,7 @@
    "channel_name": "channel23",
    "display_name": "Perú Mágico",
    "enabled": true,
-   "source_url": "http://@@ACCT_PE2@@/187632",
+   "source_url": "http://@@ACCT_PE2@@/187639",
    "hls_url": "https://stream.tv247on.com/hls/channel23/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -694,9 +694,9 @@
    "encode_resolution": "960x540",
    "_comment_failover": "Primary moved to ACCT_PE2 on 2026-09-15: ACCT_PE1 held 6 of 12 Peru primaries and was running 8 live connections against its max of 5, so streams on it were being starved. Peru primaries now 4/4/4.",
    "source_urls": [
-    "http://@@ACCT_PE2@@/187632",
-    "http://@@ACCT_PE1@@/187632",
-    "http://@@ACCT_PE3@@/187632"
+    "http://@@ACCT_PE2@@/187639",
+    "http://@@ACCT_PE3@@/187639",
+    "http://@@ACCT_PE1@@/187639"
    ],
    "logo": "/player/logos/channel23.png",
    "use_standby": true,
@@ -711,7 +711,18 @@
     ],
     "label": "IPE"
    },
-   "_comment_substitute": "PER - PERUMAGICO 187632 is the ONLY Peru Magico in the catalogue and it trickles: 851 KB in 25s with 22 of 25 seconds idle (~34 KB/s), far under a watchable rate, which is why the 14s write watchdog kept killing it. Stand-in is PER - IPE HD 187639 (13.3 MB in 16s, 0 idle seconds) - Peru public/cultural, the closest match in country."
+   "_comment_substitute": "PER - PERUMAGICO 187632 is the ONLY Peru Magico in the catalogue and it trickles: 851 KB in 25s with 22 of 25 seconds idle (~34 KB/s), far under a watchable rate, which is why the 14s write watchdog kept killing it. Stand-in is PER - IPE HD 187639 (13.3 MB in 16s, 0 idle seconds) - Peru public/cultural, the closest match in country.",
+   "_original_source_urls": [
+    "http://@@ACCT_PE2@@/187632",
+    "http://@@ACCT_PE1@@/187632",
+    "http://@@ACCT_PE3@@/187632"
+   ],
+   "substituted": {
+    "since": "2026-09-15T17:32:05Z",
+    "label": "IPE",
+    "after_hours": 1.0,
+    "outage": 2
+   }
   },
   {
    "channel_name": "channel24",
