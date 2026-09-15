@@ -650,7 +650,7 @@
    "channel_name": "channel22",
    "display_name": "América TV HD (Perú)",
    "enabled": true,
-   "source_url": "http://@@ACCT_PE1@@/187630",
+   "source_url": "http://@@ACCT_PE3@@/187630",
    "hls_url": "https://stream.tv247on.com/hls/channel22/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -662,14 +662,14 @@
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
-   "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
+   "_comment_failover": "Primary moved to ACCT_PE3 on 2026-09-15: ACCT_PE1 held 6 of 12 Peru primaries and was running 8 live connections against its max of 5, so streams on it were being starved. Peru primaries now 4/4/4.",
    "source_urls": [
+    "http://@@ACCT_PE3@@/187630",
+    "http://@@ACCT_PE3@@/30574",
     "http://@@ACCT_PE1@@/187630",
     "http://@@ACCT_PE2@@/187630",
-    "http://@@ACCT_PE3@@/187630",
     "http://@@ACCT_PE1@@/30574",
-    "http://@@ACCT_PE2@@/30574",
-    "http://@@ACCT_PE3@@/30574"
+    "http://@@ACCT_PE2@@/30574"
    ],
    "logo": "/player/logos/channel22.png",
    "use_standby": true,
@@ -680,7 +680,7 @@
    "channel_name": "channel23",
    "display_name": "Perú Mágico",
    "enabled": true,
-   "source_url": "http://@@ACCT_PE1@@/187632",
+   "source_url": "http://@@ACCT_PE2@@/187632",
    "hls_url": "https://stream.tv247on.com/hls/channel23/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -692,16 +692,17 @@
    "force_silent_audio": false,
    "video_mode": "encode",
    "encode_resolution": "960x540",
-   "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
+   "_comment_failover": "Primary moved to ACCT_PE2 on 2026-09-15: ACCT_PE1 held 6 of 12 Peru primaries and was running 8 live connections against its max of 5, so streams on it were being starved. Peru primaries now 4/4/4.",
    "source_urls": [
+    "http://@@ACCT_PE2@@/187632",
     "http://@@ACCT_PE1@@/187632",
-    "http://@@ACCT_PE3@@/187632",
-    "http://@@ACCT_PE2@@/187632"
+    "http://@@ACCT_PE3@@/187632"
    ],
    "logo": "/player/logos/channel23.png",
    "use_standby": true,
-   "token_refresh_secs": 180,
-   "_comment": "Peru Magico 187632. RE-ENABLED 2026-09-13: feed verified healthy (7.2MB/14s on ACCT_PE1). The 403s seen on PE2/PE3 are CONNECTION-CAP rejections, not a dead feed — Peru runs 11 producers against 15 slots. Left disabled by the 32f5499 rollback, hence reported Down. "
+   "token_refresh_secs": 0,
+   "_comment": "Peru Magico 187632. RE-ENABLED 2026-09-13: feed verified healthy (7.2MB/14s on ACCT_PE1). The 403s seen on PE2/PE3 are CONNECTION-CAP rejections, not a dead feed — Peru runs 11 producers against 15 slots. Left disabled by the 32f5499 rollback, hence reported Down. ",
+   "_comment_token": "2026-09-15: forced 180s refresh disabled as an A/B against the other 11 Peru channels, which keep it. ch23 was dropping to standby 42x in 2h."
   },
   {
    "channel_name": "channel24",
