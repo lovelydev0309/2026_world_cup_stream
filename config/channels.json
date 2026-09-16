@@ -43,9 +43,9 @@
    "source_urls": [
     "http://@@ACCT1@@/1028364",
     "http://@@ACCT1@@/645999",
+    "http://@@ACCT6@@/1028364",
     "http://@@ACCT2@@/1028364",
-    "http://@@ACCT4@@/1028364",
-    "http://@@ACCT6@@/1028364"
+    "http://@@ACCT4@@/1028364"
    ],
    "logo": "/player/logos/channel1.png",
    "use_standby": true,
@@ -83,12 +83,12 @@
     "http://@@ACCT3@@/30634",
     "http://@@ACCT5@@/1028333",
     "http://@@ACCT5@@/30634",
+    "http://@@ACCT6@@/1028333",
+    "http://@@ACCT6@@/30634",
     "http://@@ACCT2@@/1028333",
     "http://@@ACCT2@@/30634",
     "http://@@ACCT4@@/1028333",
-    "http://@@ACCT4@@/30634",
-    "http://@@ACCT6@@/1028333",
-    "http://@@ACCT6@@/30634"
+    "http://@@ACCT4@@/30634"
    ],
    "logo": "/player/logos/channel2.png",
    "use_standby": true,
@@ -117,14 +117,14 @@
     "http://@@ACCT3@@/30583",
     "http://@@ACCT5@@/1028359",
     "http://@@ACCT5@@/30583",
+    "http://@@ACCT6@@/1028359",
+    "http://@@ACCT6@@/30583",
     "http://@@ACCT1@@/1028359",
     "http://@@ACCT1@@/30583",
     "http://@@ACCT2@@/1028359",
     "http://@@ACCT2@@/30583",
     "http://@@ACCT4@@/1028359",
-    "http://@@ACCT4@@/30583",
-    "http://@@ACCT6@@/1028359",
-    "http://@@ACCT6@@/30583"
+    "http://@@ACCT4@@/30583"
    ],
    "logo": "/player/logos/channel3.png",
    "use_standby": true,
@@ -151,10 +151,10 @@
    "source_urls": [
     "http://@@ACCT5@@/1028334",
     "http://@@ACCT3@@/1028334",
+    "http://@@ACCT6@@/1028334",
     "http://@@ACCT1@@/1028334",
     "http://@@ACCT2@@/1028334",
-    "http://@@ACCT4@@/1028334",
-    "http://@@ACCT6@@/1028334"
+    "http://@@ACCT4@@/1028334"
    ]
   },
   {
@@ -179,12 +179,12 @@
     "http://@@ACCT2@@/1028329",
     "http://@@ACCT3@@/1028329",
     "http://@@ACCT5@@/1028329",
+    "http://@@ACCT6@@/1028329",
     "http://@@ACCT1@@/1028329",
-    "http://@@ACCT_PE1@@/1028329",
     "http://@@ACCT_PE2@@/1028329",
     "http://@@ACCT_PE3@@/1028329",
     "http://@@ACCT4@@/1028329",
-    "http://@@ACCT6@@/1028329"
+    "http://@@ACCT_PE1@@/1028329"
    ],
    "_comment_token": "2026-09-13/14: forced 35s refresh removed AGAIN (the 32f5499 rollback restored it). It fires ~95 times/hour, each a 1-2s gap, on a source measured LONG-LIVED: three pulls each ran the full 120s test ceiling delivering 47-52MB. The stale watchdog already covers a real token stall, so the pre-emptive refresh is pure self-inflicted churn. NOTE: the Peru channels' 180s refresh is NOT this bug - Peru tokens measure 147-197s, so 180s is correctly tuned and must stay.",
    "token_refresh_secs": 0
@@ -214,12 +214,12 @@
     "http://@@ACCT3@@/30606",
     "http://@@ACCT5@@/1028342",
     "http://@@ACCT5@@/30606",
+    "http://@@ACCT6@@/1028342",
+    "http://@@ACCT6@@/30606",
     "http://@@ACCT2@@/1028342",
     "http://@@ACCT2@@/30606",
     "http://@@ACCT4@@/1028342",
-    "http://@@ACCT4@@/30606",
-    "http://@@ACCT6@@/1028342",
-    "http://@@ACCT6@@/30606"
+    "http://@@ACCT4@@/30606"
    ]
   },
   {
@@ -243,10 +243,10 @@
    "source_urls": [
     "http://@@ACCT3@@/1028328",
     "http://@@ACCT5@@/1028328",
+    "http://@@ACCT6@@/1028328",
     "http://@@ACCT1@@/1028328",
     "http://@@ACCT2@@/1028328",
-    "http://@@ACCT4@@/1028328",
-    "http://@@ACCT6@@/1028328"
+    "http://@@ACCT4@@/1028328"
    ]
   },
   {
@@ -303,10 +303,10 @@
    "source_urls": [
     "http://@@ACCT5@@/1028360",
     "http://@@ACCT3@@/1028360",
+    "http://@@ACCT6@@/1028360",
     "http://@@ACCT1@@/1028360",
     "http://@@ACCT2@@/1028360",
-    "http://@@ACCT4@@/1028360",
-    "http://@@ACCT6@@/1028360"
+    "http://@@ACCT4@@/1028360"
    ]
   },
   {
@@ -331,9 +331,9 @@
     "http://@@ACCT4@@/1028371",
     "http://@@ACCT3@@/1028371",
     "http://@@ACCT5@@/1028371",
+    "http://@@ACCT6@@/1028371",
     "http://@@ACCT1@@/1028371",
-    "http://@@ACCT2@@/1028371",
-    "http://@@ACCT6@@/1028371"
+    "http://@@ACCT2@@/1028371"
    ]
   },
   {
@@ -356,12 +356,12 @@
    "encode_resolution": "960x540",
    "source_urls": [
     "http://@@ACCT_PE1@@/312520",
-    "http://@@ACCT_PE2@@/312520",
-    "http://@@ACCT6@@/1028353",
     "http://@@ACCT3@@/1028353",
     "http://@@ACCT5@@/1028353",
+    "http://@@ACCT6@@/1028353",
     "http://@@ACCT1@@/1028353",
     "http://@@ACCT2@@/1028353",
+    "http://@@ACCT_PE2@@/312520",
     "http://@@ACCT4@@/1028353"
    ],
    "_comment_audio": "2026-09-15: force_silent_audio REMOVED. It was applied 09-14 after verifying MX 1028353 carried no audio track, but the PE alternate 312520 — already in this list — does carry audio (15.3MB, -22.5 dB), and 1028353 has since gone 403 on every MX account. Promoted 312520 so the channel gets REAL sound."
@@ -391,12 +391,12 @@
     "http://@@ACCT3@@/30723",
     "http://@@ACCT5@@/140344",
     "http://@@ACCT5@@/30723",
+    "http://@@ACCT6@@/140344",
+    "http://@@ACCT6@@/30723",
     "http://@@ACCT1@@/140344",
     "http://@@ACCT1@@/30723",
     "http://@@ACCT4@@/140344",
-    "http://@@ACCT4@@/30723",
-    "http://@@ACCT6@@/140344",
-    "http://@@ACCT6@@/30723"
+    "http://@@ACCT4@@/30723"
    ]
   },
   {
@@ -421,9 +421,9 @@
     "http://@@ACCT2@@/1028326",
     "http://@@ACCT3@@/1028326",
     "http://@@ACCT5@@/1028326",
+    "http://@@ACCT6@@/1028326",
     "http://@@ACCT1@@/1028326",
-    "http://@@ACCT4@@/1028326",
-    "http://@@ACCT6@@/1028326"
+    "http://@@ACCT4@@/1028326"
    ]
   },
   {
@@ -478,12 +478,12 @@
     "http://@@ACCT3@@/30581",
     "http://@@ACCT5@@/140259",
     "http://@@ACCT5@@/30581",
+    "http://@@ACCT6@@/140259",
+    "http://@@ACCT6@@/30581",
     "http://@@ACCT2@@/140259",
     "http://@@ACCT2@@/30581",
     "http://@@ACCT4@@/140259",
-    "http://@@ACCT4@@/30581",
-    "http://@@ACCT6@@/140259",
-    "http://@@ACCT6@@/30581"
+    "http://@@ACCT4@@/30581"
    ]
   },
   {
@@ -531,8 +531,8 @@
    "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
    "source_urls": [
     "http://@@ACCT_PE2@@/187628",
-    "http://@@ACCT_PE1@@/187628",
-    "http://@@ACCT_PE3@@/187628"
+    "http://@@ACCT_PE3@@/187628",
+    "http://@@ACCT_PE1@@/187628"
    ],
    "logo": "/player/logos/channel17.png",
    "use_standby": true,
@@ -584,10 +584,10 @@
    "source_urls": [
     "http://@@ACCT_PE2@@/30572",
     "http://@@ACCT_PE2@@/69200",
-    "http://@@ACCT_PE1@@/30572",
-    "http://@@ACCT_PE1@@/69200",
     "http://@@ACCT_PE3@@/30572",
-    "http://@@ACCT_PE3@@/69200"
+    "http://@@ACCT_PE3@@/69200",
+    "http://@@ACCT_PE1@@/30572",
+    "http://@@ACCT_PE1@@/69200"
    ],
    "logo": "/player/logos/channel19.png",
    "use_standby": true,
@@ -639,8 +639,8 @@
    "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
    "source_urls": [
     "http://@@ACCT_PE3@@/312515",
-    "http://@@ACCT_PE1@@/312515",
-    "http://@@ACCT_PE2@@/312515"
+    "http://@@ACCT_PE2@@/312515",
+    "http://@@ACCT_PE1@@/312515"
    ],
    "logo": "/player/logos/channel21.png",
    "use_standby": true,
@@ -666,10 +666,10 @@
    "source_urls": [
     "http://@@ACCT_PE3@@/187630",
     "http://@@ACCT_PE3@@/30574",
-    "http://@@ACCT_PE1@@/187630",
-    "http://@@ACCT_PE1@@/30574",
     "http://@@ACCT_PE2@@/187630",
-    "http://@@ACCT_PE2@@/30574"
+    "http://@@ACCT_PE2@@/30574",
+    "http://@@ACCT_PE1@@/187630",
+    "http://@@ACCT_PE1@@/30574"
    ],
    "logo": "/player/logos/channel22.png",
    "use_standby": true,
@@ -743,8 +743,8 @@
    "_comment_failover": "Same stream ID across all 3 Peru accounts (5 conns each); primary rotated per-channel to balance ~3 primaries/account. Only one URL active at a time.",
    "source_urls": [
     "http://@@ACCT_PE3@@/187631",
-    "http://@@ACCT_PE1@@/187631",
-    "http://@@ACCT_PE2@@/187631"
+    "http://@@ACCT_PE2@@/187631",
+    "http://@@ACCT_PE1@@/187631"
    ],
    "logo": "/player/logos/channel24.png",
    "use_standby": true,
@@ -795,8 +795,8 @@
    "_comment_failover": "Same stream ID across all 3 Peru accounts; primary rotated to balance ~4 primaries/account. Only one URL active at a time.",
    "source_urls": [
     "http://@@ACCT_PE2@@/197713",
-    "http://@@ACCT_PE1@@/197713",
-    "http://@@ACCT_PE3@@/197713"
+    "http://@@ACCT_PE3@@/197713",
+    "http://@@ACCT_PE1@@/197713"
    ],
    "logo": "/player/logos/channel26.png",
    "use_standby": true,
@@ -821,8 +821,8 @@
    "_comment_failover": "Same stream ID across all 3 Peru accounts; primary rotated to balance ~4 primaries/account. Only one URL active at a time.",
    "source_urls": [
     "http://@@ACCT_PE3@@/312516",
-    "http://@@ACCT_PE1@@/312516",
-    "http://@@ACCT_PE2@@/312516"
+    "http://@@ACCT_PE2@@/312516",
+    "http://@@ACCT_PE1@@/312516"
    ],
    "logo": "/player/logos/channel27.png",
    "use_standby": true,
@@ -1267,9 +1267,9 @@
     "http://@@ACCT4@@/1349035",
     "http://@@ACCT3@@/1349035",
     "http://@@ACCT5@@/1349035",
+    "http://@@ACCT6@@/1349035",
     "http://@@ACCT1@@/1349035",
-    "http://@@ACCT2@@/1349035",
-    "http://@@ACCT6@@/1349035"
+    "http://@@ACCT2@@/1349035"
    ],
    "logo": "/player/logos/channel44.png",
    "use_standby": true,
@@ -1309,7 +1309,7 @@
    "channel_name": "channel46",
    "display_name": "Canal 12 (TUTV)",
    "enabled": true,
-   "source_url": "http://@@ACCT_LAT1@@/436890",
+   "source_url": "http://@@ACCT_LAT10@@/30637",
    "hls_url": "https://stream.tv247on.com/hls/channel46/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -1325,12 +1325,11 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@ACCT_LAT1@@/436890",
-    "http://@@ACCT_LAT2@@/436890",
-    "http://@@ACCT_LAT3@@/436890",
-    "http://@@ACCT_LAT4@@/436890"
+    "http://@@ACCT_LAT10@@/30637",
+    "http://@@ACCT_LAT3@@/30637",
+    "http://@@ACCT_LAT9@@/30637"
    ],
-   "_comment_source": "Provider outage 2026-09-14 (all sources http=000 rc=56 for hours); feed RESTORED by provider the same day and verified carrying real audio (-26 to -47 dB). Substitute configured under  if it dies again for >=5h. Re-enable when source restored.",
+   "_comment_source": "SV - CANAL 12 SD 436890: dead on ACCT_LAT1/2/3/4 on 09-14, restored by the provider same day, dead again 09-15 (http=000, 0 bytes on all four). Repeat outage -- the stand-in goes on after the 30-min repeat threshold, not 5h.",
    "substitute": {
     "source_urls": [
      "http://@@ACCT_LAT9@@/30637",
@@ -1338,6 +1337,18 @@
      "http://@@ACCT_LAT3@@/30637"
     ],
     "label": "Azteca Corazón"
+   },
+   "_original_source_urls": [
+    "http://@@ACCT_LAT1@@/436890",
+    "http://@@ACCT_LAT2@@/436890",
+    "http://@@ACCT_LAT3@@/436890",
+    "http://@@ACCT_LAT4@@/436890"
+   ],
+   "substituted": {
+    "since": "2026-09-15T23:47:52Z",
+    "label": "Azteca Corazón",
+    "after_hours": 1.0,
+    "outage": 2
    }
   },
   {
@@ -1593,10 +1604,10 @@
    "source_urls": [
     "http://@@ACCT_LAT1@@/1084022",
     "http://@@ACCT_LAT1@@/1412718",
-    "http://@@ACCT_LAT10@@/1084022",
-    "http://@@ACCT_LAT10@@/1412718",
     "http://@@ACCT_LAT3@@/1084022",
-    "http://@@ACCT_LAT3@@/1412718"
+    "http://@@ACCT_LAT3@@/1412718",
+    "http://@@ACCT_LAT10@@/1084022",
+    "http://@@ACCT_LAT10@@/1412718"
    ],
    "logo": "/player/logos/channel55.png",
    "use_standby": true,
@@ -1819,7 +1830,7 @@
    "channel_name": "channel63",
    "display_name": "Win Sports / Win Sports+",
    "enabled": true,
-   "source_url": "http://@@ACCT_LAT9@@/190259",
+   "source_url": "http://@@ACCT_LAT9@@/190260",
    "hls_url": "https://stream.tv247on.com/hls/channel63/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -1833,21 +1844,25 @@
    "encode_resolution": "960x540",
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=[190260, 30647].",
    "source_urls": [
-    "http://@@ACCT_LAT9@@/190259",
     "http://@@ACCT_LAT9@@/190260",
+    "http://@@ACCT_LAT9@@/139331",
+    "http://@@ACCT_LAT9@@/190259",
     "http://@@ACCT_LAT9@@/30647",
-    "http://@@ACCT_LAT1@@/190259",
     "http://@@ACCT_LAT1@@/190260",
+    "http://@@ACCT_LAT1@@/139331",
+    "http://@@ACCT_LAT1@@/190259",
     "http://@@ACCT_LAT1@@/30647",
-    "http://@@ACCT_LAT2@@/190259",
     "http://@@ACCT_LAT2@@/190260",
+    "http://@@ACCT_LAT2@@/139331",
+    "http://@@ACCT_LAT2@@/190259",
     "http://@@ACCT_LAT2@@/30647"
    ],
    "logo": "/player/logos/channel63.png",
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Colombia",
-   "free_zone": false
+   "free_zone": false,
+   "_comment_audio": "2026-09-15: SILENT is the PROVIDER's, not ours. All four Win Sports ids were probed on every account: 190259 and 30647 carry a silent audio track (-90.3 dB) and are the reliably-available ones; 190260 carries REAL audio (-22.7/-23.2 dB) but is intermittent; 139331 (its LATINO twin, previously missing from this list) was down at probe time. Ordered best-audio-first so the channel takes real sound whenever either PLUS feed is up, and falls back to picture-with-silence rather than going dark. Nothing on our side can add audio the provider does not send - worth raising with them."
   },
   {
    "channel_name": "channel64",
@@ -1903,7 +1918,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Guatemala",
-   "free_zone": true
+   "free_zone": true,
+   "stale_kill_secs": 30,
+   "_comment_watchdog": "2026-09-15: stale_kill_secs raised from the fleet default of 14 to 30. The feed is BURSTY, not dead: sampled once a second for 45s it delivered 8.4 MB (LAT3) and 15.3 MB (LAT4) but idled 41/45 and 40/45 seconds, with single gaps of 20s and 15s. Both exceed the 14s watchdog, so it was being killed every ~30s and sat on the standby slate despite the source being healthy and carrying real audio (-20.6 dB)."
   },
   {
    "channel_name": "channel66",
@@ -2304,8 +2321,8 @@
    "_comment_failover": "LAT package accounts ACCT_LAT1-9 (5 conns each); primary rotated. Alts=none.",
    "source_urls": [
     "http://@@ACCT_LAT7@@/195247",
-    "http://@@ACCT_LAT10@@/195247",
     "http://@@ACCT_LAT8@@/195247",
+    "http://@@ACCT_LAT10@@/195247",
     "http://@@ACCT_LAT9@@/195247"
    ],
    "logo": "/player/logos/channel79.png",
@@ -2340,12 +2357,12 @@
     "http://@@ACCT3@@/30672",
     "http://@@ACCT5@@/1279016",
     "http://@@ACCT5@@/30672",
+    "http://@@ACCT6@@/1279016",
+    "http://@@ACCT6@@/30672",
     "http://@@ACCT1@@/1279016",
     "http://@@ACCT1@@/30672",
     "http://@@ACCT2@@/1279016",
-    "http://@@ACCT2@@/30672",
-    "http://@@ACCT6@@/1279016",
-    "http://@@ACCT6@@/30672"
+    "http://@@ACCT2@@/30672"
    ]
   },
   {

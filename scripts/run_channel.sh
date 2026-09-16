@@ -188,6 +188,27 @@ PY
 fi
 log "  output fps=$OUT_FPS gop=$OUT_GOP (source cadence ${_srcfps:-unknown})"
 STALE_KILL_SECS=14   # kill ffmpeg after this many seconds of ZERO write progress.
+# PER-CHANNEL OVERRIDE (config: "stale_kill_secs"). Some provider feeds deliver in long
+# bursts rather than a steady trickle: ch65 CANAL ANTIGUA measured 8-15 MB over 45s but
+# with 40 of those 45 seconds idle and single gaps of 15-20s. The bytes are all there, yet
+# a fleet-wide 14s threshold kills it every ~30s and the channel never leaves the standby
+# slate. Raising the threshold for everyone would delay genuine stall recovery on all 76
+# channels, so this is opt-in per channel and clamped to a sane range.
+_sk=$(python3 - "$CONFIG" "$CHANNEL" <<'PYSK' 2>/dev/null
+import json, sys
+try:
+    ch = [c for c in json.load(open(sys.argv[1]))["channels"]
+          if c.get("channel_name") == sys.argv[2]]
+    print(ch[0].get("stale_kill_secs", "") if ch else "")
+except Exception:
+    print("")
+PYSK
+)
+case "$_sk" in
+    ''|*[!0-9]*) : ;;
+    *) if [ "$_sk" -ge 8 ] && [ "$_sk" -le 60 ]; then STALE_KILL_SECS="$_sk"; fi ;;
+esac
+unset _sk
 # Root cause of the "buffer→0 on some channels" reports: the tvon247 sources are
 # 302-redirect tokenized feeds whose token expires every ~90-285s. On expiry the
 # upstream keeps the TCP socket OPEN but stops sending data (no EOF, no error), so
