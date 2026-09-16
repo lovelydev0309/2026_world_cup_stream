@@ -1920,9 +1920,7 @@
    "country": "Guatemala",
    "free_zone": true,
    "stale_kill_secs": 30,
-   "_comment_watchdog": "2026-09-15: stale_kill_secs raised from the fleet default of 14 to 30. The feed is BURSTY, not dead: sampled once a second for 45s it delivered 8.4 MB (LAT3) and 15.3 MB (LAT4) but idled 41/45 and 40/45 seconds, with single gaps of 20s and 15s. Both exceed the 14s watchdog, so it was being killed every ~30s and sat on the standby slate despite the source being healthy and carrying real audio (-20.6 dB).",
-   "hidden": true,
-   "_comment_hidden": "Hidden from the published lineup 2026-09-16 at client request. PRESENTATION ONLY - the channel keeps running and its hls url still serves; this only removes it from player/channels.json. Set hidden=false to list it again (it reappears instantly, no warm-up)."
+   "_comment_watchdog": "2026-09-15: stale_kill_secs raised from the fleet default of 14 to 30. The feed is BURSTY, not dead: sampled once a second for 45s it delivered 8.4 MB (LAT3) and 15.3 MB (LAT4) but idled 41/45 and 40/45 seconds, with single gaps of 20s and 15s. Both exceed the 14s watchdog, so it was being killed every ~30s and sat on the standby slate despite the source being healthy and carrying real audio (-20.6 dB)."
   },
   {
    "channel_name": "channel66",
