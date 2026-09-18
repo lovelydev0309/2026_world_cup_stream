@@ -2262,7 +2262,7 @@
   {
    "channel_name": "channel76",
    "display_name": "AMERICATEVE",
-   "enabled": false,
+   "enabled": true,
    "source_url": "http://@@ACCT_LAT4@@/69075",
    "hls_url": "https://stream.tv247on.com/hls/channel76/index.m3u8",
    "standby_file": "standby/standby.mp4",
@@ -2270,7 +2270,7 @@
    "resolution": "1280x720",
    "fps": 30,
    "audio_bitrate": 128,
-   "_comment_source": "AMERICATEVE. PAUSED 2026-09-14: provider stopped broadcasting. CUB - AMERICATEVE 69075 resets the connection instantly (http=000 rc=56, 0 bytes in 0.22s) on ACCT_LAT4/5/6, while a control channel on the SAME account pulled 12.23MB clean - accounts healthy, stream dead. 69075 is the ONLY AMERICATEVE id across all four bouquets (9377/8354/3416/3306), so there is no alternate feed. It was the fleet-worst slot burner (261 failovers in 2h) which destabilised the other Cuba channels sharing LAT4/5/6. Re-enable when source restored.",
+   "_comment_source": "AMERICATEVE 69075. Paused 2026-09-14 (connection reset on every account, only AMERICATEVE id in any bouquet). RESUMED 2026-09-18: probed 19-20 MB with real audio -25 dB on ACCT_LAT4/5/6 - provider restored it. Re-enable when source restored.",
    "audio_sync": "preserve",
    "force_silent_audio": false,
    "video_mode": "encode",
