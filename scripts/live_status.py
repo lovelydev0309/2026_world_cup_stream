@@ -28,7 +28,8 @@ import json, os, re, time, glob
 PROJECT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HLS = os.path.join(PROJECT, "hls")
 LOGS = os.path.join(PROJECT, "logs")
-LINEUP = os.path.join(PROJECT, "player", "channels.json")
+CONFIG = os.path.join(PROJECT, "config", "channels.json")
+LINEUP = os.path.join(PROJECT, "player", "channels.json")   # fallback only
 OUT = os.path.join(PROJECT, "player", "live.json")
 STATE = os.path.join(PROJECT, "cache", "live_state.json")
 
@@ -97,10 +98,28 @@ def last_transition(ch):
 
 
 def main():
+    # Channel set comes from CONFIG, not the published lineup. gen_landing_json now DROPS
+    # a channel from player/channels.json after 3 min unhealthy -- so if we read the
+    # published list, a dead channel would vanish from tracking at minute 3, right before
+    # the 30-minute outage alert is due, and the dashboard would simply stop showing it.
+    # A channel the operator has switched on is tracked until they switch it off.
+    lineup = []
     try:
-        lineup = json.load(open(LINEUP))
+        cfg = json.load(open(CONFIG))
+        for c in cfg.get("channels", []):
+            if not c.get("enabled", True) or c.get("hidden") or c.get("quarantined"):
+                continue
+            name = c["channel_name"]
+            title_ = c.get("display_name", name)
+            sub = c.get("substituted")
+            if sub:
+                title_ = "%s · temporarily %s" % (title_, sub.get("label", "alternate channel"))
+            lineup.append({"name": name, "title": title_, "country": c.get("country", "")})
     except Exception:
-        lineup = []
+        try:
+            lineup = json.load(open(LINEUP))
+        except Exception:
+            lineup = []
     names = [c["name"] for c in lineup] or [
         os.path.basename(p.rstrip("/")) for p in glob.glob(os.path.join(HLS, "channel*/"))
     ]
