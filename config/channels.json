@@ -56,7 +56,8 @@
      "http://@@ACCT_LAT3@@/30676"
     ],
     "label": "Univision"
-   }
+   },
+   "country": "Mexico"
   },
   {
    "channel_name": "channel2",
@@ -92,7 +93,8 @@
    ],
    "logo": "/player/logos/channel2.png",
    "use_standby": true,
-   "_comment": "MX Canal 5 HD id 1028333 (HEVC, re-encoded 540p) primary + LATINO 30634 (H264 1080p) backup. Swapped 2026-07-12: old 1349033 (ES-VIX, mislabeled/dead) + 273253 (UY, dead) both went dead across all accounts."
+   "_comment": "MX Canal 5 HD id 1028333 (HEVC, re-encoded 540p) primary + LATINO 30634 (H264 1080p) backup. Swapped 2026-07-12: old 1349033 (ES-VIX, mislabeled/dead) + 273253 (UY, dead) both went dead across all accounts.",
+   "country": "Mexico"
   },
   {
    "channel_name": "channel3",
@@ -128,7 +130,8 @@
    ],
    "logo": "/player/logos/channel3.png",
    "use_standby": true,
-   "_comment": "tvon247 MX ESPN 1028359 + LATINO 30583 backup. Failover order reordered 2026-07-25 to lead with connection-HEADROOM accounts (ACCT3/5/6/2) and push the over-subscribed ACCT1 (6/5) and at-cap ACCT4 LAST — ESPN was churning failovers onto contended accounts = 'slight buffering'. Re-encoded 540p."
+   "_comment": "tvon247 MX ESPN 1028359 + LATINO 30583 backup. Failover order reordered 2026-07-25 to lead with connection-HEADROOM accounts (ACCT3/5/6/2) and push the over-subscribed ACCT1 (6/5) and at-cap ACCT4 LAST — ESPN was churning failovers onto contended accounts = 'slight buffering'. Re-encoded 540p.",
+   "country": "Mexico"
   },
   {
    "channel_name": "channel4",
@@ -155,7 +158,8 @@
     "http://@@ACCT1@@/1028334",
     "http://@@ACCT2@@/1028334",
     "http://@@ACCT4@@/1028334"
-   ]
+   ],
+   "country": "Mexico"
   },
   {
    "channel_name": "channel5",
@@ -187,7 +191,8 @@
     "http://@@ACCT_PE1@@/1028329"
    ],
    "_comment_token": "2026-09-13/14: forced 35s refresh removed AGAIN (the 32f5499 rollback restored it). It fires ~95 times/hour, each a 1-2s gap, on a source measured LONG-LIVED: three pulls each ran the full 120s test ceiling delivering 47-52MB. The stale watchdog already covers a real token stall, so the pre-emptive refresh is pure self-inflicted churn. NOTE: the Peru channels' 180s refresh is NOT this bug - Peru tokens measure 147-197s, so 180s is correctly tuned and must stay.",
-   "token_refresh_secs": 0
+   "token_refresh_secs": 0,
+   "country": "Mexico"
   },
   {
    "channel_name": "channel6",
@@ -220,7 +225,8 @@
     "http://@@ACCT2@@/30606",
     "http://@@ACCT4@@/1028342",
     "http://@@ACCT4@@/30606"
-   ]
+   ],
+   "country": "Mexico"
   },
   {
    "channel_name": "channel7",
@@ -247,7 +253,8 @@
     "http://@@ACCT1@@/1028328",
     "http://@@ACCT2@@/1028328",
     "http://@@ACCT4@@/1028328"
-   ]
+   ],
+   "country": "Mexico"
   },
   {
    "channel_name": "channel8",
@@ -280,7 +287,8 @@
     "http://@@ACCT2@@/30580",
     "http://@@ACCT4@@/140278",
     "http://@@ACCT4@@/30580"
-   ]
+   ],
+   "country": "Mexico"
   },
   {
    "channel_name": "channel9",
@@ -307,7 +315,8 @@
     "http://@@ACCT1@@/1028360",
     "http://@@ACCT2@@/1028360",
     "http://@@ACCT4@@/1028360"
-   ]
+   ],
+   "country": "Mexico"
   },
   {
    "channel_name": "channel10",
@@ -334,7 +343,8 @@
     "http://@@ACCT6@@/1028371",
     "http://@@ACCT1@@/1028371",
     "http://@@ACCT2@@/1028371"
-   ]
+   ],
+   "country": "Mexico"
   },
   {
    "channel_name": "channel11",
@@ -364,7 +374,8 @@
     "http://@@ACCT_PE2@@/312520",
     "http://@@ACCT4@@/1028353"
    ],
-   "_comment_audio": "2026-09-15: force_silent_audio REMOVED. It was applied 09-14 after verifying MX 1028353 carried no audio track, but the PE alternate 312520 — already in this list — does carry audio (15.3MB, -22.5 dB), and 1028353 has since gone 403 on every MX account. Promoted 312520 so the channel gets REAL sound."
+   "_comment_audio": "2026-09-15: force_silent_audio REMOVED. It was applied 09-14 after verifying MX 1028353 carried no audio track, but the PE alternate 312520 — already in this list — does carry audio (15.3MB, -22.5 dB), and 1028353 has since gone 403 on every MX account. Promoted 312520 so the channel gets REAL sound.",
+   "country": "Mexico"
   },
   {
    "channel_name": "channel12",
@@ -397,7 +408,8 @@
     "http://@@ACCT1@@/30723",
     "http://@@ACCT4@@/140344",
     "http://@@ACCT4@@/30723"
-   ]
+   ],
+   "country": "Mexico"
   },
   {
    "channel_name": "channel13",
@@ -424,7 +436,8 @@
     "http://@@ACCT6@@/1028326",
     "http://@@ACCT1@@/1028326",
     "http://@@ACCT4@@/1028326"
-   ]
+   ],
+   "country": "Mexico"
   },
   {
    "channel_name": "channel14",
@@ -451,7 +464,8 @@
     "http://@@ACCT1@@/140329",
     "http://@@ACCT2@@/140329",
     "http://@@ACCT4@@/140329"
-   ]
+   ],
+   "country": "Mexico"
   },
   {
    "channel_name": "channel15",
@@ -484,7 +498,8 @@
     "http://@@ACCT2@@/30581",
     "http://@@ACCT4@@/140259",
     "http://@@ACCT4@@/30581"
-   ]
+   ],
+   "country": "Mexico"
   },
   {
    "channel_name": "channel16",
@@ -510,7 +525,8 @@
    ],
    "logo": "/player/logos/channel16.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 180,
+   "country": "Peru"
   },
   {
    "channel_name": "channel17",
@@ -536,7 +552,8 @@
    ],
    "logo": "/player/logos/channel17.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 180,
+   "country": "Peru"
   },
   {
    "channel_name": "channel18",
@@ -562,7 +579,8 @@
    ],
    "logo": "/player/logos/channel18.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 180,
+   "country": "Peru"
   },
   {
    "channel_name": "channel19",
@@ -592,7 +610,8 @@
    "logo": "/player/logos/channel19.png",
    "use_standby": true,
    "token_refresh_secs": 180,
-   "_comment": "ATV (Peru). Primary 30572 'PER - ATV' — the correctly-labelled feed, which RECOVERED (16.6MB/18s, h264 1920x1080 + aac on PE1/PE3) after previously testing 0 bytes on all Peru accounts. Backup 69200 'PER - ATV+' is a DIFFERENT channel, so it is a last resort, not a peer. Had no failover at all before 2026-09-13."
+   "_comment": "ATV (Peru). Primary 30572 'PER - ATV' — the correctly-labelled feed, which RECOVERED (16.6MB/18s, h264 1920x1080 + aac on PE1/PE3) after previously testing 0 bytes on all Peru accounts. Backup 69200 'PER - ATV+' is a DIFFERENT channel, so it is a last resort, not a peer. Had no failover at all before 2026-09-13.",
+   "country": "Peru"
   },
   {
    "channel_name": "channel20",
@@ -618,7 +637,8 @@
    ],
    "logo": "/player/logos/channel20.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 180,
+   "country": "Peru"
   },
   {
    "channel_name": "channel21",
@@ -644,7 +664,8 @@
    ],
    "logo": "/player/logos/channel21.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 180,
+   "country": "Peru"
   },
   {
    "channel_name": "channel22",
@@ -674,7 +695,8 @@
    "logo": "/player/logos/channel22.png",
    "use_standby": true,
    "_comment": "tvon247 PER AMERICA TV: 187630 (VIP) primary + 30574 (base América Televisión) as 2nd feed variant across the 3 Peru accounts. 2026-07-27: BOTH feeds degrading provider-side (Connection reset by peer / ~10s bursts + broken audio) = source outage, auto-recovers when provider restores. Encode 540p.",
-   "token_refresh_secs": 180
+   "token_refresh_secs": 180,
+   "country": "Peru"
   },
   {
    "channel_name": "channel23",
@@ -711,7 +733,8 @@
     ],
     "label": "IPE"
    },
-   "_comment_substitute": "PER - PERUMAGICO 187632 is the ONLY Peru Magico in the catalogue and it trickles: 851 KB in 25s with 22 of 25 seconds idle (~34 KB/s), far under a watchable rate, which is why the 14s write watchdog kept killing it. Stand-in is PER - IPE HD 187639 (13.3 MB in 16s, 0 idle seconds) - Peru public/cultural, the closest match in country."
+   "_comment_substitute": "PER - PERUMAGICO 187632 is the ONLY Peru Magico in the catalogue and it trickles: 851 KB in 25s with 22 of 25 seconds idle (~34 KB/s), far under a watchable rate, which is why the 14s write watchdog kept killing it. Stand-in is PER - IPE HD 187639 (13.3 MB in 16s, 0 idle seconds) - Peru public/cultural, the closest match in country.",
+   "country": "Peru"
   },
   {
    "channel_name": "channel24",
@@ -737,7 +760,8 @@
    ],
    "logo": "/player/logos/channel24.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 180,
+   "country": "Peru"
   },
   {
    "channel_name": "channel25",
@@ -763,7 +787,8 @@
    ],
    "logo": "/player/logos/channel25.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 180,
+   "country": "Peru"
   },
   {
    "channel_name": "channel26",
@@ -789,7 +814,8 @@
    ],
    "logo": "/player/logos/channel26.png",
    "use_standby": true,
-   "token_refresh_secs": 180
+   "token_refresh_secs": 180,
+   "country": "Peru"
   },
   {
    "channel_name": "channel27",
@@ -816,7 +842,8 @@
    "logo": "/player/logos/channel27.png",
    "use_standby": true,
    "token_refresh_secs": 180,
-   "_comment": "ESPN 2 HD (Peru) 312516. RE-ENABLED 2026-09-13: feed verified healthy on ALL THREE Peru accounts (9.7-10.6MB/14s). It was left disabled by the 32f5499 rollback, so the client's monitoring correctly reported it Down — it simply was not in the lineup. "
+   "_comment": "ESPN 2 HD (Peru) 312516. RE-ENABLED 2026-09-13: feed verified healthy on ALL THREE Peru accounts (9.7-10.6MB/14s). It was left disabled by the 32f5499 rollback, so the client's monitoring correctly reported it Down — it simply was not in the lineup. ",
+   "country": "Peru"
   },
   {
    "channel_name": "channel28",
@@ -842,7 +869,8 @@
     "http://@@KOZEE4@@/71862",
     "http://@@KOZEE5@@/71862"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "country": "US"
   },
   {
    "channel_name": "channel29",
@@ -868,7 +896,8 @@
     "http://@@KOZEE5@@/71853",
     "http://@@KOZEE1@@/71853"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "country": "US"
   },
   {
    "channel_name": "channel30",
@@ -894,7 +923,8 @@
     "http://@@KOZEE5@@/71855",
     "http://@@KOZEE1@@/71855"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "country": "US"
   },
   {
    "channel_name": "channel31",
@@ -920,7 +950,8 @@
     "http://@@KOZEE5@@/71330",
     "http://@@KOZEE1@@/71330"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "country": "US"
   },
   {
    "channel_name": "channel32",
@@ -946,7 +977,8 @@
     "http://@@KOZEE4@@/71335",
     "http://@@KOZEE1@@/71335"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "country": "US"
   },
   {
    "channel_name": "channel33",
@@ -972,7 +1004,8 @@
     "http://@@KOZEE4@@/1060173",
     "http://@@KOZEE5@@/1060173"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "country": "US"
   },
   {
    "channel_name": "channel34",
@@ -998,7 +1031,8 @@
     "http://@@KOZEE5@@/1427912",
     "http://@@KOZEE1@@/1427912"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "country": "US"
   },
   {
    "channel_name": "channel35",
@@ -1024,7 +1058,8 @@
     "http://@@KOZEE5@@/71324",
     "http://@@KOZEE1@@/71324"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "country": "US"
   },
   {
    "channel_name": "channel36",
@@ -1050,7 +1085,8 @@
     "http://@@KOZEE5@@/71904",
     "http://@@KOZEE1@@/71904"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "country": "US"
   },
   {
    "channel_name": "channel37",
@@ -1076,7 +1112,8 @@
     "http://@@KOZEE4@@/685809",
     "http://@@KOZEE1@@/685809"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "country": "US"
   },
   {
    "channel_name": "channel38",
@@ -1102,7 +1139,8 @@
     "http://@@KOZEE4@@/71935",
     "http://@@KOZEE5@@/71935"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "country": "US"
   },
   {
    "channel_name": "channel39",
@@ -1128,7 +1166,8 @@
     "http://@@KOZEE5@@/71951",
     "http://@@KOZEE1@@/71951"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "country": "US"
   },
   {
    "channel_name": "channel40",
@@ -1154,7 +1193,8 @@
     "http://@@KOZEE5@@/72383",
     "http://@@KOZEE1@@/72383"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "country": "US"
   },
   {
    "channel_name": "channel41",
@@ -1180,7 +1220,8 @@
     "http://@@KOZEE5@@/71989",
     "http://@@KOZEE1@@/71989"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "country": "US"
   },
   {
    "channel_name": "channel42",
@@ -1206,7 +1247,8 @@
     "http://@@KOZEE4@@/71964",
     "http://@@KOZEE1@@/71964"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "country": "US"
   },
   {
    "channel_name": "channel43",
@@ -1232,7 +1274,8 @@
     "http://@@KOZEE4@@/71944",
     "http://@@KOZEE5@@/71944"
    ],
-   "use_standby": true
+   "use_standby": true,
+   "country": "US"
   },
   {
    "channel_name": "channel44",

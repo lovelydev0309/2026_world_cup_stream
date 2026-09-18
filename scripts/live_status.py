@@ -46,6 +46,16 @@ RATE_BASELINE = 30      # seconds of history a rate is measured over (see below)
 # baseline rolls, while age keeps updating every 5s.
 
 
+
+def _country_of(name):
+    """1-15 Mexico, 16-27 Peru, 28+ US -- the original lineup's numbering, kept in step
+    with gen_landing_json.country_of()."""
+    try:
+        n = int(re.sub(r"\D", "", name) or 0)
+    except ValueError:
+        return ""
+    return "Mexico" if n <= 15 else "Peru" if n <= 27 else "US"
+
 def read_playlist(ch):
     p = os.path.join(HLS, ch, "index.m3u8")
     if not os.path.isfile(p):
@@ -114,7 +124,10 @@ def main():
             sub = c.get("substituted")
             if sub:
                 title_ = "%s · temporarily %s" % (title_, sub.get("label", "alternate channel"))
-            lineup.append({"name": name, "title": title_, "country": c.get("country", "")})
+            # Same fallback gen_landing_json.py uses: a channel added without a country
+            # field must not land in "Other" on the dashboard.
+            ctry = c.get("country") or _country_of(name)
+            lineup.append({"name": name, "title": title_, "country": ctry})
     except Exception:
         try:
             lineup = json.load(open(LINEUP))
