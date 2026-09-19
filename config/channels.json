@@ -526,7 +526,9 @@
    "logo": "/player/logos/channel16.png",
    "use_standby": true,
    "token_refresh_secs": 180,
-   "country": "Peru"
+   "country": "Peru",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel17",
@@ -553,7 +555,9 @@
    "logo": "/player/logos/channel17.png",
    "use_standby": true,
    "token_refresh_secs": 180,
-   "country": "Peru"
+   "country": "Peru",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel18",
@@ -580,7 +584,9 @@
    "logo": "/player/logos/channel18.png",
    "use_standby": true,
    "token_refresh_secs": 180,
-   "country": "Peru"
+   "country": "Peru",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel19",
@@ -611,7 +617,9 @@
    "use_standby": true,
    "token_refresh_secs": 180,
    "_comment": "ATV (Peru). Primary 30572 'PER - ATV' — the correctly-labelled feed, which RECOVERED (16.6MB/18s, h264 1920x1080 + aac on PE1/PE3) after previously testing 0 bytes on all Peru accounts. Backup 69200 'PER - ATV+' is a DIFFERENT channel, so it is a last resort, not a peer. Had no failover at all before 2026-09-13.",
-   "country": "Peru"
+   "country": "Peru",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel20",
@@ -638,7 +646,9 @@
    "logo": "/player/logos/channel20.png",
    "use_standby": true,
    "token_refresh_secs": 180,
-   "country": "Peru"
+   "country": "Peru",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel21",
@@ -665,7 +675,9 @@
    "logo": "/player/logos/channel21.png",
    "use_standby": true,
    "token_refresh_secs": 180,
-   "country": "Peru"
+   "country": "Peru",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel22",
@@ -696,7 +708,9 @@
    "use_standby": true,
    "_comment": "tvon247 PER AMERICA TV: 187630 (VIP) primary + 30574 (base América Televisión) as 2nd feed variant across the 3 Peru accounts. 2026-07-27: BOTH feeds degrading provider-side (Connection reset by peer / ~10s bursts + broken audio) = source outage, auto-recovers when provider restores. Encode 540p.",
    "token_refresh_secs": 180,
-   "country": "Peru"
+   "country": "Peru",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel23",
@@ -734,7 +748,9 @@
     "label": "IPE"
    },
    "_comment_substitute": "PER - PERUMAGICO 187632 is the ONLY Peru Magico in the catalogue and it trickles: 851 KB in 25s with 22 of 25 seconds idle (~34 KB/s), far under a watchable rate, which is why the 14s write watchdog kept killing it. Stand-in is PER - IPE HD 187639 (13.3 MB in 16s, 0 idle seconds) - Peru public/cultural, the closest match in country.",
-   "country": "Peru"
+   "country": "Peru",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel24",
@@ -761,7 +777,9 @@
    "logo": "/player/logos/channel24.png",
    "use_standby": true,
    "token_refresh_secs": 180,
-   "country": "Peru"
+   "country": "Peru",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel25",
@@ -788,7 +806,9 @@
    "logo": "/player/logos/channel25.png",
    "use_standby": true,
    "token_refresh_secs": 180,
-   "country": "Peru"
+   "country": "Peru",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel26",
@@ -815,7 +835,9 @@
    "logo": "/player/logos/channel26.png",
    "use_standby": true,
    "token_refresh_secs": 180,
-   "country": "Peru"
+   "country": "Peru",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel27",
@@ -843,7 +865,9 @@
    "use_standby": true,
    "token_refresh_secs": 180,
    "_comment": "ESPN 2 HD (Peru) 312516. RE-ENABLED 2026-09-13: feed verified healthy on ALL THREE Peru accounts (9.7-10.6MB/14s). It was left disabled by the 32f5499 rollback, so the client's monitoring correctly reported it Down — it simply was not in the lineup. ",
-   "country": "Peru"
+   "country": "Peru",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel28",
@@ -870,7 +894,9 @@
     "http://@@KOZEE5@@/71862"
    ],
    "use_standby": true,
-   "country": "US"
+   "country": "US",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel29",
@@ -897,7 +923,9 @@
     "http://@@KOZEE1@@/71853"
    ],
    "use_standby": true,
-   "country": "US"
+   "country": "US",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel30",
@@ -924,7 +952,9 @@
     "http://@@KOZEE1@@/71855"
    ],
    "use_standby": true,
-   "country": "US"
+   "country": "US",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel31",
@@ -951,7 +981,9 @@
     "http://@@KOZEE1@@/71330"
    ],
    "use_standby": true,
-   "country": "US"
+   "country": "US",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel32",
@@ -978,7 +1010,9 @@
     "http://@@KOZEE1@@/71335"
    ],
    "use_standby": true,
-   "country": "US"
+   "country": "US",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel33",
@@ -1005,7 +1039,9 @@
     "http://@@KOZEE5@@/1060173"
    ],
    "use_standby": true,
-   "country": "US"
+   "country": "US",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel34",
@@ -1032,7 +1068,9 @@
     "http://@@KOZEE1@@/1427912"
    ],
    "use_standby": true,
-   "country": "US"
+   "country": "US",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel35",
@@ -1059,7 +1097,9 @@
     "http://@@KOZEE1@@/71324"
    ],
    "use_standby": true,
-   "country": "US"
+   "country": "US",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel36",
@@ -1086,7 +1126,9 @@
     "http://@@KOZEE1@@/71904"
    ],
    "use_standby": true,
-   "country": "US"
+   "country": "US",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel37",
@@ -1113,7 +1155,9 @@
     "http://@@KOZEE1@@/685809"
    ],
    "use_standby": true,
-   "country": "US"
+   "country": "US",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel38",
@@ -1140,7 +1184,9 @@
     "http://@@KOZEE5@@/71935"
    ],
    "use_standby": true,
-   "country": "US"
+   "country": "US",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel39",
@@ -1167,7 +1213,9 @@
     "http://@@KOZEE1@@/71951"
    ],
    "use_standby": true,
-   "country": "US"
+   "country": "US",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel40",
@@ -1194,7 +1242,9 @@
     "http://@@KOZEE1@@/72383"
    ],
    "use_standby": true,
-   "country": "US"
+   "country": "US",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel41",
@@ -1221,7 +1271,9 @@
     "http://@@KOZEE1@@/71989"
    ],
    "use_standby": true,
-   "country": "US"
+   "country": "US",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel42",
@@ -1248,7 +1300,9 @@
     "http://@@KOZEE1@@/71964"
    ],
    "use_standby": true,
-   "country": "US"
+   "country": "US",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel43",
@@ -1275,7 +1329,9 @@
     "http://@@KOZEE5@@/71944"
    ],
    "use_standby": true,
-   "country": "US"
+   "country": "US",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel44",
@@ -1381,7 +1437,9 @@
     "label": "Azteca Corazón",
     "after_hours": 1.0,
     "outage": 2
-   }
+   },
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel47",
@@ -1427,7 +1485,9 @@
     "label": "Azteca Cinema",
     "after_hours": 5.2,
     "outage": 1
-   }
+   },
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel48",
@@ -1453,7 +1513,9 @@
     "http://@@ACCT_LAT6@@/436875",
     "http://@@ACCT_LAT5@@/436875",
     "http://@@ACCT_LAT4@@/436875"
-   ]
+   ],
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel49",
@@ -1479,7 +1541,9 @@
     "http://@@ACCT_LAT6@@/436898",
     "http://@@ACCT_LAT5@@/436898",
     "http://@@ACCT_LAT7@@/436898"
-   ]
+   ],
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel50",
@@ -1509,7 +1573,9 @@
     "http://@@ACCT_LAT8@@/1028540",
     "http://@@ACCT_LAT7@@/436899",
     "http://@@ACCT_LAT7@@/1028540"
-   ]
+   ],
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel51",
@@ -1565,7 +1631,9 @@
     "http://@@ACCT_LAT8@@/273291",
     "http://@@ACCT_LAT9@@/436902",
     "http://@@ACCT_LAT9@@/273291"
-   ]
+   ],
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel53",
@@ -1593,7 +1661,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Venezuela",
-   "free_zone": true
+   "free_zone": true,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel54",
@@ -1625,7 +1695,9 @@
    "token_refresh_secs": 0,
    "country": "Venezuela",
    "free_zone": true,
-   "hls_time": 2
+   "hls_time": 2,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel55",
@@ -1656,7 +1728,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Venezuela",
-   "free_zone": false
+   "free_zone": false,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel56",
@@ -1688,7 +1762,9 @@
    "token_refresh_secs": 0,
    "country": "Venezuela",
    "free_zone": false,
-   "hls_time": 2
+   "hls_time": 2,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel57",
@@ -1719,7 +1795,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Colombia",
-   "free_zone": true
+   "free_zone": true,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel58",
@@ -1747,7 +1825,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Colombia",
-   "free_zone": true
+   "free_zone": true,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel59",
@@ -1778,7 +1858,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Colombia",
-   "free_zone": true
+   "free_zone": true,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel60",
@@ -1809,7 +1891,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Colombia",
-   "free_zone": false
+   "free_zone": false,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel61",
@@ -1839,7 +1923,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Colombia",
-   "free_zone": false
+   "free_zone": false,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel62",
@@ -1867,7 +1953,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Colombia",
-   "free_zone": false
+   "free_zone": false,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel63",
@@ -1905,7 +1993,9 @@
    "token_refresh_secs": 0,
    "country": "Colombia",
    "free_zone": false,
-   "_comment_audio": "2026-09-15: SILENT is the PROVIDER's, not ours. All four Win Sports ids were probed on every account: 190259 and 30647 carry a silent audio track (-90.3 dB) and are the reliably-available ones; 190260 carries REAL audio (-22.7/-23.2 dB) but is intermittent; 139331 (its LATINO twin, previously missing from this list) was down at probe time. Ordered best-audio-first so the channel takes real sound whenever either PLUS feed is up, and falls back to picture-with-silence rather than going dark. Nothing on our side can add audio the provider does not send - worth raising with them."
+   "_comment_audio": "2026-09-15: SILENT is the PROVIDER's, not ours. All four Win Sports ids were probed on every account: 190259 and 30647 carry a silent audio track (-90.3 dB) and are the reliably-available ones; 190260 carries REAL audio (-22.7/-23.2 dB) but is intermittent; 139331 (its LATINO twin, previously missing from this list) was down at probe time. Ordered best-audio-first so the channel takes real sound whenever either PLUS feed is up, and falls back to picture-with-silence rather than going dark. Nothing on our side can add audio the provider does not send - worth raising with them.",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel64",
@@ -1933,7 +2023,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Guatemala",
-   "free_zone": true
+   "free_zone": true,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel65",
@@ -1963,7 +2055,9 @@
    "country": "Guatemala",
    "free_zone": true,
    "stale_kill_secs": 30,
-   "_comment_watchdog": "2026-09-15: stale_kill_secs raised from the fleet default of 14 to 30. The feed is BURSTY, not dead: sampled once a second for 45s it delivered 8.4 MB (LAT3) and 15.3 MB (LAT4) but idled 41/45 and 40/45 seconds, with single gaps of 20s and 15s. Both exceed the 14s watchdog, so it was being killed every ~30s and sat on the standby slate despite the source being healthy and carrying real audio (-20.6 dB)."
+   "_comment_watchdog": "2026-09-15: stale_kill_secs raised from the fleet default of 14 to 30. The feed is BURSTY, not dead: sampled once a second for 45s it delivered 8.4 MB (LAT3) and 15.3 MB (LAT4) but idled 41/45 and 40/45 seconds, with single gaps of 20s and 15s. Both exceed the 14s watchdog, so it was being killed every ~30s and sat on the standby slate despite the source being healthy and carrying real audio (-20.6 dB).",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel66",
@@ -1991,7 +2085,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Guatemala",
-   "free_zone": true
+   "free_zone": true,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel67",
@@ -2019,7 +2115,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Guatemala",
-   "free_zone": false
+   "free_zone": false,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel68",
@@ -2055,7 +2153,9 @@
      "http://@@ACCT_LAT3@@/30629"
     ],
     "label": "CNN en Español"
-   }
+   },
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel69",
@@ -2112,7 +2212,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Honduras",
-   "free_zone": true
+   "free_zone": true,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel71",
@@ -2141,7 +2243,9 @@
    "token_refresh_secs": 0,
    "country": "Honduras",
    "free_zone": true,
-   "_disabled_reason": "2026-09-12: provider feed 214639 returns no data and is the ONLY AME 47 TV id in the catalog; retry loop was burning connection slots. Re-enable when the provider restores it."
+   "_disabled_reason": "2026-09-12: provider feed 214639 returns no data and is the ONLY AME 47 TV id in the catalog; retry loop was burning connection slots. Re-enable when the provider restores it.",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel72",
@@ -2170,7 +2274,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Honduras",
-   "free_zone": false
+   "free_zone": false,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel73",
@@ -2229,7 +2335,9 @@
    "token_refresh_secs": 0,
    "country": "Cuba",
    "free_zone": true,
-   "_comment": "CUBAVISION. 2026-09-13: primary reordered to 1359967 'ES - CUBAVISION SD', the only source that renders a CLEAN picture. 30695 'CUB - CUBAVISION' and 187616 'CUB - CUBAVISION vip' both deliver full byte volume and report ZERO ffmpeg decode errors, but an extracted frame is green horizontal banding / macroblock garbage — so byte counts and error counts BOTH miss it and only a frame catches it. Failover had already walked to 1359967 on its own; this just stops it starting on a corrupt feed."
+   "_comment": "CUBAVISION. 2026-09-13: primary reordered to 1359967 'ES - CUBAVISION SD', the only source that renders a CLEAN picture. 30695 'CUB - CUBAVISION' and 187616 'CUB - CUBAVISION vip' both deliver full byte volume and report ZERO ffmpeg decode errors, but an extracted frame is green horizontal banding / macroblock garbage — so byte counts and error counts BOTH miss it and only a frame catches it. Failover had already walked to 1359967 on its own; this just stops it starting on a corrupt feed.",
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel75",
@@ -2257,7 +2365,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Cuba",
-   "free_zone": true
+   "free_zone": true,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel76",
@@ -2285,7 +2395,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Cuba",
-   "free_zone": true
+   "free_zone": true,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel77",
@@ -2315,7 +2427,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Cuba",
-   "free_zone": false
+   "free_zone": false,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel78",
@@ -2343,7 +2457,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Cuba",
-   "free_zone": false
+   "free_zone": false,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel79",
@@ -2372,7 +2488,9 @@
    "use_standby": true,
    "token_refresh_secs": 0,
    "country": "Cuba",
-   "free_zone": false
+   "free_zone": false,
+   "hidden": true,
+   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
   },
   {
    "channel_name": "channel80",
