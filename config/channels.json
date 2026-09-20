@@ -894,9 +894,7 @@
     "http://@@KOZEE5@@/71862"
    ],
    "use_standby": true,
-   "country": "US",
-   "hidden": true,
-   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
+   "country": "US"
   },
   {
    "channel_name": "channel29",
@@ -923,9 +921,7 @@
     "http://@@KOZEE1@@/71853"
    ],
    "use_standby": true,
-   "country": "US",
-   "hidden": true,
-   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
+   "country": "US"
   },
   {
    "channel_name": "channel30",
@@ -952,9 +948,7 @@
     "http://@@KOZEE1@@/71855"
    ],
    "use_standby": true,
-   "country": "US",
-   "hidden": true,
-   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
+   "country": "US"
   },
   {
    "channel_name": "channel31",
@@ -981,9 +975,7 @@
     "http://@@KOZEE1@@/71330"
    ],
    "use_standby": true,
-   "country": "US",
-   "hidden": true,
-   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
+   "country": "US"
   },
   {
    "channel_name": "channel32",
@@ -1010,9 +1002,7 @@
     "http://@@KOZEE1@@/71335"
    ],
    "use_standby": true,
-   "country": "US",
-   "hidden": true,
-   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
+   "country": "US"
   },
   {
    "channel_name": "channel33",
@@ -1039,9 +1029,7 @@
     "http://@@KOZEE5@@/1060173"
    ],
    "use_standby": true,
-   "country": "US",
-   "hidden": true,
-   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
+   "country": "US"
   },
   {
    "channel_name": "channel34",
@@ -1068,9 +1056,7 @@
     "http://@@KOZEE1@@/1427912"
    ],
    "use_standby": true,
-   "country": "US",
-   "hidden": true,
-   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
+   "country": "US"
   },
   {
    "channel_name": "channel35",
@@ -1097,9 +1083,7 @@
     "http://@@KOZEE1@@/71324"
    ],
    "use_standby": true,
-   "country": "US",
-   "hidden": true,
-   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
+   "country": "US"
   },
   {
    "channel_name": "channel36",
@@ -1126,9 +1110,7 @@
     "http://@@KOZEE1@@/71904"
    ],
    "use_standby": true,
-   "country": "US",
-   "hidden": true,
-   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
+   "country": "US"
   },
   {
    "channel_name": "channel37",
@@ -1155,9 +1137,7 @@
     "http://@@KOZEE1@@/685809"
    ],
    "use_standby": true,
-   "country": "US",
-   "hidden": true,
-   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
+   "country": "US"
   },
   {
    "channel_name": "channel38",
@@ -1184,9 +1164,7 @@
     "http://@@KOZEE5@@/71935"
    ],
    "use_standby": true,
-   "country": "US",
-   "hidden": true,
-   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
+   "country": "US"
   },
   {
    "channel_name": "channel39",
@@ -1213,9 +1191,7 @@
     "http://@@KOZEE1@@/71951"
    ],
    "use_standby": true,
-   "country": "US",
-   "hidden": true,
-   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
+   "country": "US"
   },
   {
    "channel_name": "channel40",
@@ -1242,9 +1218,7 @@
     "http://@@KOZEE1@@/72383"
    ],
    "use_standby": true,
-   "country": "US",
-   "hidden": true,
-   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
+   "country": "US"
   },
   {
    "channel_name": "channel41",
@@ -1271,9 +1245,7 @@
     "http://@@KOZEE1@@/71989"
    ],
    "use_standby": true,
-   "country": "US",
-   "hidden": true,
-   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
+   "country": "US"
   },
   {
    "channel_name": "channel42",
@@ -1300,9 +1272,7 @@
     "http://@@KOZEE1@@/71964"
    ],
    "use_standby": true,
-   "country": "US",
-   "hidden": true,
-   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
+   "country": "US"
   },
   {
    "channel_name": "channel43",
@@ -1329,9 +1299,7 @@
     "http://@@KOZEE5@@/71944"
    ],
    "use_standby": true,
-   "country": "US",
-   "hidden": true,
-   "_comment_hidden": "Hidden 2026-09-19 at client request: publish MEXICO ONLY for now. PRESENTATION ONLY - the channel keeps running and its hls url still serves; set hidden=false to list it again (instant, no warm-up)."
+   "country": "US"
   },
   {
    "channel_name": "channel44",

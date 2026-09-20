@@ -36,6 +36,18 @@ import json, os, time
 PROJECT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CFG = os.path.join(PROJECT, 'config', 'channels.json')
 OUT = os.path.join(PROJECT, 'player', 'channels.json')
+# Per-shop lineups. majotv.com and kozeetv.com both read player/channels.json today, so a
+# lineup change meant for one shop lands on both (2026-09-19: hiding non-Mexico for MajoTV
+# emptied KozeeTV). These files let each site read only its own bouquet:
+#   player/majo/channels.json   everything that is not the US bouquet
+#   player/kozee/channels.json  the US bouquet (KOZEE accounts, ch28-43)
+# The shared channels.json keeps emitting the union, so nothing breaks until a site moves.
+SHOP_OUT = {
+    'majo':  os.path.join(PROJECT, 'player', 'majo',  'channels.json'),
+    'kozee': os.path.join(PROJECT, 'player', 'kozee', 'channels.json'),
+}
+def shop_of(entry):
+    return 'kozee' if entry.get('country') == 'US' else 'majo'
 LIVE = os.path.join(PROJECT, 'player', 'live.json')
 HEALTH = os.path.join(PROJECT, 'cache', 'lineup_health.json')
 BASE = 'https://stream.tv247on.com'
@@ -158,7 +170,13 @@ for ch in candidates:
 
 save_health({k: v for k, v in fresh.items() if v is not None})
 
-tmp = '%s.%d.tmp' % (OUT, os.getpid())   # pid-unique: cron and the 5s loop can overlap
-with open(tmp, 'w') as f:
-    json.dump(out, f, ensure_ascii=False, indent=2)
-os.replace(tmp, OUT)   # atomic swap so a fetch never sees a half-written file
+def _write(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = '%s.%d.tmp' % (path, os.getpid())   # pid-unique: cron and the 5s loop can overlap
+    with open(tmp, 'w') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, path)   # atomic swap so a fetch never sees a half-written file
+
+_write(OUT, out)                                            # shared (union) - what both sites read today
+for shop, path in SHOP_OUT.items():
+    _write(path, [e for e in out if shop_of(e) == shop])
