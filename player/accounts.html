@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Account Balance</title>
+<style>
+  :root{ --bg:#0f1216; --card:#1a1f26; --line:#2a313b; --txt:#e7ebf0; --mut:#8a94a3;
+         --ok:#22c55e; --full:#f59e0b; --over:#ef4444; --accent:#f97316; --chip:#0c0f13; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--txt); font:15px/1.4 system-ui,Segoe UI,Roboto,sans-serif; }
+  header{ position:sticky; top:0; background:#12161c; border-bottom:1px solid var(--line);
+          padding:12px 18px; z-index:5; }
+  .hrow{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  header h1{ font-size:18px; margin:0; margin-right:auto; display:flex; align-items:center; gap:8px; }
+  header h1 a{ color:var(--mut); font-size:13px; font-weight:400; text-decoration:none; margin-left:6px; }
+  header h1 a:hover{ color:var(--txt); }
+  .refbox{ display:flex; align-items:center; gap:8px; color:var(--mut); font-size:13px; }
+  .refbox .age{ min-width:96px; text-align:right; }
+  button{ border:0; border-radius:8px; padding:7px 14px; font-weight:600; cursor:pointer; color:#fff; font-size:14px; }
+  button[disabled]{ opacity:.5; cursor:default; }
+  .icon{ background:#233044; } .icon.on{ background:var(--accent); }
+  .chips{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .chip{ display:flex; align-items:center; gap:7px; background:var(--chip); border:1px solid var(--line);
+         border-radius:999px; padding:6px 13px; font-size:13px; }
+  .chip .n{ font-weight:700; font-size:15px; }
+  .chip .d{ width:9px; height:9px; border-radius:50%; }
+  .chip.ok .d{ background:var(--ok); } .chip.over .d{ background:var(--over); }
+  .chip.all .d{ background:#5b6675; } .chip.slot .d{ background:#60a5fa; }
+  main{ padding:16px 18px 48px; max-width:1150px; margin:0 auto; }
+  /* actions */
+  .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:0 0 14px; }
+  .plan{ background:#2563eb; } .apply{ background:var(--over); } .home{ background:#7c3aed; }
+  .ghost{ background:#233044; }
+  .panel{ background:#141922; border:1px solid var(--line); border-radius:12px; padding:14px 16px;
+          margin:0 0 16px; display:none; }
+  .panel.show{ display:block; }
+  .panel h3{ margin:0 0 8px; font-size:14px; text-transform:uppercase; letter-spacing:.05em; }
+  .panel pre{ margin:0; white-space:pre-wrap; font:12.5px/1.45 ui-monospace,Menlo,Consolas,monospace;
+              color:#cbd5e1; max-height:340px; overflow:auto; }
+  .panel .foot{ display:flex; gap:10px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+  .warnline{ color:#fde68a; font-size:13px; }
+  /* account rows */
+  .grp{ margin:18px 2px 8px; font-size:14px; font-weight:700; text-transform:uppercase;
+        letter-spacing:.05em; display:flex; gap:8px; align-items:center; }
+  .grp .c{ color:var(--mut); font-weight:600; }
+  .acct{ background:var(--card); border:1px solid var(--line); border-left:3px solid var(--line);
+         border-radius:10px; padding:10px 12px; margin:7px 0; }
+  .acct.s-ok{ border-left-color:var(--ok); }
+  .acct.s-full{ border-left-color:var(--full); }
+  .acct.s-over{ border-left-color:var(--over); }
+  .acct.s-unknown{ border-left-color:#5b6675; }
+  .top{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; cursor:pointer; }
+  .alias{ font-weight:700; min-width:118px; }
+  .count{ font-variant-numeric:tabular-nums; color:var(--mut); font-size:13px; min-width:62px; }
+  .count b{ color:var(--txt); font-size:15px; }
+  .bar{ flex:1 1 180px; height:9px; background:#0c0f13; border:1px solid var(--line);
+        border-radius:999px; overflow:hidden; min-width:120px; display:flex; }
+  .bar i{ display:block; height:100%; }
+  .bar i.f{ background:var(--ok); } .bar i.v{ background:#7c3aed; } .bar i.o{ background:var(--over); }
+  .badge{ font-size:11px; padding:1px 7px; border-radius:6px; background:var(--chip);
+          border:1px solid var(--line); color:var(--mut); white-space:nowrap; }
+  .badge.b-over{ color:#fecaca; border-color:#5b1010; background:#2a0808; }
+  .badge.b-full{ color:#fde68a; border-color:#5b4708; background:#2a2205; }
+  .badge.b-vis{ color:#ddd6fe; border-color:#4c1d95; background:#1e1033; }
+  .chs{ display:none; margin:10px 0 2px; padding-top:9px; border-top:1px solid var(--line); }
+  .chs.show{ display:block; }
+  .ch{ display:flex; gap:8px; align-items:center; padding:3px 0; font-size:13px; }
+  .ch .nm{ color:var(--mut); font-variant-numeric:tabular-nums; min-width:86px; }
+  .ch .ti{ flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hidden{ display:none !important; }
+  .msg{ color:var(--mut); padding:24px; text-align:center; }
+  .banner{ background:#2a0808; border:1px solid #5b1010; color:#fecaca; border-radius:10px;
+           padding:8px 14px; margin:0 0 12px; font-size:13px; display:none; }
+  .banner.show{ display:block; }
+  .banner.warn{ background:#2a2205; border-color:#5b4708; color:#fde68a; }
+  .toast{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:#0c0f13;
+          border:1px solid var(--line); padding:10px 16px; border-radius:10px; opacity:0;
+          transition:.2s; pointer-events:none; z-index:9; }
+  .toast.show{ opacity:1; }
+  .legend{ color:var(--mut); font-size:12px; margin:14px 2px 0; }
+  .legend i{ display:inline-block; width:9px; height:9px; border-radius:2px; margin:0 4px 0 10px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <h1>&#9878; Account Balance <a href="admin.html">&larr; channel admin</a></h1>
+    <div class="refbox">
+      <span class="age" id="age">—</span>
+      <button class="icon" id="refresh" title="Refresh now">&#8635;</button>
+      <button class="icon on" id="auto" title="Toggle auto-refresh">Auto&nbsp;10s</button>
+    </div>
+  </div>
+  <div class="chips" id="chips"></div>
+</header>
+<main>
+  <div class="banner" id="banner"></div>
+
+  <div class="actions">
+    <button class="plan" id="btnPlan">Plan rebalance</button>
+    <button class="home hidden" id="btnHome">Send channels home</button>
+    <span class="warnline" id="actNote"></span>
+  </div>
+
+  <div class="panel" id="panel">
+    <h3 id="panelTitle">Rebalance plan</h3>
+    <pre id="panelBody"></pre>
+    <div class="foot" id="panelFoot"></div>
+  </div>
+
+  <div id="list" class="msg">Loading accounts…</div>
+
+  <div class="legend">
+    Bar: <i style="background:#22c55e"></i>on its own primary
+         <i style="background:#7c3aed"></i>failed over from elsewhere
+         <i style="background:#ef4444"></i>over cap
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+(function(){
+  var API   = '/admin-api';
+  var token = '5fbfbb6626407d12bf128abe76289022';   // same embedded token as admin.html
+
+  var listEl=document.getElementById('list'), chipsEl=document.getElementById('chips'),
+      ageEl=document.getElementById('age'), banner=document.getElementById('banner'),
+      toastEl=document.getElementById('toast'), panel=document.getElementById('panel'),
+      panelTitle=document.getElementById('panelTitle'), panelBody=document.getElementById('panelBody'),
+      panelFoot=document.getElementById('panelFoot'), actNote=document.getElementById('actNote'),
+      btnPlan=document.getElementById('btnPlan'), btnHome=document.getElementById('btnHome');
+  var last=0, timer=null, autoOn=true, open={}, poll=null;
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function toast(m){ toastEl.textContent=m; toastEl.classList.add('show');
+    setTimeout(function(){ toastEl.classList.remove('show'); },2600); }
+  function api(path,method){
+    return fetch(API+path,{ method:method||'GET', headers:{'X-Admin-Token':token}, cache:'no-store' })
+      .then(function(r){ if(!r.ok&&r.status===401){ var e=new Error('401'); e.code=401; throw e; }
+                         return r.json().then(function(j){ return {status:r.status, body:j}; }); });
+  }
+
+  // ── rendering ────────────────────────────────────────────────────────────────
+  function bar(a){
+    if(!a.max) return '<div class="bar"></div>';
+    var vis=a.channels.filter(function(c){return c.visiting;}).length,
+        own=a.live-vis, over=Math.max(0,a.live-a.max), cap=a.max,
+        w=function(n){ return (100*Math.min(n,cap)/cap)+'%'; };
+    var h='<div class="bar">';
+    if(own>0)  h+='<i class="f" style="width:'+w(own)+'"></i>';
+    if(vis>0)  h+='<i class="v" style="width:'+w(vis)+'"></i>';
+    if(over>0) h+='<i class="o" style="width:'+w(over)+'"></i>';
+    return h+'</div>';
+  }
+
+  function acctRow(a){
+    var badges='';
+    if(a.state==='over')  badges+='<span class="badge b-over">OVER CAP</span>';
+    if(a.state==='full')  badges+='<span class="badge b-full">full</span>';
+    var vis=a.channels.filter(function(c){return c.visiting;}).length;
+    if(vis)               badges+='<span class="badge b-vis">'+vis+' visiting</span>';
+    if(a.primaries!==a.live)
+      badges+='<span class="badge">'+a.primaries+' configured</span>';
+    if(a.provider_active!=null)
+      badges+='<span class="badge" title="provider-reported, lags by minutes">prov '+a.provider_active+'</span>';
+    if(a.error) badges+='<span class="badge b-over">'+esc(a.error)+'</span>';
+
+    var chs=a.channels.map(function(c){
+      return '<div class="ch"><span class="nm">'+esc(c.name)+'</span>'+
+             '<span class="ti">'+esc(c.title)+'</span>'+
+             (c.visiting?'<span class="badge b-vis">home: '+esc(c.home||'?')+'</span>':'')+
+             '</div>'; }).join('') || '<div class="ch"><span class="ti">no live connections</span></div>';
+
+    return '<div class="acct s-'+a.state+'" data-a="'+esc(a.alias)+'">'+
+      '<div class="top">'+
+        '<span class="alias">'+esc(a.alias)+'</span>'+
+        '<span class="count"><b>'+a.live+'</b> / '+(a.max==null?'?':a.max)+'</span>'+
+        bar(a)+badges+
+      '</div>'+
+      '<div class="chs'+(open[a.alias]?' show':'')+'">'+chs+'</div>'+
+    '</div>';
+  }
+
+  function render(d){
+    var t=d.totals;
+    chipsEl.innerHTML=
+      '<span class="chip all"><span class="d"></span><span class="n">'+t.accounts+'</span> accounts</span>'+
+      '<span class="chip slot"><span class="d"></span><span class="n">'+t.live+'</span> live of '+t.slots+' slots</span>'+
+      '<span class="chip '+(t.over?'over':'ok')+'"><span class="d"></span><span class="n">'+t.over+'</span> over cap</span>'+
+      (d.squatters.length?'<span class="chip over"><span class="d"></span><span class="n">'+
+        d.squatters.length+'</span> off their primary</span>':'');
+
+    var groups={}, order=[];
+    d.accounts.forEach(function(a){
+      if(!groups[a.group]){ groups[a.group]=[]; order.push(a.group); }
+      groups[a.group].push(a); });
+    listEl.className='';
+    listEl.innerHTML=order.map(function(g){
+      var rows=groups[g], live=0, slots=0;
+      rows.forEach(function(a){ live+=a.live; slots+=(a.max||0); });
+      // over-cap first: the thing you opened this page to find
+      rows.sort(function(x,y){ var r={over:0,full:1,ok:2,unknown:3};
+        return (r[x.state]-r[y.state]) || x.alias.localeCompare(y.alias); });
+      return '<div class="grp">'+esc(g)+'<span class="c">'+live+' / '+slots+' slots</span></div>'+
+             rows.map(acctRow).join('');
+    }).join('');
+
+    btnHome.className = d.squatters.length ? 'home' : 'home hidden';
+    if(d.squatters.length){
+      btnHome.textContent='Send '+d.squatters.length+' channel'+(d.squatters.length>1?'s':'')+' home';
+      actNote.textContent='';
+    }
+    banner.className='banner'+(d.caps_stale?' warn show':'');
+    if(d.caps_stale) banner.textContent='⚠ Account caps were last read '+
+      Math.round((d.generated-d.caps_fetched)/60)+' min ago — counts are live, caps may be stale.';
+    last=Date.now();
+  }
+
+  function load(){
+    return api('/accounts').then(function(r){ render(r.body); })
+      .catch(function(e){
+        listEl.className='msg';
+        if(e&&e.code===401){ listEl.textContent='Invalid admin token.'; }
+        else { banner.className='banner show';
+               banner.textContent='⚠ Could not reach the admin API — retrying…'; }
+      });
+  }
+
+  // ── actions ──────────────────────────────────────────────────────────────────
+  function showPanel(title, body, foot){
+    panelTitle.textContent=title; panelBody.textContent=body;
+    panelFoot.innerHTML=''; (foot||[]).forEach(function(b){ panelFoot.appendChild(b); });
+    panel.classList.add('show');
+  }
+  function mkBtn(label, cls, fn){
+    var b=document.createElement('button'); b.className=cls; b.textContent=label;
+    b.onclick=fn; return b;
+  }
+  function closePanel(){ panel.classList.remove('show'); }
+
+  // Plan first, apply second. --apply restarts every channel whose primary moves, so the
+  // plan is shown and the restart only happens on a deliberate second click.
+  btnPlan.onclick=function(){
+    btnPlan.disabled=true; btnPlan.textContent='Planning…';
+    showPanel('Rebalance plan','Reading account caps from the provider…',[]);
+    api('/rebalance/plan','POST').then(function(r){
+      var txt=r.body.plan||'(no output)';
+      var moves=(txt.match(/PRIMARY moves \((\d+)\)/)||[])[1];
+      var foot=[];
+      if(moves&&moves!=='0'){
+        foot.push(mkBtn('Apply — restarts '+moves+' channel'+(moves>1?'s':''),'apply',function(){
+          if(!confirm('Apply the rebalance?\n\n'+moves+' channel(s) will be restarted, one every 8s. '+
+                      'Each is briefly off air.')) return;
+          api('/rebalance/apply','POST').then(function(x){
+            if(x.body.ok){ toast('Rebalance started'); watchJob('Rebalance running'); }
+            else toast(x.body.error||'Could not start');
+          });
+        }));
+      }
+      foot.push(mkBtn('Close','ghost',closePanel));
+      showPanel('Rebalance plan', txt, foot);
+    }).catch(function(){ showPanel('Rebalance plan','Could not reach the admin API.',
+                                   [mkBtn('Close','ghost',closePanel)]); })
+      .then(function(){ btnPlan.disabled=false; btnPlan.textContent='Plan rebalance'; });
+  };
+
+  btnHome.onclick=function(){
+    if(!confirm('Restart the channels that are running on someone else\'s account?\n\n'+
+                'Each one\'s own primary is probed first and skipped if it is still down, '+
+                'so a dead feed is not restarted into a failover loop.\n\n'+
+                'The ones that do restart are briefly off air, one every 8s. This is the '+
+                'only thing that moves them back — the rebalancer only reorders configuration.')) return;
+    api('/sendhome','POST').then(function(r){
+      if(r.body.ok){ toast('Restarting '+r.body.channels+' channel(s)'); watchJob('Sending channels home'); }
+      else toast(r.body.error||'Could not start');
+    });
+  };
+
+  function watchJob(title){
+    showPanel(title,'starting…',[mkBtn('Close','ghost',function(){
+      closePanel(); if(poll){ clearInterval(poll); poll=null; } })]);
+    if(poll) clearInterval(poll);
+    poll=setInterval(function(){
+      api('/rebalance/status').then(function(r){
+        panelBody.textContent=r.body.log||'(no output yet)';
+        panelBody.scrollTop=panelBody.scrollHeight;
+        if(!r.body.running){
+          clearInterval(poll); poll=null;
+          panelTitle.textContent=title+' — finished';
+          load();
+        }
+      });
+    },2000);
+  }
+
+  // ── wiring ───────────────────────────────────────────────────────────────────
+  // Only the header row toggles — clicking a channel inside the expanded list should not
+  // collapse the thing you just opened to read.
+  listEl.addEventListener('click',function(e){
+    var top=e.target.closest ? e.target.closest('.top') : null;
+    if(!top) return;
+    var box=top.closest('.acct'); if(!box) return;
+    var a=box.getAttribute('data-a'); open[a]=!open[a];
+    var ch=box.querySelector('.chs'); if(ch) ch.classList.toggle('show',!!open[a]);
+  });
+  document.getElementById('refresh').onclick=load;
+  document.getElementById('auto').onclick=function(){
+    autoOn=!autoOn; this.className=autoOn?'icon on':'icon';
+    if(autoOn) timer=setInterval(load,10000); else clearInterval(timer);
+  };
+  setInterval(function(){
+    if(!last){ ageEl.textContent='—'; return; }
+    var s=Math.round((Date.now()-last)/1000);
+    ageEl.textContent = s<60 ? ('updated '+s+'s ago') : ('updated '+Math.round(s/60)+'m ago');
+  },1000);
+
+  load(); timer=setInterval(load,10000);
+})();
+</script>
+</body>
+</html>
