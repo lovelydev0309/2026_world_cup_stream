@@ -14,8 +14,19 @@ cap even after its primaries were levelled:
   PRIMARY    source_urls[0] — where the channel normally connects.
   FAILOVER   the ORDER of the rest. When a channel fails it walks down this list, so if many
              channels share the same second entry a single provider blip piles them all onto
-             one account and pushes it over. Each channel's remaining accounts are ordered by
-             how loaded they are, so the walk heads for whoever has room.
+             one account and pushes it over.
+
+             This used to order each channel's fallbacks by "whoever has the most room",
+             which sounds right and is the exact bug: the key was IDENTICAL for every
+             channel, so the emptiest account became the FIRST fallback for all of them at
+             once. Measured 2026-09-24: ACCT5 was the first hop for 14 channels while
+             holding 3 slots, and ACCT6 sat at position 4+ for 16 of the 17 channels that
+             could reach it, so the walk never arrived — one account permanently over, its
+             neighbour permanently idle. Each POSITION is now fanned out across accounts in
+             proportion to capacity, so the fleet's first hops diverge instead of converging.
+
+             NOTE this script cannot move a RUNNING channel; it only rewrites config. Live
+             occupancy is enforce_caps.py's job, and the two coordinate via RECENT_MOVE_SECS.
 
 Assignment is most-constrained-first (a channel with two possible accounts is placed before
 one with six), and each channel takes the account with the lowest projected LOAD RATIO
@@ -39,6 +50,12 @@ RUNNER = os.path.join(PROJECT, "scripts", "run_channel.sh")
 LOGDIR = os.path.join(PROJECT, "logs")
 UA = "okhttp/4.9.3"
 STAGGER = 8          # seconds between restarts: one channel briefly out at a time
+# enforce_caps.py also rewrites source_urls[0], on a different clock (every 5 min, reacting
+# to LIVE occupancy) than this one (every 30 min, reacting to CONFIGURED primaries). With
+# both free to move the same channel they hand it back and forth -- channel11 went
+# PE1 -> ACCT1 by the enforcer and ACCT1 -> ACCT2 by this script minutes later, two restarts
+# for no net gain. A channel the enforcer touched recently is therefore left where it put it.
+RECENT_MOVE_SECS = 900
 RESERVE = 1          # leave this many slots free per account where the options allow it.
                      # Sitting exactly AT max is not safe: when a channel fails over, the
                      # provider still holds the session it just dropped, so the account is
@@ -91,6 +108,16 @@ def alias_of(url):
     return m.group(1) if m else None
 
 
+def recently_moved():
+    """Channels enforce_caps.py relocated within RECENT_MOVE_SECS — do not move them again."""
+    try:
+        d = json.load(open(os.path.join(PROJECT, "cache", "enforce_caps.json")))
+    except Exception:
+        return set()
+    now = time.time()
+    return {k for k, v in d.items() if now - (v or {}).get("moved_at", 0) < RECENT_MOVE_SECS}
+
+
 def restart(ch):
     ps = subprocess.run(["ps", "-eo", "pid,cmd"], capture_output=True, text=True).stdout
     for pat in (r"ffmpeg.*hls/%s/" % ch, r"run_channel\.sh %s(\s|$)" % ch):
@@ -131,6 +158,10 @@ def main():
     # watching. Nothing is gained by relocating a channel that is already on an account with
     # room. So: keep every current primary, then move the minimum number of channels OFF the
     # over-cap accounts until nobody is over.
+    recent = recently_moved()
+    if recent:
+        print("leaving %d channel(s) where enforce_caps just put them: %s"
+              % (len(recent), ", ".join(sorted(recent))))
     load = collections.Counter()
     primary = {}
     for c in chans:
@@ -156,6 +187,7 @@ def main():
             continue
         movable = sorted((c for c in chans
                           if primary[c["channel_name"]] == a
+                          and c["channel_name"] not in recent
                           and len([o for o in options[c["channel_name"]] if o != a]) > 0),
                          key=lambda c: -len(options[c["channel_name"]]))
         for c in movable:
