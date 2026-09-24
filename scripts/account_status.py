@@ -233,27 +233,47 @@ def snapshot():
                                   "home": home.get(ch), "now": alias})
         mx = rec.get("max")
         n = len(here)
-        state = ("unknown" if not mx else
+        # A lapsed subscription keeps reporting max_connections while 401-ing every stream,
+        # so status is checked BEFORE capacity — an expired account rendered as "ok" is how
+        # ACCT_PE2/PE3 sat with 14 channels pointed at them for two days.
+        active = str(rec.get("status") or "").strip().lower() == "active"
+        state = ("expired" if rec.get("status") and not active else
+                 "unknown" if not mx else
                  "over" if n > mx else "full" if n == mx else "ok")
+        exp = rec.get("exp")
+        days_left = int((exp - time.time()) / 86400) if exp else None
         rows.append({
             "alias": alias, "group": group_of(alias), "max": mx, "live": n,
             "primaries": sum(1 for v in home.values() if v == alias),
             "state": state, "channels": here,
             "provider_active": rec.get("active_cons"),
             "provider_status": rec.get("status"), "exp": rec.get("exp"),
+            "days_left": days_left, "usable": active and bool(mx),
             "error": rec.get("error"),
         })
 
-    known = sum(r["max"] for r in rows if r["max"])
+    known = sum(r["max"] for r in rows if r["max"] and r["usable"])
+    # Channels whose configured primary is on an account that cannot serve at all. These
+    # are the permanent-churn cases: every restart sends them home, home refuses, they walk.
+    dead = {r["alias"] for r in rows if r["state"] == "expired"}
+    homeless = sorted(
+        ({"name": n, "title": title.get(n, n), "home": h} for n, h in home.items()
+         if h in dead), key=lambda d: int(re.sub(r"\D", "", d["name"])))
     return {
         "generated": int(time.time()),
         "caps_fetched": caps.get("fetched", 0),
         "caps_stale": (time.time() - caps.get("fetched", 0)) > CAPS_STALE,
         "accounts": rows,
         "squatters": squatters,
+        "homeless": homeless,
+        "expiring": sorted(({"alias": r["alias"], "days_left": r["days_left"]}
+                            for r in rows
+                            if r["days_left"] is not None and r["days_left"] <= 7),
+                           key=lambda d: d["days_left"]),
         "totals": {"accounts": len(rows), "slots": known,
                    "live": sum(r["live"] for r in rows),
-                   "over": sum(1 for r in rows if r["state"] == "over")},
+                   "over": sum(1 for r in rows if r["state"] == "over"),
+                   "expired": len(dead), "homeless": len(homeless)},
     }
 
 

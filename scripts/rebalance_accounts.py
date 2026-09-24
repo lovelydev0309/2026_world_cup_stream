@@ -72,6 +72,14 @@ def max_connections(env):
                 "http://%s/player_api.php?username=%s&password=%s" % (h, u, p),
                 headers={"User-Agent": UA})
             d = json.load(urllib.request.urlopen(req, timeout=15)).get("user_info", {})
+            # An EXPIRED subscription still reports max_connections=5 while refusing every
+            # stream with 401. Treating that as capacity is how 14 channels came to be
+            # pointed at ACCT_PE2/PE3 after they lapsed on 2026-09-22: their designated home
+            # answered nothing, so they lived in permanent failover and drove the fleet's
+            # churn. Anything other than Active has NO usable slots.
+            if str(d.get("status", "")).strip().lower() != "active":
+                out[a] = None
+                continue
             out[a] = int(d.get("max_connections", 0)) or None
         except Exception:
             out[a] = None
@@ -165,15 +173,36 @@ def main():
 
     # Report + build the new url order for each channel.
     changes, plan = [], []
+    # Failover ORDER is spread across channels, not sorted globally. The old key was
+    # `sorted(rest, key=load_ratio)` -- "head for whoever has the most room" -- which was
+    # IDENTICAL for every channel, so the emptiest account became the FIRST fallback for
+    # all of them simultaneously. Measured 2026-09-24: ACCT5 was the first failover hop for
+    # 14 channels while holding 3 slots, and ACCT6 sat at position 4+ for 16 of the 17
+    # channels that could reach it, so the walk never got there. One provider blip then
+    # sent fourteen channels at a three-slot account, it went over cap, the provider
+    # starved everyone on it, and they all stepped on together.
+    #
+    # So each POSITION is fanned out in proportion to capacity: a channel takes the
+    # account least used at that position so far, per slot. These counters persist across
+    # channels within the run, which is what de-correlates the walks.
+    hop_use = collections.defaultdict(collections.Counter)
+    tot_use = collections.Counter()
+
     for c in chans:
         name = c["channel_name"]
         opts = options.get(name) or []
         if not opts:
             continue
         want = primary[name]
-        # Failover order: after the primary, head for whoever has the most room.
-        rest = sorted([a for a in opts if a != want],
-                      key=lambda a: (load[a] / float(mx[a]), a))
+        rest, pool, pos = [], [a for a in opts if a != want], 0
+        while pool:
+            pick = min(pool, key=lambda a: (hop_use[pos][a] / float(mx[a]),
+                                            tot_use[a] / float(mx[a]), a))
+            hop_use[pos][pick] += 1
+            tot_use[pick] += 1
+            rest.append(pick)
+            pool.remove(pick)
+            pos += 1
         rank = {a: i for i, a in enumerate([want] + rest)}
         new_urls = sorted(c["source_urls"],
                           key=lambda u: (rank.get(alias_of(u), 99),

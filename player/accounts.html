@@ -51,6 +51,7 @@
   .acct.s-full{ border-left-color:var(--full); }
   .acct.s-over{ border-left-color:var(--over); }
   .acct.s-unknown{ border-left-color:#5b6675; }
+  .acct.s-expired{ border-left-color:#e11d48; background:#241016; }
   .top{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; cursor:pointer; }
   .alias{ font-weight:700; min-width:118px; }
   .count{ font-variant-numeric:tabular-nums; color:var(--mut); font-size:13px; min-width:62px; }
@@ -64,6 +65,7 @@
   .badge.b-over{ color:#fecaca; border-color:#5b1010; background:#2a0808; }
   .badge.b-full{ color:#fde68a; border-color:#5b4708; background:#2a2205; }
   .badge.b-vis{ color:#ddd6fe; border-color:#4c1d95; background:#1e1033; }
+  .badge.b-exp{ color:#fecdd3; border-color:#881337; background:#2b0b14; font-weight:700; }
   .chs{ display:none; margin:10px 0 2px; padding-top:9px; border-top:1px solid var(--line); }
   .chs.show{ display:block; }
   .ch{ display:flex; gap:8px; align-items:center; padding:3px 0; font-size:13px; }
@@ -157,6 +159,9 @@
 
   function acctRow(a){
     var badges='';
+    if(a.state==='expired') badges+='<span class="badge b-exp">SUBSCRIPTION EXPIRED</span>';
+    else if(a.days_left!=null && a.days_left<=7)
+      badges+='<span class="badge b-full">expires in '+a.days_left+'d</span>';
     if(a.state==='over')  badges+='<span class="badge b-over">OVER CAP</span>';
     if(a.state==='full')  badges+='<span class="badge b-full">full</span>';
     var vis=a.channels.filter(function(c){return c.visiting;}).length;
@@ -189,6 +194,8 @@
       '<span class="chip all"><span class="d"></span><span class="n">'+t.accounts+'</span> accounts</span>'+
       '<span class="chip slot"><span class="d"></span><span class="n">'+t.live+'</span> live of '+t.slots+' slots</span>'+
       '<span class="chip '+(t.over?'over':'ok')+'"><span class="d"></span><span class="n">'+t.over+'</span> over cap</span>'+
+      (t.expired?'<span class="chip over"><span class="d"></span><span class="n">'+t.expired+'</span> EXPIRED</span>':'')+
+      (t.homeless?'<span class="chip over"><span class="d"></span><span class="n">'+t.homeless+'</span> channels with a dead primary</span>':'')+
       (d.squatters.length?'<span class="chip over"><span class="d"></span><span class="n">'+
         d.squatters.length+'</span> off their primary</span>':'');
 
@@ -212,9 +219,18 @@
       btnHome.textContent='Send '+d.squatters.length+' channel'+(d.squatters.length>1?'s':'')+' home';
       actNote.textContent='';
     }
-    banner.className='banner'+(d.caps_stale?' warn show':'');
-    if(d.caps_stale) banner.textContent='⚠ Account caps were last read '+
-      Math.round((d.generated-d.caps_fetched)/60)+' min ago — counts are live, caps may be stale.';
+    var exp=d.accounts.filter(function(a){return a.state==='expired';}).map(function(a){return a.alias;});
+    if(exp.length){
+      banner.className='banner show';
+      banner.textContent='\u26A0 SUBSCRIPTION EXPIRED: '+exp.join(', ')+
+        ' — these accounts still report max_connections but refuse every stream (401). '+
+        (d.homeless.length? d.homeless.length+' channel(s) have one of them as their primary and are stuck in permanent failover. ':'')+
+        'This needs the subscription renewed; no config change fixes it.';
+    } else if(d.caps_stale){
+      banner.className='banner warn show';
+      banner.textContent='\u26A0 Account caps were last read '+
+        Math.round((d.generated-d.caps_fetched)/60)+' min ago — counts are live, caps may be stale.';
+    } else { banner.className='banner'; }
     last=Date.now();
   }
 
