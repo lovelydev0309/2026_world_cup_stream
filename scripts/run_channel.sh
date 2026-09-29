@@ -73,15 +73,30 @@ print(c.get('standby_file','standby/standby.mp4'),
       c.get('encode_resolution','960x540'),
       'true' if c.get('use_standby', True) else 'false',
       c.get('segment_type','mpegts'),
-      c.get('token_refresh_secs', 85))")
+      c.get('token_refresh_secs', 240))")
 # Proactive token refresh: tvon247's 302 token silently expires (socket goes quiet, no EOF),
 # and ffmpeg's -reconnect can't recover it — only a process RESTART re-resolves the 302 for a
 # FRESH token. Reactively that costs a ~15s watchdog gap; PROACTIVELY capping each ffmpeg run
 # just under the token's lifetime makes it exit and reconnect CLEANLY (~5s, no silent-socket
-# wait) BEFORE the token dies. 85s default sits at the cushion break-even (a ~5s gap every 85s
-# is fully rebuilt by the player's 0.94x maintainCushion) yet preempts the common 90-285s
-# tokens; short-token feeds (Azteca Uno) override it lower in channels.json. 0 disables it.
-[ -z "$TOKEN_REFRESH_SECS" ] && TOKEN_REFRESH_SECS=85
+# wait) BEFORE the token dies.
+#
+# 240s, not the former 85s. 85 was set from the ASSUMED 90-285s token range, at the low end to
+# be safe, and it cost a reconnect every 85s on every channel: 744 reconnects across 46
+# channels in 30 minutes. Each one releases and re-acquires a provider connection, which was
+# affordable with 110 slots and lethal on 2026-09-29 with 55 (nine ACCT_LAT accounts plus
+# ACCT_PE2/PE3 expired) — the re-acquire lands while the provider still holds the session we
+# just dropped, so it is refused, the playlist stalls, and viewers time out on BOTH playlist
+# and fragments after their cushion drains. That is the "plays fine for a few minutes then
+# stops" report.
+#
+# MEASURED 2026-09-29, not assumed: three sources (channel2/ACCT2, channel4/ACCT4,
+# channel14/ACCT4) each streamed a FULL 240s window without dying, delivering 33/104/65 MB
+# (curl rc=28 = our --max-time, the success case). So the token outlives 240s and 85 was ~2.8x
+# more aggressive than required. 240 is the measured-safe value; the window only proves >=240s,
+# so it is not pushed further without a longer measurement. Same lesson as ch5, whose
+# token_refresh_secs=35 caused 296 restarts in 3h while its pulls ran the full ceiling.
+# Short-token feeds still override it lower in channels.json. 0 disables it entirely.
+[ -z "$TOKEN_REFRESH_SECS" ] && TOKEN_REFRESH_SECS=240
 # Output resolution for re-encode mode (WxH). Default 960x540. Per-channel so the
 # marquee feeds can run 720p while the heavy 60fps one stays 540p for CPU.
 ENC_W=${ENC_RES%x*}; ENC_H=${ENC_RES#*x}

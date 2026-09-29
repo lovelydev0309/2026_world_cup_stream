@@ -117,7 +117,14 @@ def main():
     try:
         cfg = json.load(open(CONFIG))
         for c in cfg.get("channels", []):
-            if not c.get("enabled", True) or c.get("hidden") or c.get("quarantined"):
+            # NOTE `hidden` is deliberately NOT a reason to stop tracking. hidden means
+            # "delisted from the viewer lineup"; `enabled` is the real on/off switch. A
+            # hidden channel is still running and still holding a provider connection, so it
+            # still needs watching. Excluding it here cost us dearly: when the non-Mexico
+            # channels were hidden on 2026-09-23, live.json fell to 34 of 81 channels, and
+            # when nine ACCT_LAT accounts expired days later, 16 channels went down and the
+            # 30-minute outage alert never fired -- the bot cannot alert on what it cannot see.
+            if not c.get("enabled", True) or c.get("quarantined"):
                 continue
             name = c["channel_name"]
             title_ = c.get("display_name", name)

@@ -31,7 +31,7 @@ Three guards stop that from doing more harm than the problem it fixes:
 Run from cron every minute AND from the live-status 5s loop, so the lineup tracks
 health in about five seconds rather than up to a minute.
 """
-import json, os, time
+import json, os, sys, time
 
 PROJECT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CFG = os.path.join(PROJECT, 'config', 'channels.json')
@@ -154,12 +154,24 @@ for ch in candidates:
     sub = ch.get('substituted')
     if sub:
         title = '%s · temporarily %s' % (title, sub.get('label', 'alternate channel'))
+    # A channel MUST publish its OWN stream. An explicit hls_url is honoured only when it
+    # actually points at this channel's directory: config has twice carried a copy-paste
+    # hls_url from another channel (ch44 VIX Premium and ch45 Sky Sport both published
+    # /hls/channel1/ -- Imagen Televisión -- on 2026-09-05 and again 2026-09-29), so every
+    # viewer picking those two got a third channel's feed. The derived URL is always correct,
+    # so a mismatch is discarded rather than published.
+    own = f'{BASE}/hls/{name}/index.m3u8'
+    hls = ch.get('hls_url') or own
+    if f'/hls/{name}/' not in hls:
+        sys.stderr.write('WARNING %s: hls_url points at another channel (%s) - '
+                         'ignoring it and serving %s\n' % (name, hls, own))
+        hls = own
     entry = {
         'name':    name,
         'title':   title,
         'country': ch.get('country') or country_of(name),
         'logo':    logo,
-        'hls':     ch.get('hls_url', f'{BASE}/hls/{name}/index.m3u8'),
+        'hls':     hls,
     }
     # Additive fields: existing consumers ignore them, new ones can grey out a bad channel
     # in real time instead of waiting for it to drop out three minutes later.
