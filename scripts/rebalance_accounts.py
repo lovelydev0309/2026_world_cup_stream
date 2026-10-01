@@ -56,6 +56,9 @@ STAGGER = 8          # seconds between restarts: one channel briefly out at a ti
 # PE1 -> ACCT1 by the enforcer and ACCT1 -> ACCT2 by this script minutes later, two restarts
 # for no net gain. A channel the enforcer touched recently is therefore left where it put it.
 RECENT_MOVE_SECS = 900
+# An account this close to its expiry date stops receiving assignments, so its channels
+# move off it on OUR schedule rather than all at once when the provider cuts it off.
+EXPIRING_SOON_SECS = 24 * 3600
 RESERVE = 1          # leave this many slots free per account where the options allow it.
                      # Sitting exactly AT max is not safe: when a channel fails over, the
                      # provider still holds the session it just dropped, so the account is
@@ -95,6 +98,18 @@ def max_connections(env):
             # answered nothing, so they lived in permanent failover and drove the fleet's
             # churn. Anything other than Active has NO usable slots.
             if str(d.get("status", "")).strip().lower() != "active":
+                out[a] = None
+                continue
+            # An account that expires TODAY is treated the same way, so its channels migrate
+            # BEFORE the lapse instead of all failing over the moment it dies. Expiry is
+            # knowable in advance -- there is no reason to take the outage. (2026-10-01:
+            # ACCT2/3/4 hit days_left=0 holding 10 channels while five fresh accounts sat
+            # empty.) A channel whose only accounts are all expiring keeps its current
+            # primary, because options[] goes empty and it is skipped.
+            exp = d.get("exp_date")
+            if exp and (int(exp) - time.time()) < EXPIRING_SOON_SECS:
+                sys.stderr.write("NOTE %s expires in %.1fh - excluded from new assignments\n"
+                                 % (a, (int(exp) - time.time()) / 3600.0))
                 out[a] = None
                 continue
             out[a] = int(d.get("max_connections", 0)) or None
