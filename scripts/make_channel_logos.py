@@ -198,6 +198,13 @@ def motif(kind, bg, accent):
         c.ellipse(IX, IY, 28, 28, (255, 255, 255, 40))
         c.ring(IX, IY, 27, 3, WHITE)
         c.tri([(IX - 9, IY - 15), (IX + 17, IY), (IX - 9, IY + 15)], WHITE)
+    elif kind == "golf":
+        c.ellipse(IX - 6, IY + 8, 17, 17, (246, 246, 242, 255))          # ball
+        for dx in (-8, 0, 8):
+            for dy in (-6, 2, 10):
+                c.ellipse(IX - 6 + dx, IY + 8 + dy, 1.6, 1.6, (176, 176, 170, 255))
+        c.rect(IX + 16, IY - 26, IX + 19, IY + 22, (210, 210, 206, 255))  # pin
+        c.tri([(IX + 19, IY - 26), (IX + 33, IY - 19), (IX + 19, IY - 12)], accent + (255,))
     elif kind == "fan":
         cols = [(70, 160, 255), (255, 70, 110), (255, 170, 40), (90, 210, 120), (170, 110, 255)]
         for i, col in enumerate(cols):
@@ -223,6 +230,13 @@ SPEC = [
     ("channel92", ["HULU", "ORIGINALS"],           "play",       (11, 31, 22),  (28, 231, 131)),
     ("channel93", ["HBO MAX", "ON-DEMAND"],        "play",       (22, 16, 42),  (138, 79, 247)),
     ("channel94", ["PEACOCK", "SERIES"],           "fan",        (16, 18, 24),  (70, 160, 255)),
+    ("channel28", ["STARZ"],                       "star",       (14, 14, 16),  (200, 200, 205)),
+    ("channel29", ["SHOWTIME"],                    "play",       (18, 10, 12),  (214, 38, 46)),
+    ("channel31", ["AMC"],                         "film",       (20, 14, 14),  (196, 48, 48)),
+    ("channel32", ["FX"],                          "chevron",    (18, 18, 20),  (226, 226, 230)),
+    ("channel35", ["TNT"],                         "chevron",    (22, 14, 10),  (240, 128, 32)),
+    ("channel42", ["NBC SPORTS", "BAY AREA"],      "chevron",    (12, 16, 26),  (255, 170, 40)),
+    ("channel43", ["NBC", "GOLF"],                 "golf",       (10, 24, 16),  (255, 190, 50)),
 ]
 
 
@@ -231,8 +245,12 @@ def esc(t):
 
 
 os.makedirs(TMP, exist_ok=True)
+import sys as _sys
+only = set(_sys.argv[1:])
 made = []
 for name, lines, kind, bg, accent in SPEC:
+    if only and name not in only:
+        continue
     mp = os.path.join(TMP, "%s.png" % name)
     if kind == "play" and name == "channel93":
         c = C(W, H)
