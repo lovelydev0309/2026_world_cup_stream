@@ -9,7 +9,7 @@ Routes (nginx server block for the DNS host proxies everything here):
   GET /player_api.php?username&password[&action=...]   user_info/server_info + catalogue
   GET /get.php?username&password[&type=m3u_plus]        M3U playlist
   GET /xmltv.php                                        empty guide (apps want a 200)
-  GET /live/<u>/<p>/<id>.<ext>  and  /<u>/<p>/<id>      302 -> live HLS on the CDN
+  GET /live/<u>/<p>/<id>.<ext>  and  /<u>/<p>/<id>      live playlist, segments on the CDN
   GET /movie/<u>/<p>/<id>.<ext>                         302 -> signed /xv/ VOD path
   GET /xv/<user>/<exp>/<sig>/<key>/<file>               VOD playlist/segment from disk
 
@@ -19,6 +19,13 @@ is_vip/authorized means the subscription is live. Results are cached so a channe
 costs no WordPress round trip, and a tvinus.com outage keeps already-active viewers on
 air from the stale cache instead of kicking everyone off.
 
+Device limits: each member's max_connections comes from check-vip (per plan — 1 or 2
+devices). The gateway serves every live playlist itself (re-read from local disk, segment
+URIs made absolute to the CDN, so video bytes still come from the CDN) and every VOD file,
+so each poll proves a device is still watching. A device is ip + User-Agent; a NEW device
+is refused while the plan's slots are taken, a device already watching is never cut off,
+and a device that stops frees its slot after SESSION_WINDOW.
+
 VOD is referer-locked at the origin (/player/vod/ 403s without a tvinus/majotv Referer)
 and apps send no Referer, so movies go through /xv/<user>/<exp>/<sig>/<key>/<file>, where
 <key> is the movie's folder under the web root (vod/<slug> or vod-us/_majo_new/<slug>) —
@@ -26,13 +33,17 @@ an HMAC-signed, expiring path. The gateway serves those files itself (sendfile):
 alfg/nginx-rtmp image has neither auth_request nor secure_link, so nginx can't check it.
 
 Binds 172.17.0.1:8091 (host-only, reached by the nginx-rtmp container), never public.
+Members reach it through a Bunny pull zone (tv1.sazatv.com -> origin), which neither
+forwards the public hostname nor the client address as the socket peer: links are built
+from XTREAM_PUBLIC_HOST and the viewer is the leftmost X-Forwarded-For entry.
 Config: env / config/accounts.env — XTREAM_SECRET (required for VOD signing),
-TVINUS_CHECK_URL, TVINUS_TZ_OFFSET (hours; WordPress stores local time), XTREAM_PORT.
+XTREAM_PUBLIC_HOST, TVINUS_CHECK_URL, TVINUS_TZ_OFFSET (hours; WordPress stores
+Singapore time, UTC+8), XTREAM_PORT.
 """
 import hashlib, hmac, json, os, re, sys, threading, time, zlib
 from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse, parse_qs, quote, urlencode
+from urllib.parse import urlparse, parse_qs, quote, urlencode, urljoin
 from urllib.request import Request, urlopen
 
 PROJECT = os.environ.get("PROJECT", "/opt/streaming-stack")
@@ -60,6 +71,7 @@ CHECK_URL = ENV.get("TVINUS_CHECK_URL",
                     "https://tvinus.com/wp-json/tvinus-reseller/v1/auth/check-vip")
 TZ = timezone(timedelta(hours=float(ENV.get("TVINUS_TZ_OFFSET", "8"))))
 SECRET = ENV.get("XTREAM_SECRET", "").encode()
+PUBLIC_HOST = ENV.get("XTREAM_PUBLIC_HOST", "")    # the DNS members type, e.g. tv1.sazatv.com
 # Web-root names in catalogue URLs -> where those disks sit on the host (docker-compose
 # mounts ./vod-disk at /var/www/player/vod and ./vod-disk-us at /var/www/player/vod-us).
 VOD_ROOTS = {"vod": os.path.join(PROJECT, "vod-disk"),
@@ -74,8 +86,11 @@ AUTH_STALE_MAX = 1800     # s an active user stays on air while tvinus.com is do
 # guesser on one account; the wider per-IP cap stops spraying — sized for carrier NAT, where
 # one phone stuck on an old saved password must not lock out its neighbours. A password
 # that already succeeded is served from cache and never hits either budget.
-FAIL_WINDOW, FAIL_MAX_USER, FAIL_MAX_IP = 300, 8, 40
+# X-Forwarded-For can be forged by anyone hitting the origin directly, so a per-account cap
+# that ignores the address backs both up.
+FAIL_WINDOW, FAIL_MAX_USER, FAIL_MAX_IP, FAIL_MAX_ACCOUNT = 300, 8, 40, 30
 VOD_TOKEN_SECS = 8 * 3600
+SESSION_WINDOW = 120      # s without a playlist/segment fetch before a device's slot frees
 VOD_ID_BASE = 90_000_000  # fallback VOD ids, above both channel numbers and movies.json ids
 
 def log(msg):
@@ -204,7 +219,8 @@ def authenticate(user, pw, ip):
         hit = _auth_cache.get(key)
         if hit and hit[1] and now - hit[0] < AUTH_TTL_OK:
             return hit[1]                     # proven password: budgets don't apply
-        for k, cap in ((ip, FAIL_MAX_IP), ((ip, user), FAIL_MAX_USER)):
+        for k, cap in ((ip, FAIL_MAX_IP), ((ip, user), FAIL_MAX_USER),
+                       (("*", user), FAIL_MAX_ACCOUNT)):
             recent = [t for t in _fails.get(k, []) if now - t < FAIL_WINDOW]
             _fails[k] = recent
             if len(recent) >= cap:
@@ -224,6 +240,7 @@ def authenticate(user, pw, ip):
         with _auth_lock:
             _fails.setdefault(ip, []).append(now)
             _fails.setdefault((ip, user), []).append(now)
+            _fails.setdefault(("*", user), []).append(now)
     else:
         exp = _parse_exp(d.get("expires_at") or "")
         if exp is None and float(d.get("points") or 0) > 0:
@@ -231,11 +248,44 @@ def authenticate(user, pw, ip):
             # client), so the balance itself is the time left when expires_at is absent.
             exp = int(now + float(d["points"]) * 3600)
         active = bool(d.get("is_vip") or d.get("authorized")) and (exp is None or exp > now)
-        acct = {"user": user, "active": active, "exp": exp, "max_conn": 1,
+        try:
+            max_conn = max(1, int(d.get("max_connections") or 1))   # per user level
+        except (TypeError, ValueError):
+            max_conn = 1
+        with _sess_lock:
+            _limits[user] = max_conn
+        acct = {"user": user, "active": active, "exp": exp, "max_conn": max_conn,
                 "points": d.get("points", 0)}
     with _auth_lock:
         _auth_cache[key] = (now, acct)
     return acct
+
+# ── Device (connection) limits ──────────────────────────────────────────────────
+
+_sessions = {}        # user -> {device: last_seen}
+_limits = {}          # user -> max_connections from the last successful check-vip
+_sess_lock = threading.Lock()
+
+def device_key(ip, ua):
+    return "%s|%s" % (ip, hashlib.sha1((ua or "").encode()).hexdigest()[:10])
+
+def claim_slot(user, device):
+    """-> "new" (device just started), "same" (already watching) or "full" (refused)."""
+    now = time.time()
+    with _sess_lock:
+        devs = {d: t for d, t in _sessions.get(user, {}).items() if now - t < SESSION_WINDOW}
+        state = "same" if device in devs else "new"
+        if state == "new" and len(devs) >= _limits.get(user, 1):
+            _sessions[user] = devs
+            return "full"
+        devs[device] = now
+        _sessions[user] = devs
+        return state
+
+def active_count(user):
+    now = time.time()
+    with _sess_lock:
+        return sum(1 for t in _sessions.get(user, {}).values() if now - t < SESSION_WINDOW)
 
 # ── Signed VOD paths ────────────────────────────────────────────────────────────────
 
@@ -270,9 +320,10 @@ def user_info(acct, user, pw):
             "message": "" if acct["active"] else "Subscription expired",
             "auth": 1, "status": "Active" if acct["active"] else "Expired",
             "exp_date": str(acct["exp"]) if acct["exp"] else None,
-            "is_trial": "0", "active_cons": "0", "created_at": None,
+            "is_trial": "0", "active_cons": str(active_count(user)), "created_at": None,
             "max_connections": str(acct["max_conn"]),
-            "allowed_output_formats": ["m3u8", "ts"]}
+            # HLS only: apps that honour this pick .m3u8; .ts requests are redirected
+            "allowed_output_formats": ["m3u8"]}
 
 def server_info(host, https):
     now = datetime.now(timezone.utc)
@@ -342,7 +393,8 @@ class H(BaseHTTPRequestHandler):
         pass                          # request lines carry passwords — log events, not URLs
 
     def ip(self):
-        return self.headers.get("X-Real-IP") or self.client_address[0]
+        xff = self.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+        return xff or self.headers.get("X-Real-IP") or self.client_address[0]
 
     def send(self, code, body=b"", ctype="application/json", extra=None):
         if isinstance(body, (dict, list)):
@@ -363,8 +415,11 @@ class H(BaseHTTPRequestHandler):
         self.send(302, b"", "text/plain", {"Location": loc})
 
     def base(self):
-        https = self.headers.get("X-Forwarded-Proto") == "https"
-        host = self.headers.get("Host", "localhost")
+        """Public base URL for links we hand out. Behind Bunny the Host reaching us is the
+        origin's, so the configured public host wins; the scheme follows what the viewer
+        used (nginx forwards the CDN's X-Forwarded-Proto, else its own $scheme)."""
+        https = self.headers.get("X-Forwarded-Proto", "").split(",")[0].strip() == "https"
+        host = PUBLIC_HOST or self.headers.get("Host", "localhost")
         return ("https://" if https else "http://") + host, host, https
 
     def acct(self, user, pw):
@@ -400,7 +455,8 @@ class H(BaseHTTPRequestHandler):
                                  "application/xml")
             m = re.match(r"^/(?:(live|movie)/)?([^/]+)/([^/]+)/(\d+)(?:\.(\w+))?$", path)
             if m:
-                return self.play(m.group(1) or "live", m.group(2), m.group(3), int(m.group(4)))
+                return self.play(m.group(1) or "live", m.group(2), m.group(3), int(m.group(4)),
+                                 (m.group(5) or "").lower())
             return self.send(404, {"error": "not found"})
         except BrokenPipeError:
             pass
@@ -453,7 +509,20 @@ class H(BaseHTTPRequestHandler):
         self.send(200, body, "audio/x-mpegurl",
                   {"Content-Disposition": 'attachment; filename="playlist.m3u"'})
 
-    def play(self, kind, user, pw, sid):
+    def slot(self, user, what):
+        """Device-limit gate for a playlist/segment fetch; False = refused (already sent)."""
+        state = claim_slot(user, device_key(self.ip(), self.headers.get("User-Agent")))
+        if state == "full":
+            log("REFUSED %s %s ip=%s: all %d device slot(s) in use"
+                % (user, what, self.ip(), _limits.get(user, 1)))
+            self.send(403, "Maximum connections reached\n", "text/plain")
+            return False
+        if state == "new":
+            log("device start %s %s ip=%s (%d/%d)"
+                % (user, what, self.ip(), active_count(user), _limits.get(user, 1)))
+        return True
+
+    def play(self, kind, user, pw, sid, ext):
         from urllib.parse import unquote
         user, pw = unquote(user), unquote(pw)
         acct = self.acct(user, pw)
@@ -461,23 +530,52 @@ class H(BaseHTTPRequestHandler):
             return
         if not acct or not acct["active"]:
             return self.send(403, "Forbidden\n", "text/plain")
+        base, _, _ = self.base()
         if kind == "live":
             c = CAT.live_by_id.get(sid)
             if not c:
                 return self.send(404, "Not found\n", "text/plain")
-            log("play live %s ch%d ip=%s" % (user, sid, self.ip()))
-            return self.redirect(c["hls"])
+            if ext == "ts":           # we only produce HLS; send MPEG-TS-mode apps to it
+                return self.redirect("%s/live/%s/%s/%d.m3u8"
+                                     % (base, quote(user, safe=""), quote(pw, safe=""), sid))
+            if not self.slot(user, "ch%d" % sid):
+                return
+            return self.live_playlist(c)
         v = CAT.vod_by_id.get(sid)
         if not v or not SECRET:
             return self.send(404, "Not found\n", "text/plain")
         log("play vod %s %s ip=%s" % (user, v["slug"], self.ip()))
-        base, _, _ = self.base()
         return self.redirect(base + vod_path(user, v["key"]))
+
+    def live_playlist(self, c):
+        """The channel's live playlist from local disk, segment URIs made absolute to the
+        CDN — the app polls US (device accounting) but pulls video from the CDN."""
+        hls_root = os.path.realpath(os.path.join(PROJECT, "hls"))
+        fp = os.path.realpath(os.path.join(PROJECT, urlparse(c["hls"]).path.lstrip("/")))
+        cdn_dir = c["hls"].rsplit("/", 1)[0] + "/"
+        try:
+            if not fp.startswith(hls_root + os.sep):
+                raise OSError(fp)
+            text = open(fp, encoding="utf-8", errors="replace").read()
+        except OSError:
+            return self.redirect(c["hls"])          # no local copy: hand over to the CDN
+        out = []
+        for line in text.splitlines():
+            if line and not line.startswith("#"):
+                line = urljoin(cdn_dir, line)
+            elif 'URI="' in line:
+                line = re.sub(r'URI="([^"]+)"',
+                              lambda m: 'URI="%s"' % urljoin(cdn_dir, m.group(1)), line)
+            out.append(line)
+        self.send(200, "\n".join(out) + "\n", "application/vnd.apple.mpegurl")
 
 
     def vod_file(self, path):
         if not vod_path_ok(path):
             return self.send(403, "Forbidden\n", "text/plain")
+        from urllib.parse import unquote
+        if path.endswith((".m3u8", ".ts")) and not self.slot(unquote(path.split("/")[2]), "vod"):
+            return
         rest = path.split("/", 5)[5]                 # <vod|vod-us>/<folder...>/<file>
         root, _, rel = rest.partition("/")
         base = os.path.realpath(VOD_ROOTS[root])
