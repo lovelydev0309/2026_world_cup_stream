@@ -47,6 +47,7 @@ import hashlib, hmac, json, os, re, sys, threading, time, zlib
 from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs, quote, urlencode, urljoin
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 PROJECT = os.environ.get("PROJECT", "/opt/streaming-stack")
@@ -212,6 +213,14 @@ def _parse_exp(s):
     except Exception:
         return None
 
+def _unreachable(user, err, hit, now):
+    """tvinus.com down/erroring: keep a previously-active viewer on air, fail closed
+    otherwise. A 401 is NOT this — it's a wrong password and must count as one."""
+    log("check-vip failed for %s: %s" % (user, str(err)[:120]))
+    if hit and hit[1] and hit[1]["active"] and now - hit[0] < AUTH_STALE_MAX:
+        return hit[1]
+    return None
+
 def authenticate(user, pw, ip):
     """-> account dict {user, active, exp, max_conn} or None for bad credentials.
     Raises PermissionError when this IP has burnt its wrong-password budget."""
@@ -233,12 +242,12 @@ def authenticate(user, pw, ip):
         return None
     try:
         d = _check_vip(user, pw)
+    except HTTPError as e:
+        if e.code not in (400, 401, 403):
+            return _unreachable(user, e, hit, now)
+        d = {}                    # definitive "wrong username/password" -> counted below
     except Exception as e:
-        # tvinus.com unreachable: keep a previously-active viewer on air, fail closed otherwise
-        log("check-vip failed for %s: %s" % (user, str(e)[:120]))
-        if hit and hit[1] and hit[1]["active"] and now - hit[0] < AUTH_STALE_MAX:
-            return hit[1]
-        return None
+        return _unreachable(user, e, hit, now)
     if not d.get("user_id") or d.get(PW_FIELD) is not True:
         if d.get("user_id") and PW_FIELD not in d:
             log("check-vip sent no %r for %s: password unverified, refusing" % (PW_FIELD, user))
