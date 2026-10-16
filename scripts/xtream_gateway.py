@@ -52,7 +52,9 @@ from urllib.request import Request, urlopen
 
 PROJECT = os.environ.get("PROJECT", "/opt/streaming-stack")
 LINEUP = os.path.join(PROJECT, "player", "channels.json")          # published, health-aware
-MOVIES = os.path.join(PROJECT, "player", "vod", "movies.json")
+# The PUBLISHED catalogue: nginx mounts ./vod-disk at /var/www/player/vod, so
+# player/vod/movies.json on the host is a stale leftover nginx never serves.
+MOVIES = os.path.join(PROJECT, "vod-disk", "movies.json")
 ENVFILE = os.path.join(PROJECT, "config", "accounts.env")
 
 def _env():
@@ -123,10 +125,13 @@ class Catalogue:
         with self.lock:
             if mt == self.mt:
                 return
+            before = (len(self.live), len(self.vod))
             self._load_live()
             self._load_vod()
             self.mt = mt
-            log("catalogue: %d live, %d vod" % (len(self.live), len(self.vod)))
+            # channels.json is regenerated every ~5s (live_status), so only log real change
+            if (len(self.live), len(self.vod)) != before:
+                log("catalogue: %d live, %d vod" % (len(self.live), len(self.vod)))
 
     def _load_live(self):
         try:
