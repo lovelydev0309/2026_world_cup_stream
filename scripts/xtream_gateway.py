@@ -14,8 +14,11 @@ Routes (nginx server block for the DNS host proxies everything here):
   GET /xv/<user>/<exp>/<sig>/<key>/<file>               VOD playlist/segment from disk
 
 Auth = tvinus-reseller REST `auth/check-vip` (POST username+password ->
-{user_id,is_vip,authorized,points,expires_at}); a user_id means the password is right,
-is_vip/authorized means the subscription is live. Results are cached so a channel flip
+{user_id,is_vip,authorized,points,expires_at}). check-vip did NOT verify the password
+(2026-10-16: any password, even empty, got the full VIP answer for a real username), so
+a login is accepted only when the response explicitly confirms the password
+(TVINUS_PW_FIELD, default `password_valid: true`, the contract asked of ASSE). Until the
+panel sends it, every login fails closed. Results are cached so a channel flip
 costs no WordPress round trip, and a tvinus.com outage keeps already-active viewers on
 air from the stale cache instead of kicking everyone off.
 
@@ -71,6 +74,7 @@ CHECK_URL = ENV.get("TVINUS_CHECK_URL",
                     "https://tvinus.com/wp-json/tvinus-reseller/v1/auth/check-vip")
 TZ = timezone(timedelta(hours=float(ENV.get("TVINUS_TZ_OFFSET", "8"))))
 SECRET = ENV.get("XTREAM_SECRET", "").encode()
+PW_FIELD = ENV.get("TVINUS_PW_FIELD", "password_valid")   # must be literally true
 PUBLIC_HOST = ENV.get("XTREAM_PUBLIC_HOST", "")    # the DNS members type, e.g. tv1.sazatv.com
 # Web-root names in catalogue URLs -> where those disks sit on the host (docker-compose
 # mounts ./vod-disk at /var/www/player/vod and ./vod-disk-us at /var/www/player/vod-us).
@@ -90,7 +94,7 @@ AUTH_STALE_MAX = 1800     # s an active user stays on air while tvinus.com is do
 # that ignores the address backs both up.
 FAIL_WINDOW, FAIL_MAX_USER, FAIL_MAX_IP, FAIL_MAX_ACCOUNT = 300, 8, 40, 30
 VOD_TOKEN_SECS = 8 * 3600
-SESSION_WINDOW = 120      # s without a playlist/segment fetch before a device's slot frees
+SESSION_WINDOW = 30       # s without a playlist/segment fetch before a device's slot frees (client: 30s)
 VOD_ID_BASE = 90_000_000  # fallback VOD ids, above both channel numbers and movies.json ids
 
 def log(msg):
@@ -235,7 +239,9 @@ def authenticate(user, pw, ip):
         if hit and hit[1] and hit[1]["active"] and now - hit[0] < AUTH_STALE_MAX:
             return hit[1]
         return None
-    if not d.get("user_id"):
+    if not d.get("user_id") or d.get(PW_FIELD) is not True:
+        if d.get("user_id") and PW_FIELD not in d:
+            log("check-vip sent no %r for %s: password unverified, refusing" % (PW_FIELD, user))
         acct = None
         with _auth_lock:
             _fails.setdefault(ip, []).append(now)
