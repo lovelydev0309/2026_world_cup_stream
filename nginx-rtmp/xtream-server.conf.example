@@ -1,0 +1,26 @@
+# Xtream gateway server block — paste into nginx.conf's http{} once the DNS host exists.
+# Replace LINE_HOST with the domain members type into their app (A record -> the box).
+# Kept out of nginx.conf until then: nginx.conf is bind-mounted live on the box.
+#
+# Port 8080 inside the container = host :80 and :8080 (docker-compose). Add a matching
+# `listen 443 ssl` block with LINE_HOST's own certificate later; old Android TV boxes
+# often fail modern TLS, so plain http must stay available regardless.
+#
+# Everything goes to the gateway, including signed VOD files (/xv/...): the
+# alfg/nginx-rtmp image has no auth_request/secure_link, so nginx can't verify them.
+
+    server {
+        listen 8080;
+        server_name LINE_HOST;
+        client_max_body_size 64k;
+        access_log off;                   # every app URL carries a member's password
+
+        location / {
+            proxy_pass http://172.17.0.1:8091;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 30s;
+            proxy_max_temp_file_size 0;   # stream VOD segments through, never spool to disk
+        }
+    }
