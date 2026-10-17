@@ -9,7 +9,8 @@ Routes (nginx server block for the DNS host proxies everything here):
   GET /player_api.php?username&password[&action=...]   user_info/server_info + catalogue
   GET /get.php?username&password[&type=m3u_plus]        M3U playlist
   GET /xmltv.php                                        empty guide (apps want a 200)
-  GET /live/<u>/<p>/<id>.<ext>  and  /<u>/<p>/<id>      live playlist, segments on the CDN
+  GET /live/<u>/<p>/<id>.m3u8                           live playlist, segments on the CDN
+  GET /live/<u>/<p>/<id>.ts                             continuous MPEG-TS (apps in TS mode)
   GET /movie/<u>/<p>/<id>.<ext>                         302 -> signed /xv/ VOD path
   GET /xv/<user>/<exp>/<sig>/<key>/<file>               VOD playlist/segment from disk
 
@@ -97,6 +98,12 @@ AUTH_STALE_MAX = 1800     # s an active user stays on air while tvinus.com is do
 # that ignores the address backs both up.
 FAIL_WINDOW, FAIL_MAX_USER, FAIL_MAX_IP, FAIL_MAX_ACCOUNT = 300, 8, 40, 30
 VOD_TOKEN_SECS = 8 * 3600
+# MPEG-TS output: Smarters/TiviMate default to /live/…/<id>.ts and expect ONE endless TS
+# stream (a redirect to an HLS playlist makes them fail with "Playback error"), so those
+# requests get the channel's local HLS segments sent back to back as they appear.
+TS_START_SEGS = 3         # start this many segments behind the live edge (startup cushion)
+TS_IDLE_MAX = 45          # s with no new segment before giving up (channel stalled)
+TS_REAUTH_SECS = 60       # re-check the account while streaming (expiry/password change)
 SESSION_WINDOW = 30       # s without a playlist/segment fetch before a device's slot frees (client: 30s)
 VOD_ID_BASE = 90_000_000  # fallback VOD ids, above both channel numbers and movies.json ids
 
@@ -307,6 +314,24 @@ def active_count(user):
     with _sess_lock:
         return sum(1 for t in _sessions.get(user, {}).values() if now - t < SESSION_WINDOW)
 
+def local_playlist(c):
+    """Path of a channel's live playlist on this host's disk, or None if it isn't there."""
+    hls_root = os.path.realpath(os.path.join(PROJECT, "hls"))
+    fp = os.path.realpath(os.path.join(PROJECT, urlparse(c["hls"]).path.lstrip("/")))
+    return fp if fp.startswith(hls_root + os.sep) and os.path.isfile(fp) else None
+
+def playlist_segments(fp):
+    """[(media sequence, segment path)] of a local media playlist."""
+    seq, out = 0, []
+    with open(fp, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith("#EXT-X-MEDIA-SEQUENCE:"):
+                seq = int(line.split(":", 1)[1] or 0)
+            elif line and not line.startswith("#"):
+                out.append((seq + len(out), os.path.join(os.path.dirname(fp), line)))
+    return out
+
 # ── Signed VOD paths ────────────────────────────────────────────────────────────────
 
 def vod_sig(user, exp, key):
@@ -342,8 +367,7 @@ def user_info(acct, user, pw):
             "exp_date": str(acct["exp"]) if acct["exp"] else None,
             "is_trial": "0", "active_cons": str(active_count(user)), "created_at": None,
             "max_connections": str(acct["max_conn"]),
-            # HLS only: apps that honour this pick .m3u8; .ts requests are redirected
-            "allowed_output_formats": ["m3u8"]}
+            "allowed_output_formats": ["m3u8", "ts"]}
 
 def server_info(host, https):
     now = datetime.now(timezone.utc)
@@ -543,15 +567,16 @@ class H(BaseHTTPRequestHandler):
 
     def slot(self, user, what):
         """Device-limit gate for a playlist/segment fetch; False = refused (already sent)."""
-        state = claim_slot(user, device_key(self.ip(), self.headers.get("User-Agent")))
+        ua = self.headers.get("User-Agent") or ""
+        state = claim_slot(user, device_key(self.ip(), ua))
         if state == "full":
-            log("REFUSED %s %s ip=%s: all %d device slot(s) in use"
-                % (user, what, self.ip(), _limits.get(user, 1)))
+            log("REFUSED %s %s ip=%s ua=%.40s: all %d device slot(s) in use"
+                % (user, what, self.ip(), ua, _limits.get(user, 1)))
             self.send(403, "Maximum connections reached\n", "text/plain")
             return False
         if state == "new":
-            log("device start %s %s ip=%s (%d/%d)"
-                % (user, what, self.ip(), active_count(user), _limits.get(user, 1)))
+            log("device start %s %s ip=%s ua=%.40s (%d/%d)"
+                % (user, what, self.ip(), ua, active_count(user), _limits.get(user, 1)))
         return True
 
     def play(self, kind, user, pw, sid, ext):
@@ -567,11 +592,10 @@ class H(BaseHTTPRequestHandler):
             c = CAT.live_by_id.get(sid)
             if not c:
                 return self.send(404, "Not found\n", "text/plain")
-            if ext == "ts":           # we only produce HLS; send MPEG-TS-mode apps to it
-                return self.redirect("%s/live/%s/%s/%d.m3u8"
-                                     % (base, quote(user, safe=""), quote(pw, safe=""), sid))
-            if not self.slot(user, "ch%d" % sid):
+            if not self.slot(user, "ch%d.%s" % (sid, ext or "m3u8")):
                 return
+            if ext == "ts":
+                return self.live_ts(user, pw, c, sid)
             return self.live_playlist(c)
         v = CAT.vod_by_id.get(sid)
         if not v or not SECRET:
@@ -579,15 +603,74 @@ class H(BaseHTTPRequestHandler):
         log("play vod %s %s ip=%s" % (user, v["slug"], self.ip()))
         return self.redirect(base + vod_path(user, v["key"]))
 
+    def live_ts(self, user, pw, c, sid):
+        """One endless MPEG-TS stream for apps in TS mode: the channel's HLS segments from
+        local disk, back to back as they appear. Ends when the app disconnects, the
+        channel stalls for TS_IDLE_MAX, or the account stops being active."""
+        fp = local_playlist(c)
+        if not fp:
+            return self.send(404, "Not found\n", "text/plain")
+        self.send_response(200)
+        self.send_header("Content-Type", "video/mp2t")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Connection", "close")
+        self.end_headers()
+        if self.command == "HEAD":
+            return
+        self.close_connection = True
+        self.connection.settimeout(30)              # an app that stops reading frees the thread
+        device = device_key(self.ip(), self.headers.get("User-Agent"))
+        last, t0, sent, why = None, time.time(), 0, "client closed"
+        last_new = last_auth = t0
+        try:
+            while True:
+                try:
+                    segs = playlist_segments(fp)
+                except (OSError, ValueError):
+                    segs = []
+                if segs:
+                    if last is None:
+                        last = segs[max(0, len(segs) - TS_START_SEGS)][0] - 1
+                    elif segs[-1][0] < last:         # encoder restarted with new numbering
+                        last = segs[-1][0] - 1
+                    for sq, path in segs:
+                        if sq <= last:
+                            continue
+                        try:
+                            with open(path, "rb") as f:
+                                sent += self.connection.sendfile(f)
+                        except FileNotFoundError:   # rotated out between read and open
+                            pass
+                        last, last_new = sq, time.time()
+                        claim_slot(user, device)    # keep this device's slot warm
+                now = time.time()
+                if now - last_new > TS_IDLE_MAX:
+                    why = "channel stalled"
+                    break
+                if now - last_auth > TS_REAUTH_SECS:
+                    last_auth = now
+                    try:
+                        a = authenticate(user, pw, self.ip())
+                    except PermissionError:
+                        a = None
+                    if not a or not a["active"]:
+                        why = "account no longer active"
+                        break
+                claim_slot(user, device)
+                time.sleep(1)
+        except OSError:                             # broken pipe / reset / send timeout
+            pass
+        log("ts end %s ch%d %ds %.1fMB (%s)" % (user, sid, time.time() - t0, sent / 1e6, why))
+
     def live_playlist(self, c):
         """The channel's live playlist from local disk, segment URIs made absolute to the
         CDN — the app polls US (device accounting) but pulls video from the CDN."""
-        hls_root = os.path.realpath(os.path.join(PROJECT, "hls"))
-        fp = os.path.realpath(os.path.join(PROJECT, urlparse(c["hls"]).path.lstrip("/")))
+        fp = local_playlist(c)
         cdn_dir = c["hls"].rsplit("/", 1)[0] + "/"
         try:
-            if not fp.startswith(hls_root + os.sep):
-                raise OSError(fp)
+            if not fp:
+                raise OSError("no local playlist")
             text = open(fp, encoding="utf-8", errors="replace").read()
         except OSError:
             return self.redirect(c["hls"])          # no local copy: hand over to the CDN
