@@ -11,7 +11,9 @@ Routes (nginx server block for the DNS host proxies everything here):
   GET /xmltv.php                                        empty guide (apps want a 200)
   GET /live/<u>/<p>/<id>.m3u8                           live playlist, segments on the CDN
   GET /live/<u>/<p>/<id>.ts                             continuous MPEG-TS (apps in TS mode)
-  GET /movie/<u>/<p>/<id>.<ext>                         302 -> signed /xv/ VOD path
+  GET /movie/<u>/<p>/<id>.m3u8                          VOD playlist, absolute signed /xv/ segments
+  GET /movie/<u>/<p>/<id>.<other ext>                   whole movie as one MPEG-TS file (Range)
+  GET /movie/img/<vod|vod-us>/<folder>/<image>          poster (no Referer needed, unlike the CDN)
   GET /xv/<user>/<exp>/<sig>/<key>/<file>               VOD playlist/segment from disk
 
 Auth = tvinus-reseller REST `auth/check-vip` (POST username+password ->
@@ -332,6 +334,82 @@ def playlist_segments(fp):
                 out.append((seq + len(out), os.path.join(os.path.dirname(fp), line)))
     return out
 
+class TsRebase:
+    """Keeps an endless MPEG-TS stream's clock continuous across encoder restarts.
+
+    Our channels restart often (64 of 95 had a restart in their 160s window, 2026-10-17)
+    and each restart leaps the timestamps (e.g. 240s -> 95443s). HLS players get an
+    EXT-X-DISCONTINUITY tag for that; a raw .ts stream has no such signal, so players
+    freeze or reconnect. When any PTS or PCR jumps by more than JUMP, one shared offset
+    is re-based so the stream continues ~1 frame after where it was — audio and video
+    move together, so they stay in sync. Applied to PES PTS/DTS and adaptation-field PCR.
+    """
+    WRAP = 1 << 33                       # 33-bit 90 kHz clock
+    JUMP = 2 * 90000                     # >2s either way = a restart, not B-frame reorder
+
+    def __init__(self):
+        self.offset = 0
+        self.last = {}                   # ("pts"|"pcr", pid) -> last ADJUSTED value
+        self.rebases = 0
+
+    def _shift(self, key, ts, detect=True):
+        a = (ts + self.offset) % self.WRAP
+        prev = self.last.get(key)
+        if detect and prev is not None:
+            d = (a - prev + self.WRAP // 2) % self.WRAP - self.WRAP // 2
+            if d > self.JUMP or d < -self.JUMP:
+                self.offset = (self.offset - d + 3000) % self.WRAP
+                a = (ts + self.offset) % self.WRAP
+                self.rebases += 1
+        if detect:
+            self.last[key] = a
+        return a
+
+    @staticmethod
+    def _get_ts(b, i):
+        return (((b[i] >> 1) & 7) << 30 | b[i + 1] << 22 | (b[i + 2] >> 1) << 15
+                | b[i + 3] << 7 | b[i + 4] >> 1)
+
+    @staticmethod
+    def _put_ts(b, i, v):
+        b[i] = (b[i] & 0xF0) | ((v >> 30) & 7) << 1 | 1
+        b[i + 1] = (v >> 22) & 0xFF
+        b[i + 2] = ((v >> 15) & 0x7F) << 1 | 1
+        b[i + 3] = (v >> 7) & 0xFF
+        b[i + 4] = (v & 0x7F) << 1 | 1
+
+    def process(self, data):
+        b = bytearray(data)
+        for i in range(0, len(b) - 187, 188):
+            if b[i] != 0x47:
+                continue
+            pid = (b[i + 1] & 0x1F) << 8 | b[i + 2]
+            afc = (b[i + 3] >> 4) & 3
+            p = i + 4
+            pcr_at = None
+            if afc & 2:
+                af_len = b[i + 4]
+                if af_len >= 7 and b[i + 5] & 0x10:
+                    pcr_at = i + 6
+                p = i + 5 + af_len
+            # PES first: in a packet carrying both, the restart is detected on the PTS and
+            # the PCR then gets the same new offset.
+            if (b[i + 1] & 0x40 and afc & 1 and p + 14 <= i + 188
+                    and b[p] == 0 and b[p + 1] == 0 and b[p + 2] == 1):
+                flags = b[p + 7] >> 6
+                if flags & 2:
+                    self._put_ts(b, p + 9, self._shift(("pts", pid), self._get_ts(b, p + 9)))
+                    if flags == 3 and p + 19 <= i + 188:
+                        self._put_ts(b, p + 14,
+                                     self._shift(("dts", pid), self._get_ts(b, p + 14), False))
+            if pcr_at is not None:
+                j = pcr_at
+                base = b[j] << 25 | b[j + 1] << 17 | b[j + 2] << 9 | b[j + 3] << 1 | b[j + 4] >> 7
+                nb = self._shift(("pcr", pid), base)
+                b[j], b[j + 1], b[j + 2], b[j + 3] = (nb >> 25) & 0xFF, (nb >> 17) & 0xFF, (nb >> 9) & 0xFF, (nb >> 1) & 0xFF
+                b[j + 4] = (b[j + 4] & 0x7F) | (nb & 1) << 7
+        return bytes(b)
+
 # ── Signed VOD paths ────────────────────────────────────────────────────────────────
 
 def vod_sig(user, exp, key):
@@ -384,16 +462,23 @@ def live_rows(cat_id=None):
              "custom_sid": "", "tv_archive": 0, "direct_source": "", "tv_archive_duration": 0}
             for i, c in enumerate(CAT.live) if cat_id in (None, "", c["cat"])]
 
-def vod_rows(cat_id=None):
+def poster_url(base, logo):
+    """Posters live under the referer-locked /player/vod/ on the CDN, which 403s every app;
+    hand apps our own /movie/img/ copy instead (same file, read from disk)."""
+    m = re.match(r"^https?://[^/]+/player/((?:vod|vod-us)/.+)$", logo or "")
+    return "%s/movie/img/%s" % (base, m.group(1)) if m and base else logo
+
+def vod_rows(base, cat_id=None):
     return [{"num": i + 1, "name": v["name"], "title": v["name"], "year": v["year"],
-             "stream_type": "movie", "stream_id": v["id"], "stream_icon": v["logo"],
+             "stream_type": "movie", "stream_id": v["id"],
+             "stream_icon": poster_url(base, v["logo"]),
              "rating": str(v["rating"]), "rating_5based": round(float(v["rating"] or 0) / 2, 1),
              "added": v["added"], "is_adult": 0, "category_id": v["cat"],
              "category_ids": [int(v["cat"])], "container_extension": "m3u8",
              "custom_sid": "", "direct_source": ""}
             for i, v in enumerate(CAT.vod) if cat_id in (None, "", v["cat"])]
 
-def vod_info(sid):
+def vod_info(base, sid):
     v = CAT.vod_by_id.get(sid)
     if not v:
         return {"info": [], "movie_data": []}
@@ -401,7 +486,8 @@ def vod_info(sid):
     m = re.match(r"(\d+):(\d+):(\d+)", v["duration"] or "")
     if m:
         secs = int(m.group(1)) * 3600 + int(m.group(2)) * 60 + int(m.group(3))
-    return {"info": {"name": v["name"], "movie_image": v["logo"], "cover_big": v["logo"],
+    img = poster_url(base, v["logo"])
+    return {"info": {"name": v["name"], "movie_image": img, "cover_big": img,
                      "plot": v["plot"], "description": v["plot"], "cast": v["cast"],
                      "actors": v["cast"], "director": v["director"], "genre": v["genre"],
                      "releasedate": v["year"], "duration": v["duration"],
@@ -423,7 +509,8 @@ def m3u(base, user, pw, with_vod):
         vcats = {c["category_id"]: c["category_name"] for c in CAT.vod_cats}
         for v in CAT.vod:
             out.append('#EXTINF:-1 tvg-id="" tvg-name="%s" tvg-logo="%s" group-title="VOD - %s",%s'
-                       % (v["name"], v["logo"], vcats.get(v["cat"], ""), v["name"]))
+                       % (v["name"], poster_url(base, v["logo"]), vcats.get(v["cat"], ""),
+                          v["name"]))
             out.append("%s/movie/%s/%s/%d.m3u8" % (base, u, p, v["id"]))
     return "\n".join(out) + "\n"
 
@@ -497,6 +584,8 @@ class H(BaseHTTPRequestHandler):
         q.update({k: v[0] for k, v in getattr(self, "_form", {}).items()})
         path = url.path
         try:
+            if path.startswith("/movie/img/"):
+                return self.vod_image(path[len("/movie/img/"):])
             if path.startswith("/xv/"):
                 return self.vod_file(path)
             if path == "/player_api.php":
@@ -542,9 +631,9 @@ class H(BaseHTTPRequestHandler):
         if action == "get_vod_categories":
             return self.send(200, CAT.vod_cats)
         if action == "get_vod_streams":
-            return self.send(200, vod_rows(cat))
+            return self.send(200, vod_rows(self.base()[0], cat))
         if action == "get_vod_info":
-            return self.send(200, vod_info(int(q.get("vod_id") or 0)))
+            return self.send(200, vod_info(self.base()[0], int(q.get("vod_id") or 0)))
         if action in ("get_series_categories", "get_series"):
             return self.send(200, [])
         if action == "get_series_info":
@@ -600,8 +689,13 @@ class H(BaseHTTPRequestHandler):
         v = CAT.vod_by_id.get(sid)
         if not v or not SECRET:
             return self.send(404, "Not found\n", "text/plain")
-        log("play vod %s %s ip=%s" % (user, v["slug"], self.ip()))
-        return self.redirect(base + vod_path(user, v["key"]))
+        log("play vod %s %s .%s ip=%s ua=%.40s" % (user, v["slug"], ext or "m3u8", self.ip(),
+                                                  self.headers.get("User-Agent") or ""))
+        if not self.slot(user, "vod.%s" % (ext or "m3u8")):
+            return
+        if ext in ("", "m3u8"):
+            return self.vod_playlist(user, v, base)
+        return self.vod_ts(v)
 
     def live_ts(self, user, pw, c, sid):
         """One endless MPEG-TS stream for apps in TS mode: the channel's HLS segments from
@@ -621,6 +715,7 @@ class H(BaseHTTPRequestHandler):
         self.close_connection = True
         self.connection.settimeout(30)              # an app that stops reading frees the thread
         device = device_key(self.ip(), self.headers.get("User-Agent"))
+        clock = TsRebase()
         last, t0, sent, why = None, time.time(), 0, "client closed"
         last_new = last_auth = t0
         try:
@@ -639,9 +734,17 @@ class H(BaseHTTPRequestHandler):
                             continue
                         try:
                             with open(path, "rb") as f:
-                                sent += self.connection.sendfile(f)
+                                data = f.read()
+                            # A segment cut off by an encoder restart can end mid-packet;
+                            # sent as-is, every later packet in the stream is misaligned
+                            # (players lose sync, TsRebase stops seeing packets). Drop
+                            # the partial tail so the stream stays 188-byte aligned.
+                            chunk = (clock.process(data[:len(data) - len(data) % 188])
+                                     if data[:1] == b"\x47" else b"")   # not TS: skip
                         except FileNotFoundError:   # rotated out between read and open
-                            pass
+                            chunk = b""
+                        self.connection.sendall(chunk)
+                        sent += len(chunk)
                         last, last_new = sq, time.time()
                         claim_slot(user, device)    # keep this device's slot warm
                 now = time.time()
@@ -661,7 +764,8 @@ class H(BaseHTTPRequestHandler):
                 time.sleep(1)
         except OSError:                             # broken pipe / reset / send timeout
             pass
-        log("ts end %s ch%d %ds %.1fMB (%s)" % (user, sid, time.time() - t0, sent / 1e6, why))
+        log("ts end %s ch%d %ds %.1fMB %d clock rebase(s) (%s)"
+            % (user, sid, time.time() - t0, sent / 1e6, clock.rebases, why))
 
     def live_playlist(self, c):
         """The channel's live playlist from local disk, segment URIs made absolute to the
@@ -684,6 +788,107 @@ class H(BaseHTTPRequestHandler):
             out.append(line)
         self.send(200, "\n".join(out) + "\n", "application/vnd.apple.mpegurl")
 
+
+    def vod_local(self, v):
+        """(movie folder on disk, its index.m3u8) or (None, None)."""
+        root, _, rel = v["key"].partition("/")
+        d = os.path.realpath(os.path.join(VOD_ROOTS[root], rel))
+        pl = os.path.join(d, "index.m3u8")
+        if not d.startswith(os.path.realpath(VOD_ROOTS[root]) + os.sep) or not os.path.isfile(pl):
+            return None, None
+        return d, pl
+
+    def vod_playlist(self, user, v, base):
+        """The movie's playlist served AT the /movie/ URL, every segment an absolute signed
+        /xv/ URL. Not a redirect: ExoPlayer-based apps resolve relative segment names
+        against the ORIGINAL URL, so after a 302 they'd ask for the wrong address."""
+        d, pl = self.vod_local(v)
+        if not pl:
+            return self.send(404, "Not found\n", "text/plain")
+        signed = base + vod_path(user, v["key"]).rsplit("/", 1)[0] + "/"
+        out = []
+        for line in open(pl, encoding="utf-8", errors="replace").read().splitlines():
+            if line and not line.startswith("#"):
+                line = urljoin(signed, line)
+            elif 'URI="' in line:
+                line = re.sub(r'URI="([^"]+)"',
+                              lambda m: 'URI="%s"' % urljoin(signed, m.group(1)), line)
+            out.append(line)
+        self.send(200, "\n".join(out) + "\n", "application/vnd.apple.mpegurl")
+
+    def vod_ts(self, v):
+        """The whole movie as ONE MPEG-TS file for players that want a file, not HLS: the
+        segments of one encode concatenate into a valid TS. Byte ranges are mapped across
+        the segment files, so seeking works."""
+        d, pl = self.vod_local(v)
+        if not pl:
+            return self.send(404, "Not found\n", "text/plain")
+        parts = []
+        for line in open(pl, encoding="utf-8", errors="replace"):
+            line = line.strip()
+            if line and not line.startswith("#"):
+                fp = os.path.realpath(os.path.join(d, line))
+                if fp.startswith(d + os.sep) and os.path.isfile(fp):
+                    parts.append((fp, os.path.getsize(fp)))
+        total = sum(sz for _, sz in parts)
+        start, end = 0, total - 1
+        m = re.match(r"bytes=(\d*)-(\d*)$", self.headers.get("Range", "").strip())
+        if m and (m.group(1) or m.group(2)):
+            if m.group(1):
+                start = int(m.group(1))
+                end = min(int(m.group(2)), total - 1) if m.group(2) else total - 1
+            else:                                   # suffix range: last N bytes
+                start = max(0, total - int(m.group(2)))
+            if start > end or start >= total:
+                return self.send(416, b"", "text/plain", {"Content-Range": "bytes */%d" % total})
+        partial = bool(m and (m.group(1) or m.group(2)))
+        self.send_response(206 if partial else 200)
+        self.send_header("Content-Type", "video/mp2t")
+        self.send_header("Content-Length", str(end - start + 1))
+        self.send_header("Accept-Ranges", "bytes")
+        if partial:
+            self.send_header("Content-Range", "bytes %d-%d/%d" % (start, end, total))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        if self.command == "HEAD":
+            return
+        self.connection.settimeout(30)
+        pos = 0
+        try:
+            for fp, sz in parts:
+                if pos + sz <= start:
+                    pos += sz
+                    continue
+                if pos > end:
+                    break
+                off = max(0, start - pos)
+                count = min(sz, end - pos + 1) - off
+                with open(fp, "rb") as f:
+                    self.connection.sendfile(f, off, count)
+                pos += sz
+        except OSError:                             # app closed / seeked away
+            pass
+
+    def vod_image(self, rel):
+        root, _, rest = rel.partition("/")
+        if root not in VOD_ROOTS or ".." in rest.split("/"):
+            return self.send(404, "Not found\n", "text/plain")
+        base = os.path.realpath(VOD_ROOTS[root])
+        fp = os.path.realpath(os.path.join(base, rest))
+        ctype = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
+                 ".webp": "image/webp"}.get(os.path.splitext(fp)[1].lower())
+        if not ctype or not fp.startswith(base + os.sep) or not os.path.isfile(fp):
+            return self.send(404, "Not found\n", "text/plain")
+        with open(fp, "rb") as f:
+            self.send_response(200)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Length", str(os.fstat(f.fileno()).st_size))
+            self.send_header("Cache-Control", "public, max-age=86400")   # same for everyone
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            if self.command != "HEAD":
+                self.connection.sendfile(f)
 
     def vod_file(self, path):
         if not vod_path_ok(path):
