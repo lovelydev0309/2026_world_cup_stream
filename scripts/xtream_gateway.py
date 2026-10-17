@@ -425,6 +425,7 @@ class H(BaseHTTPRequestHandler):
         self.send_header("Content-Type", ctype + ("; charset=utf-8" if ctype.startswith(("application/json", "text/", "audio/")) else ""))
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
+        self.send_header("Access-Control-Allow-Origin", "*")
         for k, v in (extra or {}).items():
             self.send_header(k, v)
         self.end_headers()
@@ -448,6 +449,14 @@ class H(BaseHTTPRequestHandler):
         except PermissionError:
             self.send(429, {"user_info": {"auth": 0, "message": "Too many attempts"}})
             return False
+
+    def do_OPTIONS(self):             # CORS preflight from browser-based players
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def do_HEAD(self):
         self.do_GET()
@@ -490,6 +499,9 @@ class H(BaseHTTPRequestHandler):
         if acct is False:
             return
         if not acct:
+            # Never log the password. Its length exposes the classic failure: a password
+            # with # ? & / % or a space is cut short in the app's URL before it reaches us.
+            log("login refused %s ip=%s pwlen=%d" % (user, self.ip(), len(pw)))
             return self.send(200, {"user_info": {"auth": 0}})
         action = q.get("action", "")
         if not action:
@@ -609,6 +621,7 @@ class H(BaseHTTPRequestHandler):
             self.send_header("Content-Type", ctype)
             self.send_header("Content-Length", str(size))
             self.send_header("Cache-Control", "no-store")
+            self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
             if self.command != "HEAD":
                 self.connection.sendfile(f)
