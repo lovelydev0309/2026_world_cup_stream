@@ -28,7 +28,7 @@ air from the stale cache instead of kicking everyone off.
 Device limits: each member's max_connections comes from check-vip (per plan — 1 or 2
 devices). The gateway serves every live playlist itself (re-read from local disk, segment
 URIs made absolute to the CDN, so video bytes still come from the CDN) and every VOD file,
-so each poll proves a device is still watching. A device is ip + User-Agent; a NEW device
+so each poll proves a device is still watching. A device is the viewer's IP; a NEW device
 is refused while the plan's slots are taken, a device already watching is never cut off,
 and a device that stops frees its slot after SESSION_WINDOW.
 
@@ -92,6 +92,10 @@ VOD_TYPES = {".m3u8": "application/vnd.apple.mpegurl", ".ts": "video/mp2t",
 AUTH_TTL_OK = 60          # s a good answer is reused (channel flips cost nothing)
 AUTH_TTL_BAD = 15         # s a wrong-password/expired answer is reused
 AUTH_STALE_MAX = 1800     # s an active user stays on air while tvinus.com is down
+# check-vip takes 2-7s, so a channel switch that needed a fresh check felt like a dead
+# click. An ACTIVE answer up to this old is served at once and re-checked in the
+# background (stale-while-revalidate); running .ts streams still re-auth every 60s.
+AUTH_SWR_MAX = 600
 # Wrong-password budgets (check-vip is a password-guess oracle). Per (ip,user) stops a
 # guesser on one account; the wider per-IP cap stops spraying — sized for carrier NAT, where
 # one phone stuck on an old saved password must not lock out its neighbours. A password
@@ -179,6 +183,8 @@ class Catalogue:
         used = {r["stream_id"] for r in rows if isinstance(r.get("stream_id"), int)}
         claimed = set()
         for r in sorted(rows, key=lambda r: r.get("slug", "")):
+            if r.get("hidden"):
+                continue        # removed/blocked titles: the website hides them, so do we
             m = re.match(r".*/player/((?:vod|vod-us)(?:/[A-Za-z0-9._-]+)+)/index\.m3u8$",
                          r.get("m3u8_url", ""))
             if not m or "/../" in m.group(1) + "/":
@@ -212,6 +218,7 @@ CAT = Catalogue()
 _auth_cache = {}      # (user, sha256(pw)) -> (ts, account-or-None)
 _fails = {}           # ip or (ip,user) -> [timestamps of wrong-password attempts]
 _auth_lock = threading.Lock()
+_revalidating = set()  # cache keys with a background check-vip in flight
 
 def _check_vip(user, pw):
     """Raw check-vip call. Returns the JSON dict, or raises on transport failure."""
@@ -246,6 +253,14 @@ def authenticate(user, pw, ip):
         hit = _auth_cache.get(key)
         if hit and hit[1] and now - hit[0] < AUTH_TTL_OK:
             return hit[1]                     # proven password: budgets don't apply
+        acct = hit[1] if hit else None
+        if (acct and acct["active"] and now - hit[0] < AUTH_SWR_MAX
+                and not (acct["exp"] and acct["exp"] <= now)):
+            if key not in _revalidating:      # answer now, refresh behind the scenes
+                _revalidating.add(key)
+                threading.Thread(target=_revalidate, args=(user, pw, ip, key),
+                                 daemon=True).start()
+            return acct
         for k, cap in ((ip, FAIL_MAX_IP), ((ip, user), FAIL_MAX_USER),
                        (("*", user), FAIL_MAX_ACCOUNT)):
             recent = [t for t in _fails.get(k, []) if now - t < FAIL_WINDOW]
@@ -254,6 +269,20 @@ def authenticate(user, pw, ip):
                 raise PermissionError(ip)
     if hit and hit[1] is None and now - hit[0] < AUTH_TTL_BAD:
         return None
+    return _remote_check(user, pw, ip, key, hit, now)
+
+def _revalidate(user, pw, ip, key):
+    try:
+        with _auth_lock:
+            hit = _auth_cache.get(key)
+        _remote_check(user, pw, ip, key, hit, time.time())
+    finally:
+        with _auth_lock:
+            _revalidating.discard(key)
+
+def _remote_check(user, pw, ip, key, hit, now):
+    """Ask check-vip, cache and return the answer (shared by the inline and background
+    paths)."""
     try:
         d = _check_vip(user, pw)
     except HTTPError as e:
@@ -296,7 +325,11 @@ _limits = {}          # user -> max_connections from the last successful check-v
 _sess_lock = threading.Lock()
 
 def device_key(ip, ua):
-    return "%s|%s" % (ip, hashlib.sha1((ua or "").encode()).hexdigest()[:10])
+    """One viewer location = one device. NOT ip+User-Agent: Smarters for Windows opens a
+    movie with an NSPlayer/7.10 probe and then plays it with VLC/2.2.4, so a UA-keyed
+    limit counted one movie as two devices and refused the real player on a 1-device
+    plan. (A household's TVs share an IP and count as one — the lenient side.)"""
+    return ip
 
 def claim_slot(user, device):
     """-> "new" (device just started), "same" (already watching) or "full" (refused)."""
