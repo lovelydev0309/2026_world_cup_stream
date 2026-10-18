@@ -55,9 +55,35 @@ from urllib.request import Request, urlopen
 
 PROJECT = os.environ.get("PROJECT", "/opt/streaming-stack")
 LINEUP = os.path.join(PROJECT, "player", "channels.json")          # published, health-aware
-# The PUBLISHED catalogue: nginx mounts ./vod-disk at /var/www/player/vod, so
+# The PUBLISHED movie catalogues and their language: nginx mounts ./vod-disk at
+# /player/vod (MajoTV, Spanish) and ./vod-disk-us at /player/vod-us (KozeeTV, English);
 # player/vod/movies.json on the host is a stale leftover nginx never serves.
-MOVIES = os.path.join(PROJECT, "vod-disk", "movies.json")
+CATALOGUES = [(os.path.join(PROJECT, "vod-disk", "movies.json"), "es"),
+              (os.path.join(PROJECT, "vod-disk-us", "movies.json"), "en")]
+EN_ID_OFFSET = 200_000_000   # both catalogues reuse provider stream_ids (14 collide)
+
+# Channel packages, chosen per member by the agent in the panel and returned by
+# check-vip as `bouquet`: which live countries (channels.json "country") and movie
+# languages the member gets. Missing/unknown = everything, so members created before
+# packages existed keep the full lineup.
+PACKAGES = {"es": ({"Mexico"}, {"es"}),           # Spanish: Mexican channels + Spanish movies
+            "us": ({"US"}, {"en"})}               # USA: US channels + English movies
+PACKAGE_ALIASES = {"spanish": "es", "espanol": "es", "español": "es", "mexico": "es",
+                   "mx": "es", "latino": "es", "english": "us", "usa": "us", "en": "us",
+                   "america": "us", "united states": "us"}
+
+def package_of(d):
+    v = str(d.get("bouquet") or "").strip().lower()
+    v = PACKAGE_ALIASES.get(v, v)
+    return v if v in PACKAGES else "all"
+
+def live_ok(acct, c):
+    pk = PACKAGES.get(acct.get("package", "all"))
+    return pk is None or c["country"] in pk[0]
+
+def vod_ok(acct, v):
+    pk = PACKAGES.get(acct.get("package", "all"))
+    return pk is None or v["lang"] in pk[1]
 ENVFILE = os.path.join(PROJECT, "config", "accounts.env")
 
 def _env():
@@ -132,7 +158,7 @@ class Catalogue:
             return None
 
     def refresh(self):
-        mt = (self._mtime(LINEUP), self._mtime(MOVIES))
+        mt = (self._mtime(LINEUP),) + tuple(self._mtime(f) for f, _ in CATALOGUES)
         if mt == self.mt:
             return
         with self.lock:
@@ -161,7 +187,7 @@ class Catalogue:
             cats.setdefault(country, str(len(cats) + 1))
             live.append({"id": int(m.group(1)), "name": c.get("title") or c["name"],
                          "logo": c.get("logo", ""), "hls": c["hls"],
-                         "cat": cats[country]})
+                         "country": country, "cat": cats[country]})
         live.sort(key=lambda x: x["id"])
         self.live = live
         self.live_by_id = {x["id"]: x for x in live}
@@ -169,20 +195,24 @@ class Catalogue:
                           for k, v in cats.items()]
 
     def _load_vod(self):
-        try:
-            rows = json.load(open(MOVIES))
-        except Exception as e:
-            log("movies.json unreadable: %s" % e)
-            return
-        if isinstance(rows, dict):
-            rows = rows.get("movies", [])
-        # movies.json carries its own stream_id (the same ids the website uses) — keep them,
-        # apps store favourites/resume points by stream_id. A row without one (or a
-        # duplicate) gets a slug-derived id, so it too survives catalogue regeneration.
+        books = []
+        for f, lang in CATALOGUES:
+            try:
+                rows = json.load(open(f))
+            except Exception as e:
+                log("%s unreadable: %s" % (f, e))
+                return                  # keep the previous catalogue rather than a half one
+            books.append((lang, rows.get("movies", []) if isinstance(rows, dict) else rows))
+        # movies.json carries its own stream_id (the Spanish ones are the ids the website
+        # uses) — keep them, apps store favourites/resume points by stream_id. English ids
+        # are offset (the catalogues share provider ids). A row without one, or a
+        # duplicate, gets a slug-derived id, so it too survives catalogue regeneration.
         cats, vod = {}, []
-        used = {r["stream_id"] for r in rows if isinstance(r.get("stream_id"), int)}
+        used = {r["stream_id"] + (EN_ID_OFFSET if lang == "en" else 0)
+                for lang, rows in books for r in rows if isinstance(r.get("stream_id"), int)}
         claimed = set()
-        for r in sorted(rows, key=lambda r: r.get("slug", "")):
+        for lang, r in [(lang, r) for lang, rows in books
+                        for r in sorted(rows, key=lambda r: r.get("slug", ""))]:
             if r.get("hidden"):
                 continue        # removed/blocked titles: the website hides them, so do we
             m = re.match(r".*/player/((?:vod|vod-us)(?:/[A-Za-z0-9._-]+)+)/index\.m3u8$",
@@ -192,6 +222,8 @@ class Catalogue:
             key = m.group(1)
             slug = key.rsplit("/", 1)[1]
             sid = r.get("stream_id")
+            if isinstance(sid, int) and lang == "en":
+                sid += EN_ID_OFFSET
             if not isinstance(sid, int) or sid in claimed:
                 sid = VOD_ID_BASE + zlib.crc32(slug.encode()) % 9_000_000
                 while sid in used:
@@ -205,7 +237,8 @@ class Catalogue:
                         "logo": r.get("logo_url", ""), "plot": r.get("plot", ""),
                         "cast": r.get("cast", ""), "director": r.get("director", ""),
                         "genre": r.get("genre", ""), "duration": r.get("duration", ""),
-                        "added": str(r.get("added") or 0), "cat": cats[genre]})
+                        "added": str(r.get("added") or 0), "lang": lang,
+                        "cat": cats[genre]})
         self.vod = vod
         self.vod_by_id = {x["id"]: x for x in vod}
         self.vod_cats = [{"category_id": v, "category_name": k, "parent_id": 0}
@@ -313,6 +346,7 @@ def _remote_check(user, pw, ip, key, hit, now):
         with _sess_lock:
             _limits[user] = max_conn
         acct = {"user": user, "active": active, "exp": exp, "max_conn": max_conn,
+                "package": package_of(d),
                 "points": d.get("points", 0)}
     with _auth_lock:
         _auth_cache[key] = (now, acct)
@@ -488,12 +522,21 @@ def server_info(host, https):
             "timezone": "UTC", "timestamp_now": int(now.timestamp()),
             "time_now": now.strftime("%Y-%m-%d %H:%M:%S"), "process": True}
 
-def live_rows(cat_id=None):
+def live_cats(acct):
+    have = {c["cat"] for c in CAT.live if live_ok(acct, c)}
+    return [x for x in CAT.live_cats if x["category_id"] in have]
+
+def vod_cats(acct):
+    have = {v["cat"] for v in CAT.vod if vod_ok(acct, v)}
+    return [x for x in CAT.vod_cats if x["category_id"] in have]
+
+def live_rows(acct, cat_id=None):
     return [{"num": i + 1, "name": c["name"], "stream_type": "live", "stream_id": c["id"],
              "stream_icon": c["logo"], "epg_channel_id": None, "added": "0",
              "is_adult": 0, "category_id": c["cat"], "category_ids": [int(c["cat"])],
              "custom_sid": "", "tv_archive": 0, "direct_source": "", "tv_archive_duration": 0}
-            for i, c in enumerate(CAT.live) if cat_id in (None, "", c["cat"])]
+            for i, c in enumerate([c for c in CAT.live if live_ok(acct, c)])
+            if cat_id in (None, "", c["cat"])]
 
 def poster_url(base, logo):
     """Posters live under the referer-locked /player/vod/ on the CDN, which 403s every app;
@@ -501,7 +544,7 @@ def poster_url(base, logo):
     m = re.match(r"^https?://[^/]+/player/((?:vod|vod-us)/.+)$", logo or "")
     return "%s/movie/img/%s" % (base, m.group(1)) if m and base else logo
 
-def vod_rows(base, cat_id=None):
+def vod_rows(acct, base, cat_id=None):
     return [{"num": i + 1, "name": v["name"], "title": v["name"], "year": v["year"],
              "stream_type": "movie", "stream_id": v["id"],
              "stream_icon": poster_url(base, v["logo"]),
@@ -509,11 +552,12 @@ def vod_rows(base, cat_id=None):
              "added": v["added"], "is_adult": 0, "category_id": v["cat"],
              "category_ids": [int(v["cat"])], "container_extension": "m3u8",
              "custom_sid": "", "direct_source": ""}
-            for i, v in enumerate(CAT.vod) if cat_id in (None, "", v["cat"])]
+            for i, v in enumerate([v for v in CAT.vod if vod_ok(acct, v)])
+            if cat_id in (None, "", v["cat"])]
 
-def vod_info(base, sid):
+def vod_info(acct, base, sid):
     v = CAT.vod_by_id.get(sid)
-    if not v:
+    if not v or not vod_ok(acct, v):
         return {"info": [], "movie_data": []}
     secs = 0
     m = re.match(r"(\d+):(\d+):(\d+)", v["duration"] or "")
@@ -530,17 +574,21 @@ def vod_info(base, sid):
                            "category_id": v["cat"], "container_extension": "m3u8",
                            "custom_sid": "", "direct_source": ""}}
 
-def m3u(base, user, pw, with_vod):
+def m3u(acct, base, user, pw, with_vod):
     u, p = quote(user, safe=""), quote(pw, safe="")
     out = ["#EXTM3U"]
     cats = {c["category_id"]: c["category_name"] for c in CAT.live_cats}
     for c in CAT.live:
+        if not live_ok(acct, c):
+            continue
         out.append('#EXTINF:-1 tvg-id="" tvg-name="%s" tvg-logo="%s" group-title="%s",%s'
                    % (c["name"], c["logo"], cats.get(c["cat"], ""), c["name"]))
         out.append("%s/live/%s/%s/%d.m3u8" % (base, u, p, c["id"]))
     if with_vod:
         vcats = {c["category_id"]: c["category_name"] for c in CAT.vod_cats}
         for v in CAT.vod:
+            if not vod_ok(acct, v):
+                continue
             out.append('#EXTINF:-1 tvg-id="" tvg-name="%s" tvg-logo="%s" group-title="VOD - %s",%s'
                        % (v["name"], poster_url(base, v["logo"]), vcats.get(v["cat"], ""),
                           v["name"]))
@@ -658,15 +706,15 @@ class H(BaseHTTPRequestHandler):
             return self.send(200, [])
         cat = q.get("category_id")
         if action == "get_live_categories":
-            return self.send(200, CAT.live_cats)
+            return self.send(200, live_cats(acct))
         if action == "get_live_streams":
-            return self.send(200, live_rows(cat))
+            return self.send(200, live_rows(acct, cat))
         if action == "get_vod_categories":
-            return self.send(200, CAT.vod_cats)
+            return self.send(200, vod_cats(acct))
         if action == "get_vod_streams":
-            return self.send(200, vod_rows(self.base()[0], cat))
+            return self.send(200, vod_rows(acct, self.base()[0], cat))
         if action == "get_vod_info":
-            return self.send(200, vod_info(self.base()[0], int(q.get("vod_id") or 0)))
+            return self.send(200, vod_info(acct, self.base()[0], int(q.get("vod_id") or 0)))
         if action in ("get_series_categories", "get_series"):
             return self.send(200, [])
         if action == "get_series_info":
@@ -683,7 +731,7 @@ class H(BaseHTTPRequestHandler):
         if not acct or not acct["active"]:
             return self.send(403, "Forbidden\n", "text/plain")
         base, _, _ = self.base()
-        body = m3u(base, user, pw, q.get("type", "m3u_plus") == "m3u_plus")
+        body = m3u(acct, base, user, pw, q.get("type", "m3u_plus") == "m3u_plus")
         self.send(200, body, "audio/x-mpegurl",
                   {"Content-Disposition": 'attachment; filename="playlist.m3u"'})
 
@@ -714,6 +762,8 @@ class H(BaseHTTPRequestHandler):
             c = CAT.live_by_id.get(sid)
             if not c:
                 return self.send(404, "Not found\n", "text/plain")
+            if not live_ok(acct, c):
+                return self.send(403, "Not in your package\n", "text/plain")
             if not self.slot(user, "ch%d.%s" % (sid, ext or "m3u8")):
                 return
             if ext == "ts":
@@ -722,6 +772,8 @@ class H(BaseHTTPRequestHandler):
         v = CAT.vod_by_id.get(sid)
         if not v or not SECRET:
             return self.send(404, "Not found\n", "text/plain")
+        if not vod_ok(acct, v):
+            return self.send(403, "Not in your package\n", "text/plain")
         log("play vod %s %s .%s ip=%s ua=%.40s" % (user, v["slug"], ext or "m3u8", self.ip(),
                                                   self.headers.get("User-Agent") or ""))
         if not self.slot(user, "vod.%s" % (ext or "m3u8")):
