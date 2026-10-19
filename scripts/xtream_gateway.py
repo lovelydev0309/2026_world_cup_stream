@@ -107,6 +107,9 @@ CHECK_URL = ENV.get("TVINUS_CHECK_URL",
 TZ = timezone(timedelta(hours=float(ENV.get("TVINUS_TZ_OFFSET", "8"))))
 SECRET = ENV.get("XTREAM_SECRET", "").encode()
 PW_FIELD = ENV.get("TVINUS_PW_FIELD", "password_valid")   # must be literally true
+# app_monitor.py's member: it opens every channel every 5 min, so its device-start /
+# stream-end / play lines would bury the real viewers in the log. Refusals still log.
+MONITOR_USER = ENV.get("XTREAM_MONITOR_USER", "")
 PUBLIC_HOST = ENV.get("XTREAM_PUBLIC_HOST", "")    # the DNS members type, e.g. tv1.sazatv.com
 # Web-root names in catalogue URLs -> where those disks sit on the host (docker-compose
 # mounts ./vod-disk at /var/www/player/vod and ./vod-disk-us at /var/www/player/vod-us).
@@ -744,7 +747,7 @@ class H(BaseHTTPRequestHandler):
                 % (user, what, self.ip(), ua, _limits.get(user, 1)))
             self.send(403, "Maximum connections reached\n", "text/plain")
             return False
-        if state == "new":
+        if state == "new" and user != MONITOR_USER:
             log("device start %s %s ip=%s ua=%.40s (%d/%d)"
                 % (user, what, self.ip(), ua, active_count(user), _limits.get(user, 1)))
         return True
@@ -774,8 +777,9 @@ class H(BaseHTTPRequestHandler):
             return self.send(404, "Not found\n", "text/plain")
         if not vod_ok(acct, v):
             return self.send(403, "Not in your package\n", "text/plain")
-        log("play vod %s %s .%s ip=%s ua=%.40s" % (user, v["slug"], ext or "m3u8", self.ip(),
-                                                  self.headers.get("User-Agent") or ""))
+        if user != MONITOR_USER:
+            log("play vod %s %s .%s ip=%s ua=%.40s" % (user, v["slug"], ext or "m3u8",
+                                                      self.ip(), self.headers.get("User-Agent") or ""))
         if not self.slot(user, "vod.%s" % (ext or "m3u8")):
             return
         if ext in ("", "m3u8"):
@@ -849,8 +853,9 @@ class H(BaseHTTPRequestHandler):
                 time.sleep(1)
         except OSError:                             # broken pipe / reset / send timeout
             pass
-        log("ts end %s ch%d %ds %.1fMB %d clock rebase(s) (%s)"
-            % (user, sid, time.time() - t0, sent / 1e6, clock.rebases, why))
+        if user != MONITOR_USER:
+            log("ts end %s ch%d %ds %.1fMB %d clock rebase(s) (%s)"
+                % (user, sid, time.time() - t0, sent / 1e6, clock.rebases, why))
 
     def live_playlist(self, c):
         """The channel's live playlist from local disk, segment URIs made absolute to the
