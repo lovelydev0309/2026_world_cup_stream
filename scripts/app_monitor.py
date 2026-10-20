@@ -11,7 +11,8 @@ check-vip. Each run (cron */5, flock-guarded):
   2. catalogue   live + movie lists are non-empty
   3. live        EVERY channel as MPEG-TS (/live/u/p/<id>.ts, what Smarters plays):
                  at least MIN_TS bytes of valid TS
-  4. movies      a random SAMPLE: playlist -> one segment (valid TS) + poster image.
+  4. movies      a random SAMPLE: playlist (HLS version <= 3, what VLC 2.2 inside
+                 Smarters accepts) -> one segment (valid TS) + poster image.
                  A movie that fails is re-checked next run, so one bad title can alert.
 
 Alerting is built like outage_alert.py -- informed, not spammed:
@@ -171,6 +172,10 @@ def run_checks(base, user, pw, max_channels, suspects):
             why = "SLOT"
         elif not segs:
             why = "playlist HTTP %s %s" % (code, err) if code != 200 else "playlist has no segments"
+        elif any(l.startswith("#EXT-X-VERSION:") and l.split(":")[1].strip() not in ("1", "2", "3")
+                 for l in body.decode("utf-8", "replace").splitlines()):
+            # IPTV Smarters for Windows plays through VLC 2.2.4, which rejects HLS > v3
+            why = "playlist is HLS version > 3 (VLC 2.2 / Smarters can't play it)"
         else:
             scode, sbody, serr = fetch(segs[min(5, len(segs) - 1)], limit=64 * 1024, timeout=20)
             why = ts_problem(scode, sbody, serr, 64 * 1024)

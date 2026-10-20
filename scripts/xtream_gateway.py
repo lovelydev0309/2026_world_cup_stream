@@ -66,8 +66,10 @@ EN_ID_OFFSET = 200_000_000   # both catalogues reuse provider stream_ids (14 col
 # check-vip as `bouquet`: which live countries (channels.json "country") and movie
 # languages the member gets. Missing/unknown = everything, so members created before
 # packages existed keep the full lineup.
-PACKAGES = {"es": ({"Mexico"}, {"es"}),           # Spanish: Mexican channels + Spanish movies
-            "us": ({"US"}, {"en"})}               # USA: US channels + English movies
+# Live side is a predicate on channels.json "country": Spanish = every country except the
+# US (Mexico + the LatAm/Peru lineups, and any Latin country added later).
+PACKAGES = {"es": (lambda country: country != "US", {"es"}),   # Spanish channels + movies
+            "us": (lambda country: country == "US", {"en"})}   # US channels + English movies
 PACKAGE_ALIASES = {"spanish": "es", "espanol": "es", "español": "es", "mexico": "es",
                    "mx": "es", "latino": "es", "english": "us", "usa": "us", "en": "us",
                    "america": "us", "united states": "us"}
@@ -79,7 +81,7 @@ def package_of(d):
 
 def live_ok(acct, c):
     pk = PACKAGES.get(acct.get("package", "all"))
-    return pk is None or c["country"] in pk[0]
+    return pk is None or pk[0](c["country"])
 
 def vod_ok(acct, v):
     pk = PACKAGES.get(acct.get("package", "all"))
@@ -385,6 +387,20 @@ def active_count(user):
     now = time.time()
     with _sess_lock:
         return sum(1 for t in _sessions.get(user, {}).values() if now - t < SESSION_WINDOW)
+
+# Tags that need HLS protocol version 4+ (byte ranges, init segments, i-frame lists, keys
+# with KEYFORMAT). If a playlist uses none of them it is valid as version 3.
+_V4_TAGS = ("#EXT-X-BYTERANGE", "#EXT-X-MAP", "#EXT-X-I-FRAMES-ONLY", "KEYFORMAT")
+
+def hls_compat(lines):
+    """Relabel a playlist as #EXT-X-VERSION:3 when nothing in it needs more. ffmpeg writes
+    VERSION:6 (+ EXT-X-INDEPENDENT-SEGMENTS), and IPTV Smarters for Windows plays through
+    VLC 2.2.4, whose HLS reader rejects any version above 3 -- every movie failed with
+    "Playback error" there while the same playlist played everywhere else."""
+    if any(t in l for l in lines for t in _V4_TAGS):
+        return lines
+    return ["#EXT-X-VERSION:3" if l.startswith("#EXT-X-VERSION:") else l
+            for l in lines if l != "#EXT-X-INDEPENDENT-SEGMENTS"]
 
 def local_playlist(c):
     """Path of a channel's live playlist on this host's disk, or None if it isn't there."""
@@ -876,7 +892,7 @@ class H(BaseHTTPRequestHandler):
                 line = re.sub(r'URI="([^"]+)"',
                               lambda m: 'URI="%s"' % urljoin(cdn_dir, m.group(1)), line)
             out.append(line)
-        self.send(200, "\n".join(out) + "\n", "application/vnd.apple.mpegurl")
+        self.send(200, "\n".join(hls_compat(out)) + "\n", "application/vnd.apple.mpegurl")
 
 
     def vod_local(self, v):
@@ -904,7 +920,7 @@ class H(BaseHTTPRequestHandler):
                 line = re.sub(r'URI="([^"]+)"',
                               lambda m: 'URI="%s"' % urljoin(signed, m.group(1)), line)
             out.append(line)
-        self.send(200, "\n".join(out) + "\n", "application/vnd.apple.mpegurl")
+        self.send(200, "\n".join(hls_compat(out)) + "\n", "application/vnd.apple.mpegurl")
 
     def vod_ts(self, v):
         """The whole movie as ONE MPEG-TS file for players that want a file, not HLS: the
