@@ -48,6 +48,12 @@ MAX_MOVES = 6        # per run; cron re-runs, so a big imbalance converges over 
 STAGGER = 8          # seconds between restarts — one channel briefly out at a time
 PROBE_SECS = 5
 COOLDOWN = 600       # do not move the same channel again within this many seconds
+# LEVELING (2026-10-20, client: "make sure there is no account that is empty anytime"):
+# when nothing is over cap, still even out a group where one account is FULL — no spare
+# slot for a reconnect, so its channels are the first to starve — while another account
+# the channel can use sits >= LEVEL_GAP connections emptier. Gentle: few moves per run.
+LEVEL_MOVES = 2
+LEVEL_GAP = 2
 
 
 def proc_age(pid):
@@ -130,13 +136,14 @@ def main():
         mark = "  OVER by %d" % (n - caps[a]) if n > caps[a] else (
                "  empty" if n == 0 else "")
         print("  %-13s %d/%-3d%s" % (a, n, caps[a], mark))
-    if not over:
-        print("\nnothing over cap — no moves needed")
-        return 0
-
     state = load_state()
     now = time.time()
     moves, unresolved = [], []
+    if not over:
+        level(live, count, caps, reach, home, state, now, env, moves)
+        if not moves:
+            print("\nnothing over cap and nothing to level — no moves needed")
+            return 0
 
     for acct in sorted(over, key=lambda a: -over[a]):
         need = over[acct]
@@ -207,6 +214,42 @@ def main():
         time.sleep(STAGGER)
     print("done")
     return 0
+
+
+def level(live, count, caps, reach, home, state, now, env, moves):
+    """Move channels off FULL accounts onto clearly emptier ones they can reach."""
+    for _ in range(LEVEL_MOVES):
+        best = None
+        for src in sorted(caps, key=lambda a: (caps[a] - count[a], a)):
+            if not caps.get(src) or count[src] < caps[src]:
+                continue                                   # only drain FULL accounts
+            here = [ch for ch, (al, age) in live.items() if al == src
+                    and now - state.get(ch, {}).get("moved_at", 0) >= COOLDOWN]
+            for ch in sorted(here, key=lambda c: home.get(c) == src):   # visitors first
+                opts = [a for a in reach.get(ch, []) if a != src and caps.get(a)
+                        and (caps[a] - count[a]) - (caps[src] - count[src]) >= LEVEL_GAP]
+                opts.sort(key=lambda a: (count[a] / float(caps[a]), a))
+                if opts:
+                    best = (ch, src, opts)
+                    break
+            if best:
+                break
+        if not best:
+            return
+        ch, src, opts = best
+        for t in opts:
+            ok, nbytes, note = probe_target(ch, t, env)
+            if ok:
+                moves.append({"channel": ch, "from": src, "to": t, "probe": note,
+                              "free_at_target": caps[t] - count[t],
+                              "visiting": home.get(ch) != src})
+                count[src] -= 1
+                count[t] += 1
+                state.setdefault(ch, {})["moved_at"] = now   # not picked twice this run
+                break
+            print("  skip target %-12s for %-12s (%s)" % (t, ch, note))
+        else:
+            return
 
 
 def probe_target(channel, alias, env):
