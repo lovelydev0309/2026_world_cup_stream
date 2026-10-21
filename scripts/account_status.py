@@ -64,6 +64,8 @@ def group_of(alias):
         return "Peru"
     if alias.startswith("ACCT_LAT"):
         return "LatAm"
+    if alias.startswith("ACCT_ZA"):
+        return "South Africa"
     return "Mexico"
 
 

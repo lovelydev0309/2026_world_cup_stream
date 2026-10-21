@@ -67,12 +67,15 @@ EN_ID_OFFSET = 200_000_000   # both catalogues reuse provider stream_ids (14 col
 # languages the member gets. Missing/unknown = everything, so members created before
 # packages existed keep the full lineup.
 # Live side is a predicate on channels.json "country": Spanish = every country except the
-# US (Mexico + the LatAm/Peru lineups, and any Latin country added later).
-PACKAGES = {"es": (lambda country: country != "US", {"es"}),   # Spanish channels + movies
-            "us": (lambda country: country == "US", {"en"})}   # US channels + English movies
+# US and South Africa (Mexico + the LatAm/Peru lineups, and any Latin country added later).
+NON_LATIN = {"US", "South Africa"}
+PACKAGES = {"es": (lambda country: country not in NON_LATIN, {"es"}),  # Spanish + Spanish movies
+            "us": (lambda country: country == "US", {"en"}),           # US + English movies
+            "za": (lambda country: country == "South Africa", {"en"})} # South Africa (DStv) + English movies
 PACKAGE_ALIASES = {"spanish": "es", "espanol": "es", "español": "es", "mexico": "es",
                    "mx": "es", "latino": "es", "english": "us", "usa": "us", "en": "us",
-                   "america": "us", "united states": "us"}
+                   "america": "us", "united states": "us",
+                   "south africa": "za", "southafrica": "za", "dstv": "za"}
 
 def package_of(d):
     v = str(d.get("bouquet") or "").strip().lower()
