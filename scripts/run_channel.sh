@@ -373,6 +373,15 @@ detect_codec() {
 # audio is undecodable by browsers. Returns success only if the source has at
 # least one real audio channel; otherwise push_live swaps in clean silent stereo.
 detect_audio_ok() {
+    # TRUSTED channels skip the probe entirely. On 1-connection accounts (South Africa,
+    # m3.iptv.cab) the ffprobe below is a SECOND connection: the provider answers it or the
+    # real stream with 403, the attempt fails, the standby cycle then wipes AUDIO_CACHE
+    # (bottom of the main loop), the next attempt probes again — an endless loop that kept
+    # Moja Love / SABC 1 / SABC News off air (2026-10-22). Touch cache/audio_trust_<channel>
+    # only for feeds verified to carry real audio.
+    if [ -f "$PROJECT_DIR/cache/audio_trust_${CHANNEL}" ]; then
+        return 0
+    fi
     # Only a confirmed-OK result is cached AND trusted. A source's audio config is stable, so
     # once we have SEEN real audio we never re-probe — that avoids the mid-reconnect probe miss
     # (source between tokens) that used to cut good sound out.
