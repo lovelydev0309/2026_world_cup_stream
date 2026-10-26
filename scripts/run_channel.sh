@@ -142,23 +142,89 @@ NUM_URLS=${#SOURCE_URLS[@]}
 # ONLY in the untracked config/accounts.env (gitignored, deployed out-of-band).
 # We substitute here so ffmpeg receives a real URL while git only ever sees the alias.
 ACCOUNTS_ENV="$PROJECT_DIR/config/accounts.env"
+RAW_URLS=("${SOURCE_URLS[@]}")   # unresolved, so a line pool can re-resolve them per line
+declare -A ACCT=()
 if [ -f "$ACCOUNTS_ENV" ]; then
-    declare -A ACCT
     while IFS='=' read -r _k _v; do
         [[ "$_k" =~ ^[A-Za-z0-9_]+$ ]] || continue   # skip comments / blank lines
         ACCT["$_k"]="$_v"
     done < "$ACCOUNTS_ENV"
-    for _i in "${!SOURCE_URLS[@]}"; do
-        _u="${SOURCE_URLS[$_i]}"
+else
+    log "  [FATAL] $ACCOUNTS_ENV missing — cannot resolve provider credentials for $CHANNEL"
+fi
+
+# ── Line pool: lines that take turns (config: "line_pool": [aliases], "shift_secs") ────────
+# A one-connection line held 24/7 is the pattern a seller watches for. With a pool, ONE line
+# streams the channel for a shift while the others stay offline, then the next line takes over.
+# source_urls keep naming the pool's FIRST line (@@ACCT_ZA1@@/...); that alias is swapped for
+# the line on shift. The shift comes from the wall clock (plus a per-channel stagger, so the
+# channels don't all switch in the same minute), so a restarted wrapper keeps the schedule.
+# A line the on-shift line can't serve falls over to the next pool line before the slate.
+# A pool line that ANY other enabled channel also names is dropped: on a one-connection line,
+# a second channel would be the second connection.
+LINE_POOL=()
+while IFS= read -r _a; do
+    [ -z "$_a" ] && continue
+    if [[ "$_a" == !* ]]; then
+        log "  [WARN] line pool: ${_a#!} is also used by another enabled channel – left out"
+    elif [ -z "${ACCT[$_a]:-}" ]; then
+        log "  [WARN] line pool: ${_a} not in accounts.env – left out"
+    else
+        LINE_POOL+=("$_a")
+    fi
+done < <(python3 -c "
+import json, re
+cfg = json.load(open('$CONFIG'))
+me = [c for c in cfg['channels'] if c['channel_name'] == '$CHANNEL'][0]
+taken = set()
+for c in cfg['channels']:
+    if c is me or not c.get('enabled', True):
+        continue
+    for u in (c.get('source_urls') or []) + [c.get('source_url') or '']:
+        taken.update(re.findall(r'@@([A-Za-z0-9_]+)@@', u))
+    taken.update(c.get('line_pool') or [])
+for a in me.get('line_pool') or []:
+    print(('!' if a in taken else '') + a)")
+POOL_N=${#LINE_POOL[@]}
+POOL_ALIAS=""     # the alias source_urls are written with; swapped for the line on shift
+[[ "${RAW_URLS[0]:-}" =~ @@([A-Za-z0-9_]+)@@ ]] && POOL_ALIAS="${BASH_REMATCH[1]}"
+[ -z "$POOL_ALIAS" ] && POOL_N=0
+SHIFT_SECS=$(python3 -c "
+import json
+c = [c for c in json.load(open('$CONFIG'))['channels'] if c['channel_name'] == '$CHANNEL'][0]
+print(max(60, int(c.get('shift_secs', 21600))))")
+SHIFT_OFFSET=$(( $(printf '%s' "$CHANNEL" | cksum | cut -d' ' -f1) % SHIFT_SECS ))
+SHIFT_LEAD=20     # a shift ending within this many seconds counts as over (no tiny runs)
+LINE_IDX=0
+CUR_SHIFT=-1
+# shift_state: SHIFT_NO (current shift), SHIFT_LINE (its pool index), SHIFT_LEFT (seconds from
+# now until it ends; always > SHIFT_LEAD).
+shift_state() {
+    local t=$(( $(date +%s) + SHIFT_LEAD + SHIFT_OFFSET ))
+    SHIFT_NO=$(( t / SHIFT_SECS ))
+    SHIFT_LINE=$(( SHIFT_NO % POOL_N ))
+    SHIFT_LEFT=$(( SHIFT_SECS - t % SHIFT_SECS + SHIFT_LEAD ))
+}
+# resolve_sources: SOURCE_URLS = RAW_URLS on line LINE_IDX (no pool: as written). A pool cut
+# down to one line still swaps, so the channel never falls back to a line it was denied.
+resolve_sources() {
+    local _i _u _k
+    for _i in "${!RAW_URLS[@]}"; do
+        _u="${RAW_URLS[$_i]}"
+        [ "$POOL_N" -gt 0 ] && _u="${_u//@@${POOL_ALIAS}@@/@@${LINE_POOL[$LINE_IDX]}@@}"
         for _k in "${!ACCT[@]}"; do
             _u="${_u//@@${_k}@@/${ACCT[$_k]}}"
         done
         SOURCE_URLS[$_i]="$_u"
     done
-    unset ACCT
-else
-    log "  [FATAL] $ACCOUNTS_ENV missing — cannot resolve provider credentials for $CHANNEL"
+}
+if [ "$POOL_N" -gt 1 ]; then
+    shift_state
+    LINE_IDX=$SHIFT_LINE
+    CUR_SHIFT=$SHIFT_NO
+    log "  line pool: ${LINE_POOL[*]} take ${SHIFT_SECS}s shifts; on shift: ${LINE_POOL[$LINE_IDX]} for ${SHIFT_LEFT}s"
 fi
+resolve_sources
 
 SOURCE_URL="${SOURCE_URLS[0]:-}"   # active URL; rotated by the main loop on failover
 
@@ -525,6 +591,14 @@ push_live() {
     if [ "${TOKEN_REFRESH_SECS:-0}" -gt 0 ] && [ "$TOKEN_REFRESH_SECS" -lt "$FFMPEG_CAP" ]; then
         FFMPEG_CAP=$TOKEN_REFRESH_SECS
     fi
+    # Line pool: end this run when the shift ends, so the next line takes over — unless the
+    # next shift is this same line (no point redialling it).
+    if [ "$POOL_N" -gt 1 ]; then
+        shift_state
+        if [ $(( (SHIFT_NO + 1) % POOL_N )) -ne "$LINE_IDX" ] && [ "$SHIFT_LEFT" -lt "$FFMPEG_CAP" ]; then
+            FFMPEG_CAP=$SHIFT_LEFT
+        fi
+    fi
 
     # Pick the audio path. Source audio is used when valid (channel1/3); when the
     # source delivers a broken 0-channel stream (channel2's feed does this and it
@@ -699,6 +773,36 @@ sc_save_cycle() {
     if [ "$CYCLE_FAIL" -gt 0 ]; then echo "$CYCLE_FAIL" > "$SC_CYCLE_FILE"; else rm -f "$SC_CYCLE_FILE"; fi
 }
 
+# ── Line pool switching (see LINE_POOL above) ──
+# switch_line IDX: move to another pool line, back to its first source. The plain SC_GAP hold
+# belongs to the line just dropped, so it is replaced by the TARGET line's own gap (it may have
+# been dropped seconds ago, e.g. failing back to it); a failure backoff is left in place.
+declare -A LINE_END=()   # pool index -> epoch its last connection ended (this wrapper only)
+switch_line() {
+    local next
+    LINE_IDX=$1
+    URL_IDX=0
+    resolve_sources
+    if [ "$SINGLE_CONN" = "true" ]; then
+        next=$(cat "$SC_NEXT_FILE" 2>/dev/null)
+        [[ "$next" =~ ^[0-9]+$ ]] || next=0
+        [ $(( next - $(date +%s) )) -le "$SC_GAP" ] && rm -f "$SC_NEXT_FILE"
+        sc_hold $(( ${LINE_END[$LINE_IDX]:-0} + SC_GAP ))
+    fi
+}
+# shift_check: at a shift boundary, hand over to the line on shift.
+shift_check() {
+    [ "$POOL_N" -gt 1 ] || return 0
+    shift_state
+    [ "$SHIFT_NO" = "$CUR_SHIFT" ] && return 0
+    CUR_SHIFT=$SHIFT_NO
+    [ "$SHIFT_LINE" -eq "$LINE_IDX" ] && return 0
+    log "  SHIFT: ${LINE_POOL[$LINE_IDX]} goes offline, ${LINE_POOL[$SHIFT_LINE]} takes over for ${SHIFT_LEFT}s"
+    switch_line "$SHIFT_LINE"
+    LIVE_FAIL=0
+    SAME_RETRY=0
+}
+
 # ── Main loop ─────────────────────────────────────────────────
 # Standby (the holding-pattern clip) should ONLY trigger when the source
 # genuinely can't establish a stream — i.e. rapid back-to-back failures.
@@ -719,6 +823,7 @@ SAME_RETRY=0
 # (incl. the 2 new accounts), even if one of them had a working feed. Scaling to NUM_URLS
 # means a degraded feed on some accounts fails over across ALL of them before showing slate.
 MAX_FAILS=$NUM_URLS
+[ "$POOL_N" -gt 1 ] && MAX_FAILS=$(( NUM_URLS * POOL_N ))   # every source on every pool line
 HEALTHY_RUN_SECS=45   # a run at least this long = healthy, resets the fail counter
 URL_IDX=0             # index into SOURCE_URLS of the currently-active source
 LAST_MODE=""          # "live"|"standby" — for fmp4, wipe on live↔standby transitions
@@ -735,6 +840,7 @@ if [ "$SINGLE_CONN" = "true" ]; then
 fi
 
 while true; do
+    shift_check
     # ── Drift self-correction at the 6h PTS-reset boundary ──────────────────
     # The "healthy, reconnecting on SAME URL" path below means a channel that
     # failed over to a backup account and then ran fine STAYS on that backup
@@ -758,7 +864,11 @@ while true; do
     fi
     SOURCE_URL="${SOURCE_URLS[$URL_IDX]:-}"
     if [[ -n "$SOURCE_URL" ]] && [[ $LIVE_FAIL -lt $MAX_FAILS ]]; then
-        [ "$SINGLE_CONN" = "true" ] && sc_gate   # may air the slate, so before the fmp4 check
+        if [ "$SINGLE_CONN" = "true" ]; then
+            sc_gate   # may air the slate, so before the fmp4 check
+            shift_check   # a long backoff can outlast the shift
+            SOURCE_URL="${SOURCE_URLS[$URL_IDX]:-}"
+        fi
         # fmp4 standby→live transition: standby's init.mp4 differs from the live
         # encode's, so wipe for a clean manifest+init. live→live token restarts keep
         # LAST_MODE=live and skip this (their init is byte-identical → append_list
@@ -773,6 +883,7 @@ while true; do
         EXIT=$?
         T_RUN=$(( $(date +%s) - T_START ))
         [ "$SINGLE_CONN" = "true" ] && sc_hold $(( $(date +%s) + SC_GAP ))
+        LINE_END[$LINE_IDX]=$(date +%s)
         if [[ ${FFMPEG_CAP:-0} -gt 0 && $T_RUN -ge $((FFMPEG_CAP - 3)) ]]; then
             # PLANNED exit: ffmpeg reached its -t cap (proactive token refresh, or the 6h
             # session reset). Reconnect to the SAME url for a FRESH token — this is by design,
@@ -782,7 +893,7 @@ while true; do
             LIVE_FAIL=0
             CYCLE_FAIL=0
             SAME_RETRY=0
-            log "Live exited (code=$EXIT) ran=${T_RUN}s on source[$URL_IDX] – planned token refresh, reconnecting"
+            log "Live exited (code=$EXIT) ran=${T_RUN}s on source[$URL_IDX] – planned restart (token refresh, session reset or shift end), reconnecting"
         elif [[ $T_RUN -ge $HEALTHY_RUN_SECS ]]; then
             # Healthy stream hit a transient drop – reconnect to the SAME working
             # URL immediately, no penalty and no failover.
@@ -797,10 +908,15 @@ while true; do
             if [[ $T_RUN -ge $STALL_RUN_SECS ]] && [[ ${SAME_RETRY:-0} -lt $MAX_SAME_RETRY ]]; then
                 SAME_RETRY=$((SAME_RETRY + 1))
                 log "Live exited (code=$EXIT) ran=${T_RUN}s fail=$LIVE_FAIL/$MAX_FAILS – stalled after streaming, retrying SAME source[$URL_IDX] (${SAME_RETRY}/${MAX_SAME_RETRY})"
-            elif [[ $NUM_URLS -gt 1 ]]; then
+            elif [[ $NUM_URLS -gt 1 ]] && [[ $(( URL_IDX + 1 )) -lt $NUM_URLS || $POOL_N -le 1 ]]; then
                 SAME_RETRY=0
                 URL_IDX=$(( (URL_IDX + 1) % NUM_URLS ))
                 log "Live exited (code=$EXIT) ran=${T_RUN}s fail=$LIVE_FAIL/$MAX_FAILS – failover to source[$URL_IDX]"
+            elif [[ $POOL_N -gt 1 ]]; then
+                # Every source on this line failed: the next pool line, off shift or not, beats the slate.
+                SAME_RETRY=0
+                switch_line $(( (LINE_IDX + 1) % POOL_N ))
+                log "Live exited (code=$EXIT) ran=${T_RUN}s fail=$LIVE_FAIL/$MAX_FAILS – failover to line ${LINE_POOL[$LINE_IDX]}"
             else
                 SAME_RETRY=0
                 log "Live exited (code=$EXIT) ran=${T_RUN}s fail=$LIVE_FAIL/$MAX_FAILS"
@@ -831,6 +947,12 @@ while true; do
         LIVE_FAIL=0
         URL_IDX=0   # after a standby/hold cycle, start over from the primary URL
         SAME_RETRY=0
+        if [ "$POOL_N" -gt 1 ]; then   # … on the line that is on shift (keeps any backoff hold)
+            shift_state
+            CUR_SHIFT=$SHIFT_NO
+            LINE_IDX=$SHIFT_LINE
+            resolve_sources
+        fi
         # Back off before hammering every account again; without this the loop retried instantly
         # forever, so one dead channel held slots across accounts and pushed them over cap, which
         # made the provider feed corrupt data to HEALTHY channels there. Any healthy run clears it.
