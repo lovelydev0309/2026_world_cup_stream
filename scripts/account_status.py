@@ -57,6 +57,13 @@ def aliases(env):
             if k.startswith(("ACCT", "KOZEE")) and re.match(r"[^/]+/[^/]+/.+", v)}
 
 
+# Accounts whose player_api.php we never poll. The South Africa seller (m3.iptv.cab) sells
+# one-connection lines and its API has refused this box for every login, valid or made-up,
+# since 2026-10-21 (only ACCT_ZA1/2 were ever answered). Polling it every few minutes only
+# piles up requests the seller can see; their cap is 1 by contract.
+NO_API = ("ACCT_ZA",)
+
+
 def group_of(alias):
     if alias.startswith("KOZEE"):
         return "KOZEE"
@@ -102,7 +109,7 @@ def refresh_caps(env=None):
     a transient provider hiccup.
     """
     env = env or load_env()
-    acc = aliases(env)
+    acc = {a: v for a, v in aliases(env).items() if not a.startswith(NO_API)}
     with ThreadPoolExecutor(max_workers=4) as pool:
         got = dict(pool.map(_probe, acc.items()))
     for alias in [a for a, r in got.items() if not r.get("max")]:
@@ -113,6 +120,11 @@ def refresh_caps(env=None):
         if not rec.get("max") and prev.get(alias, {}).get("max"):
             rec["max"] = prev[alias]["max"]
             rec["stale_max"] = True
+    # Unpolled accounts stay listed at their contract cap (status unknown, so never "usable").
+    for alias in aliases(env):
+        if alias.startswith(NO_API):
+            got[alias] = {"max": 1, "active_cons": None, "status": None, "exp": None,
+                          "error": "not polled (one-connection line)"}
 
     os.makedirs(os.path.dirname(CACHE), exist_ok=True)
     out = {"fetched": int(time.time()), "accounts": got}

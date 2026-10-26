@@ -59,7 +59,7 @@ pkill -9 -f "hls/${CHANNEL}/[0-9%]" 2>/dev/null || true
 
 # ── Read config ───────────────────────────────────────────────
 # Scalar fields (standby/bitrate/fps/force_silent_audio) on one line …
-read -r STANDBY_REL BITRATE AUDIO_BR FPS FORCE_SILENT_AUDIO AUDIO_SYNC VIDEO_MODE ENC_RES USE_STANDBY SEGMENT_TYPE TOKEN_REFRESH_SECS < <(python3 -c "
+read -r STANDBY_REL BITRATE AUDIO_BR FPS FORCE_SILENT_AUDIO AUDIO_SYNC VIDEO_MODE ENC_RES USE_STANDBY SEGMENT_TYPE TOKEN_REFRESH_SECS SINGLE_CONN < <(python3 -c "
 import json, sys
 cfg = json.load(open('$CONFIG'))
 chs = [c for c in cfg['channels'] if c['channel_name'] == '$CHANNEL']
@@ -73,7 +73,8 @@ print(c.get('standby_file','standby/standby.mp4'),
       c.get('encode_resolution','960x540'),
       'true' if c.get('use_standby', True) else 'false',
       c.get('segment_type','mpegts'),
-      c.get('token_refresh_secs', 240))")
+      c.get('token_refresh_secs', 240),
+      'true' if c.get('single_connection') else 'false')")
 # Proactive token refresh: tvon247's 302 token silently expires (socket goes quiet, no EOF),
 # and ffmpeg's -reconnect can't recover it — only a process RESTART re-resolves the 302 for a
 # FRESH token. Reactively that costs a ~15s watchdog gap; PROACTIVELY capping each ffmpeg run
@@ -97,6 +98,27 @@ print(c.get('standby_file','standby/standby.mp4'),
 # token_refresh_secs=35 caused 296 restarts in 3h while its pulls ran the full ceiling.
 # Short-token feeds still override it lower in channels.json. 0 disables it entirely.
 [ -z "$TOKEN_REFRESH_SECS" ] && TOKEN_REFRESH_SECS=240
+
+# ── One-connection lines (config: "single_connection": true) ──────────────────────────────
+# Some sellers (South Africa, m3.iptv.cab) sell lines that allow exactly ONE connection, and a
+# line that shows a second one reads as a shared account. On 2026-10-24 that seller cut off all
+# 25 of our lines in the same minute. What those lines saw from us on 10-23: the planned token
+# refresh above (240s, built for tvon247's expiring tokens) dropped and redialled every line
+# ~357x a day — 7,405 of that day's 14,498 connects — while the provider still held the session
+# we had just dropped; an fps ffprobe right before the stream on every wrapper start (1,207 that
+# day, mostly RPA STALE restarts); and failure retries whose backoff each RPA restart reset to
+# zero (40,420 attempts on 10-25 against the dead lines). So in this mode:
+#   * no planned refresh: a connection is held until the provider or the stall watchdog ends it;
+#   * no probe connections: fps comes from cache/srcfps_<channel> and audio is trusted (set
+#     force_silent_audio for a feed without audio);
+#   * a connection only opens SC_GAP seconds after the previous one ended, across restarts too;
+#   * the failure backoff is longer and persisted, and the wait airs the standby slate, so RPA
+#     sees fresh segments instead of killing the wrapper (which used to reset the backoff).
+SC_GAP=15
+SC_NEXT_FILE="$PROJECT_DIR/cache/sc_next_${CHANNEL}"     # epoch: no connection before this
+SC_CYCLE_FILE="$PROJECT_DIR/cache/sc_cycle_${CHANNEL}"   # CYCLE_FAIL carried across restarts
+SC_FPS_FILE="$PROJECT_DIR/cache/srcfps_${CHANNEL}"       # source r_frame_rate, e.g. 25/1
+[ "$SINGLE_CONN" = "true" ] && TOKEN_REFRESH_SECS=0
 # Output resolution for re-encode mode (WxH). Default 960x540. Per-channel so the
 # marquee feeds can run 720p while the heavy 60fps one stays 540p for CPU.
 ENC_W=${ENC_RES%x*}; ENC_H=${ENC_RES#*x}
@@ -184,9 +206,16 @@ GOP=$((FPS * 2))
 # (so we stay ~24-30fps, CPU-neutral) with an EXACT integer ratio (59.94→29.97, 50→25,
 # 25→25) instead of a lossy 30.000 resample. Falls back to the config fps if probe fails.
 OUT_FPS="$FPS"; OUT_GOP="$GOP"
-_srcfps=$(timeout 12 ffprobe -v error -user_agent "IPTV Smarters/1.0 Dalvik/2.1.0" \
-    -analyzeduration 4M -probesize 4M -select_streams v:0 -show_entries stream=r_frame_rate \
-    -of csv=p=0 "${SOURCE_URLS[0]}" 2>/dev/null | head -1)
+if [ "$SINGLE_CONN" = "true" ]; then
+    # The probe would be a second connection on a one-connection line: use the cadence recorded
+    # by an earlier probe (seed the file by hand for a new channel, while it is paused).
+    _srcfps=$(head -1 "$SC_FPS_FILE" 2>/dev/null)
+else
+    _srcfps=$(timeout 12 ffprobe -v error -user_agent "IPTV Smarters/1.0 Dalvik/2.1.0" \
+        -analyzeduration 4M -probesize 4M -select_streams v:0 -show_entries stream=r_frame_rate \
+        -of csv=p=0 "${SOURCE_URLS[0]}" 2>/dev/null | head -1)
+    [ -n "$_srcfps" ] && echo "$_srcfps" > "$SC_FPS_FILE" 2>/dev/null
+fi
 if [ -n "$_srcfps" ]; then
     _out=$(python3 - "$_srcfps" <<'PY'
 import sys
@@ -379,7 +408,7 @@ detect_audio_ok() {
     # (bottom of the main loop), the next attempt probes again — an endless loop that kept
     # Moja Love / SABC 1 / SABC News off air (2026-10-22). Touch cache/audio_trust_<channel>
     # only for feeds verified to carry real audio.
-    if [ -f "$PROJECT_DIR/cache/audio_trust_${CHANNEL}" ]; then
+    if [ -f "$PROJECT_DIR/cache/audio_trust_${CHANNEL}" ] || [ "$SINGLE_CONN" = "true" ]; then
         return 0
     fi
     # Only a confirmed-OK result is cached AND trusted. A source's audio config is stable, so
@@ -603,8 +632,9 @@ push_live() {
     return $?
 }
 
-# ── Standby: 30s cycle of standby.mp4 ─────────────────────────
+# ── Standby: 30s cycle of standby.mp4 (or $1 seconds) ─────────
 push_standby() {
+    local dur="${1:-30}"
     ensure_hls_dir
     log "→ STANDBY"
     # Scale standby to the channel's live output resolution (${ENC_W}x${ENC_H}).
@@ -619,7 +649,7 @@ push_standby() {
         -r "$OUT_FPS" -g "$OUT_GOP" \
         -force_key_frames "expr:gte(t,n_forced*2)" \
         -c:a aac -b:a "${AUDIO_BR}k" -ar 48000 -ac 2 \
-        -t 30 \
+        -t "$dur" \
         -f hls -hls_time 2 -hls_list_size 20 \
         -hls_flags "$HLS_FLAGS" \
         "${HLS_SEG[@]}" \
@@ -632,6 +662,41 @@ push_standby() {
     wait $FPID
     kill $WATCHDOG_PID 2>/dev/null; wait $WATCHDOG_PID 2>/dev/null
     rm -f "$FFMPEG_PID_FILE"
+}
+
+# ── One-connection gate (SINGLE_CONN only, see SC_GAP above) ──
+# sc_hold EPOCH: no provider connection before EPOCH. Persisted and only ever moved later, so a
+# restarted wrapper keeps waiting where the killed one left off.
+sc_hold() {
+    local cur
+    cur=$(cat "$SC_NEXT_FILE" 2>/dev/null)
+    [[ "$cur" =~ ^[0-9]+$ ]] || cur=0
+    if [ "$1" -gt "$cur" ]; then echo "$1" > "$SC_NEXT_FILE"; fi
+}
+# Wait until a connection is allowed. A backoff airs the slate: RPA restarts a wrapper whose
+# segments are stale for 90s, and those restarts are what used to wipe the backoff. The plain
+# SC_GAP between connections just waits — the player's cushion covers it, a slate would show.
+sc_gate() {
+    local next left
+    next=$(cat "$SC_NEXT_FILE" 2>/dev/null)
+    [[ "$next" =~ ^[0-9]+$ ]] || next=0
+    left=$(( next - $(date +%s) ))
+    [ "$left" -gt 0 ] && log "  one-connection: next connection allowed in ${left}s"
+    while [ "$left" -gt 0 ]; do
+        if [ "$USE_STANDBY" = "true" ] && [ "$left" -gt "$SC_GAP" ]; then
+            if [ "$SEGMENT_TYPE" = "fmp4" ] && [ "$LAST_MODE" != "standby" ]; then
+                rm -f "$HLS_DIR"/*.m4s "$HLS_DIR"/init.mp4 "$HLS_DIR"/*.m3u8 2>/dev/null
+            fi
+            LAST_MODE="standby"
+            push_standby $(( left < 30 ? left : 30 )) || true
+        else
+            sleep $(( left < 5 ? left : 5 ))
+        fi
+        left=$(( next - $(date +%s) ))
+    done
+}
+sc_save_cycle() {
+    if [ "$CYCLE_FAIL" -gt 0 ]; then echo "$CYCLE_FAIL" > "$SC_CYCLE_FILE"; else rm -f "$SC_CYCLE_FILE"; fi
 }
 
 # ── Main loop ─────────────────────────────────────────────────
@@ -658,6 +723,16 @@ HEALTHY_RUN_SECS=45   # a run at least this long = healthy, resets the fail coun
 URL_IDX=0             # index into SOURCE_URLS of the currently-active source
 LAST_MODE=""          # "live"|"standby" — for fmp4, wipe on live↔standby transitions
                       # (their init.mp4 differ; a fixed-name init would mismatch)
+if [ "$SINGLE_CONN" = "true" ]; then
+    # The previous instance may have died with its connection still held by the provider.
+    sc_hold $(( $(date +%s) + SC_GAP ))
+    # Carry the backoff level across restarts; forget it once it is 2h old.
+    if [ -n "$(find "$SC_CYCLE_FILE" -mmin -120 2>/dev/null)" ]; then
+        CYCLE_FAIL=$(cat "$SC_CYCLE_FILE" 2>/dev/null)
+        [[ "$CYCLE_FAIL" =~ ^[0-9]+$ ]] || CYCLE_FAIL=0
+    fi
+    log "  one-connection mode: no planned refresh, no probes, ${SC_GAP}s between connections, backoff level ${CYCLE_FAIL}"
+fi
 
 while true; do
     # ── Drift self-correction at the 6h PTS-reset boundary ──────────────────
@@ -683,6 +758,7 @@ while true; do
     fi
     SOURCE_URL="${SOURCE_URLS[$URL_IDX]:-}"
     if [[ -n "$SOURCE_URL" ]] && [[ $LIVE_FAIL -lt $MAX_FAILS ]]; then
+        [ "$SINGLE_CONN" = "true" ] && sc_gate   # may air the slate, so before the fmp4 check
         # fmp4 standby→live transition: standby's init.mp4 differs from the live
         # encode's, so wipe for a clean manifest+init. live→live token restarts keep
         # LAST_MODE=live and skip this (their init is byte-identical → append_list
@@ -696,6 +772,7 @@ while true; do
         push_live
         EXIT=$?
         T_RUN=$(( $(date +%s) - T_START ))
+        [ "$SINGLE_CONN" = "true" ] && sc_hold $(( $(date +%s) + SC_GAP ))
         if [[ ${FFMPEG_CAP:-0} -gt 0 && $T_RUN -ge $((FFMPEG_CAP - 3)) ]]; then
             # PLANNED exit: ffmpeg reached its -t cap (proactive token refresh, or the 6h
             # session reset). Reconnect to the SAME url for a FRESH token — this is by design,
@@ -732,6 +809,7 @@ while true; do
             # retrying at once burns the next account identically.
             if [[ $T_RUN -lt $STALL_RUN_SECS ]]; then sleep 3; fi
         fi
+        [ "$SINGLE_CONN" = "true" ] && sc_save_cycle
     else
         if [ "$USE_STANDBY" = "false" ]; then
             # Copy-mode channels skip the re-encoded standby clip: its SPS/PPS differ
@@ -757,14 +835,28 @@ while true; do
         # forever, so one dead channel held slots across accounts and pushed them over cap, which
         # made the provider feed corrupt data to HEALTHY channels there. Any healthy run clears it.
         CYCLE_FAIL=$((CYCLE_FAIL + 1))
-        case "$CYCLE_FAIL" in
-            1) BACKOFF=0 ;; 2) BACKOFF=10 ;; 3) BACKOFF=30 ;;
-            4) BACKOFF=60 ;; 5) BACKOFF=120 ;; *) BACKOFF=300 ;;
-        esac
+        if [ "$SINGLE_CONN" = "true" ]; then
+            # A one-connection line that keeps refusing is cut off or over its limit, and
+            # redialling it is exactly what gets a line or an IP blocked: back off further.
+            case "$CYCLE_FAIL" in
+                1) BACKOFF=0 ;; 2) BACKOFF=30 ;; 3) BACKOFF=60 ;; 4) BACKOFF=120 ;;
+                5) BACKOFF=300 ;; 6) BACKOFF=600 ;; *) BACKOFF=900 ;;
+            esac
+        else
+            case "$CYCLE_FAIL" in
+                1) BACKOFF=0 ;; 2) BACKOFF=10 ;; 3) BACKOFF=30 ;;
+                4) BACKOFF=60 ;; 5) BACKOFF=120 ;; *) BACKOFF=300 ;;
+            esac
+        fi
         if [ "${BACKOFF:-0}" -gt 0 ]; then
             log "  all $NUM_URLS sources failed ${CYCLE_FAIL}x in a row – backing off ${BACKOFF}s so this channel stops burning provider slots"
-            sleep "$BACKOFF"
+            if [ "$SINGLE_CONN" = "true" ]; then
+                sc_hold $(( $(date +%s) + BACKOFF ))   # sc_gate airs the slate for it
+            else
+                sleep "$BACKOFF"
+            fi
         fi
+        [ "$SINGLE_CONN" = "true" ] && sc_save_cycle
         rm -f "$AUDIO_CACHE" 2>/dev/null   # source may have changed → re-probe audio
     fi
     sleep 1

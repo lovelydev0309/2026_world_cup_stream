@@ -118,6 +118,8 @@ def free_slots():
     for a, v in ENV.items():
         if not a.startswith(("ACCT", "KOZEE")):
             continue
+        if a.startswith("ACCT_ZA"):   # never polled, see account_status.NO_API
+            continue
         m = re.match(r"([^/]+)/([^/]+)/(.+)", v)
         if not m:
             continue

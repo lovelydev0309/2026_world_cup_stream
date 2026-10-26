@@ -83,6 +83,8 @@ def max_connections(env):
     for a, v in env.items():
         if not a.startswith(("ACCT", "KOZEE")):
             continue
+        if a.startswith("ACCT_ZA"):   # never polled, see account_status.NO_API
+            continue
         m = re.match(r"([^/]+)/([^/]+)/(.+)", v)
         if not m:
             continue
@@ -167,6 +169,10 @@ def main():
             if a and a not in seen and mx.get(a):
                 seen.append(a)
         options[c["channel_name"]] = seen
+    # A channel with no account of known cap cannot be moved (the South Africa lines are
+    # never polled, and each belongs to one channel). Leaving one in crashed the whole run on
+    # options[name][0] with IndexError, so nothing at all was rebalanced while it was enabled.
+    chans = [c for c in chans if options[c["channel_name"]]]
 
     # INCREMENTAL, not from scratch. A clean-slate assignment balances just as well but
     # moved 39 of 74 channels, and every move is a restart — a visible gap for whoever is
