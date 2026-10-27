@@ -221,6 +221,11 @@ def main():
         sub = c.get("substitute")
         if not sub or not sub.get("source_urls"):
             continue
+        # Paused AND hidden = taken down on purpose (2026-10-26: every Spanish country but
+        # Mexico). Both the swap and the restore below set enabled=True, which put ch46/47/68
+        # back on air the same night; and probing them spends slots for nothing.
+        if not c.get("enabled", True) and c.get("hidden"):
+            continue
         st = state.setdefault(ch, {})
         active = bool(c.get("substituted"))
         originals = c.get("_original_source_urls") if active else (c.get("source_urls") or [])
