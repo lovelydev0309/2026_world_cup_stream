@@ -4,300 +4,521 @@
     "title": "Imagen Televisión",
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel1.png",
-    "hls": "https://stream.tv247on.com/hls/channel1/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel1/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel2",
     "title": "MX – Canal 5 HD",
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel2.png",
-    "hls": "https://stream.tv247on.com/hls/channel2/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel2/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel3",
     "title": "ESPN HD",
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel3.png",
-    "hls": "https://stream.tv247on.com/hls/channel3/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel3/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel4",
     "title": "Las Estrellas HD",
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel4.png",
-    "hls": "https://stream.tv247on.com/hls/channel4/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel4/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel5",
     "title": "Azteca Uno HD",
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel5.png",
-    "hls": "https://stream.tv247on.com/hls/channel5/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel5/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel6",
     "title": "Discovery Channel HD",
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel6.png",
-    "hls": "https://stream.tv247on.com/hls/channel6/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel6/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel7",
     "title": "Azteca 7 HD",
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel7.png",
-    "hls": "https://stream.tv247on.com/hls/channel7/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel7/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel8",
     "title": "Fox Sports 1 HD",
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel8.png",
-    "hls": "https://stream.tv247on.com/hls/channel8/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel8/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel9",
     "title": "ESPN 2 HD",
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel9.png",
-    "hls": "https://stream.tv247on.com/hls/channel9/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel9/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel10",
     "title": "TUDN",
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel10.png",
-    "hls": "https://stream.tv247on.com/hls/channel10/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel10/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel11",
     "title": "Fox Sports 2 HD",
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel11.png",
-    "hls": "https://stream.tv247on.com/hls/channel11/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel11/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel12",
     "title": "TNT México HD",
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel12.png",
-    "hls": "https://stream.tv247on.com/hls/channel12/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel12/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel13",
     "title": "AXN HD",
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel13.png",
-    "hls": "https://stream.tv247on.com/hls/channel13/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel13/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel14",
     "title": "Space HD",
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel14.png",
-    "hls": "https://stream.tv247on.com/hls/channel14/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel14/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel15",
     "title": "ESPN 3 HD",
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel15.png",
-    "hls": "https://stream.tv247on.com/hls/channel15/index.m3u8"
-  },
-  {
-    "name": "channel16",
-    "title": "Canal N (Perú)",
-    "country": "Peru",
-    "logo": "https://stream.tv247on.com/player/logos/channel16.png",
-    "hls": "https://stream.tv247on.com/hls/channel16/index.m3u8"
-  },
-  {
-    "name": "channel17",
-    "title": "Latina HD (Perú)",
-    "country": "Peru",
-    "logo": "https://stream.tv247on.com/player/logos/channel17.png",
-    "hls": "https://stream.tv247on.com/hls/channel17/index.m3u8"
-  },
-  {
-    "name": "channel18",
-    "title": "Movistar Deportes (Perú)",
-    "country": "Peru",
-    "logo": "https://stream.tv247on.com/player/logos/channel18.png",
-    "hls": "https://stream.tv247on.com/hls/channel18/index.m3u8"
-  },
-  {
-    "name": "channel19",
-    "title": "ATV (Perú)",
-    "country": "Peru",
-    "logo": "https://stream.tv247on.com/player/logos/channel19.png",
-    "hls": "https://stream.tv247on.com/hls/channel19/index.m3u8"
-  },
-  {
-    "name": "channel20",
-    "title": "Liga1 Max (Perú)",
-    "country": "Peru",
-    "logo": "https://stream.tv247on.com/player/logos/channel20.png",
-    "hls": "https://stream.tv247on.com/hls/channel20/index.m3u8"
-  },
-  {
-    "name": "channel21",
-    "title": "ESPN HD (Perú)",
-    "country": "Peru",
-    "logo": "https://stream.tv247on.com/player/logos/channel21.png",
-    "hls": "https://stream.tv247on.com/hls/channel21/index.m3u8"
-  },
-  {
-    "name": "channel22",
-    "title": "América TV HD (Perú)",
-    "country": "Peru",
-    "logo": "https://stream.tv247on.com/player/logos/channel22.png",
-    "hls": "https://stream.tv247on.com/hls/channel22/index.m3u8"
-  },
-  {
-    "name": "channel24",
-    "title": "Panamericana (Perú)",
-    "country": "Peru",
-    "logo": "https://stream.tv247on.com/player/logos/channel24.png",
-    "hls": "https://stream.tv247on.com/hls/channel24/index.m3u8"
-  },
-  {
-    "name": "channel25",
-    "title": "TV Perú HD",
-    "country": "Peru",
-    "logo": "https://stream.tv247on.com/player/logos/channel25.png",
-    "hls": "https://stream.tv247on.com/hls/channel25/index.m3u8"
-  },
-  {
-    "name": "channel26",
-    "title": "DTV Sports Plus (Perú)",
-    "country": "Peru",
-    "logo": "https://stream.tv247on.com/player/logos/channel26.png",
-    "hls": "https://stream.tv247on.com/hls/channel26/index.m3u8"
-  },
-  {
-    "name": "channel28",
-    "title": "Starz",
-    "country": "US",
-    "logo": "https://stream.tv247on.com/player/logos/channel28.png",
-    "hls": "https://stream.tv247on.com/hls/channel28/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel15/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel29",
     "title": "Showtime",
     "country": "US",
     "logo": "https://stream.tv247on.com/player/logos/channel29.png",
-    "hls": "https://stream.tv247on.com/hls/channel29/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel29/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel30",
     "title": "HBO",
     "country": "US",
     "logo": "https://stream.tv247on.com/player/logos/channel30.png",
-    "hls": "https://stream.tv247on.com/hls/channel30/index.m3u8"
-  },
-  {
-    "name": "channel31",
-    "title": "AMC",
-    "country": "US",
-    "logo": "https://stream.tv247on.com/player/logos/channel31.png",
-    "hls": "https://stream.tv247on.com/hls/channel31/index.m3u8"
-  },
-  {
-    "name": "channel32",
-    "title": "FX",
-    "country": "US",
-    "logo": "https://stream.tv247on.com/player/logos/channel32.png",
-    "hls": "https://stream.tv247on.com/hls/channel32/index.m3u8"
-  },
-  {
-    "name": "channel33",
-    "title": "Paramount Network",
-    "country": "US",
-    "logo": "https://stream.tv247on.com/player/logos/channel33.png",
-    "hls": "https://stream.tv247on.com/hls/channel33/index.m3u8"
-  },
-  {
-    "name": "channel34",
-    "title": "Paramount+ w/ Showtime",
-    "country": "US",
-    "logo": "https://stream.tv247on.com/player/logos/channel34.png",
-    "hls": "https://stream.tv247on.com/hls/channel34/index.m3u8"
-  },
-  {
-    "name": "channel35",
-    "title": "TNT",
-    "country": "US",
-    "logo": "https://stream.tv247on.com/player/logos/channel35.png",
-    "hls": "https://stream.tv247on.com/hls/channel35/index.m3u8"
-  },
-  {
-    "name": "channel36",
-    "title": "Cinemax",
-    "country": "US",
-    "logo": "https://stream.tv247on.com/player/logos/channel36.png",
-    "hls": "https://stream.tv247on.com/hls/channel36/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel30/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel37",
     "title": "ESPN ACC Network",
     "country": "US",
     "logo": "https://stream.tv247on.com/player/logos/channel37.png",
-    "hls": "https://stream.tv247on.com/hls/channel37/index.m3u8"
-  },
-  {
-    "name": "channel38",
-    "title": "ESPN 2 (US)",
-    "country": "US",
-    "logo": "https://stream.tv247on.com/player/logos/channel38.png",
-    "hls": "https://stream.tv247on.com/hls/channel38/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel37/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel39",
     "title": "ESPN U",
     "country": "US",
     "logo": "https://stream.tv247on.com/player/logos/channel39.png",
-    "hls": "https://stream.tv247on.com/hls/channel39/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel39/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel40",
     "title": "beIN Sports",
     "country": "US",
     "logo": "https://stream.tv247on.com/player/logos/channel40.png",
-    "hls": "https://stream.tv247on.com/hls/channel40/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel40/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel41",
     "title": "Fox Sports 1 (US)",
     "country": "US",
     "logo": "https://stream.tv247on.com/player/logos/channel41.png",
-    "hls": "https://stream.tv247on.com/hls/channel41/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel41/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel42",
     "title": "NBC Sports Bay Area",
     "country": "US",
     "logo": "https://stream.tv247on.com/player/logos/channel42.png",
-    "hls": "https://stream.tv247on.com/hls/channel42/index.m3u8"
-  },
-  {
-    "name": "channel43",
-    "title": "NBC Golf",
-    "country": "US",
-    "logo": "https://stream.tv247on.com/player/logos/channel43.png",
-    "hls": "https://stream.tv247on.com/hls/channel43/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel42/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel44",
     "title": "VIX Premium",
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel44.png",
-    "hls": "https://stream.tv247on.com/hls/channel1/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel44/index.m3u8",
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel45",
     "title": "Sky Sport",
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel45.png",
-    "hls": "https://stream.tv247on.com/hls/channel1/index.m3u8"
+    "hls": "https://stream.tv247on.com/hls/channel45/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel80",
+    "title": "FOROtv",
+    "country": "Mexico",
+    "logo": "https://stream.tv247on.com/player/logos/channel80.png",
+    "hls": "https://stream.tv247on.com/hls/channel80/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel82",
+    "title": "NFL Network",
+    "country": "US",
+    "logo": "https://stream.tv247on.com/player/logos/channel82.png",
+    "hls": "https://stream.tv247on.com/hls/channel82/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel83",
+    "title": "NBA TV",
+    "country": "US",
+    "logo": "https://stream.tv247on.com/player/logos/channel83.png",
+    "hls": "https://stream.tv247on.com/hls/channel83/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel84",
+    "title": "MLB Network",
+    "country": "US",
+    "logo": "https://stream.tv247on.com/player/logos/channel84.png",
+    "hls": "https://stream.tv247on.com/hls/channel84/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel85",
+    "title": "NHL Network",
+    "country": "US",
+    "logo": "https://stream.tv247on.com/player/logos/channel85.png",
+    "hls": "https://stream.tv247on.com/hls/channel85/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel86",
+    "title": "CBS Sports Network",
+    "country": "US",
+    "logo": "https://stream.tv247on.com/player/logos/channel86.png",
+    "hls": "https://stream.tv247on.com/hls/channel86/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel88",
+    "title": "AMC+",
+    "country": "US",
+    "logo": "https://stream.tv247on.com/player/logos/channel88.png",
+    "hls": "https://stream.tv247on.com/hls/channel88/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel90",
+    "title": "Hallmark Movies & Mysteries",
+    "country": "US",
+    "logo": "https://stream.tv247on.com/player/logos/channel90.png",
+    "hls": "https://stream.tv247on.com/hls/channel90/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel91",
+    "title": "Apple TV+ Series",
+    "country": "US",
+    "logo": "https://stream.tv247on.com/player/logos/channel91.png",
+    "hls": "https://stream.tv247on.com/hls/channel91/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel92",
+    "title": "Hulu Originals",
+    "country": "US",
+    "logo": "https://stream.tv247on.com/player/logos/channel92.png",
+    "hls": "https://stream.tv247on.com/hls/channel92/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel94",
+    "title": "Peacock Series",
+    "country": "US",
+    "logo": "https://stream.tv247on.com/player/logos/channel94.png",
+    "hls": "https://stream.tv247on.com/hls/channel94/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel97",
+    "title": "SABC 1 FHD",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel97.png",
+    "hls": "https://stream.tv247on.com/hls/channel97/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel98",
+    "title": "Mzansi Wethu",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel98.png",
+    "hls": "https://stream.tv247on.com/hls/channel98/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel99",
+    "title": "e.tv Extra HD",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel99.png",
+    "hls": "https://stream.tv247on.com/hls/channel99/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel100",
+    "title": "kykNET FHD",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel100.png",
+    "hls": "https://stream.tv247on.com/hls/channel100/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel101",
+    "title": "Newzroom Afrika",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel101.png",
+    "hls": "https://stream.tv247on.com/hls/channel101/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel102",
+    "title": "M-Net FHD",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel102.png",
+    "hls": "https://stream.tv247on.com/hls/channel102/index.m3u8",
+    "state": "SLATE",
+    "live": false
+  },
+  {
+    "name": "channel103",
+    "title": "Studio Universal",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel103.png",
+    "hls": "https://stream.tv247on.com/hls/channel103/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel104",
+    "title": "Mzansi Magic",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel104.png",
+    "hls": "https://stream.tv247on.com/hls/channel104/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel105",
+    "title": "Channel O",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel105.png",
+    "hls": "https://stream.tv247on.com/hls/channel105/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel107",
+    "title": "SABC 3 FHD",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel107.png",
+    "hls": "https://stream.tv247on.com/hls/channel107/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel108",
+    "title": "SABC 2 FHD",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel108.png",
+    "hls": "https://stream.tv247on.com/hls/channel108/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel109",
+    "title": "Star Life FHD",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel109.png",
+    "hls": "https://stream.tv247on.com/hls/channel109/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel110",
+    "title": "Universal TV",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel110.png",
+    "hls": "https://stream.tv247on.com/hls/channel110/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel111",
+    "title": "SuperSport Rugby",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel111.png",
+    "hls": "https://stream.tv247on.com/hls/channel111/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel112",
+    "title": "eNCA",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel112.png",
+    "hls": "https://stream.tv247on.com/hls/channel112/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel113",
+    "title": "Discovery Channel",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel113.png",
+    "hls": "https://stream.tv247on.com/hls/channel113/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel114",
+    "title": "eMovies Extra",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel114.png",
+    "hls": "https://stream.tv247on.com/hls/channel114/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel115",
+    "title": "BBC Brit",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel115.png",
+    "hls": "https://stream.tv247on.com/hls/channel115/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel116",
+    "title": "SABC News",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel116.png",
+    "hls": "https://stream.tv247on.com/hls/channel116/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel117",
+    "title": "SuperSport Cricket FHD",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel117.png",
+    "hls": "https://stream.tv247on.com/hls/channel117/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel118",
+    "title": "SuperSport Football HD",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel118.png",
+    "hls": "https://stream.tv247on.com/hls/channel118/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel119",
+    "title": "SuperSport PSL FHD",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel119.png",
+    "hls": "https://stream.tv247on.com/hls/channel119/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel120",
+    "title": "SuperSport Grandstand FHD",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel120.png",
+    "hls": "https://stream.tv247on.com/hls/channel120/index.m3u8",
+    "state": "LIVE",
+    "live": true
   }
 ]
