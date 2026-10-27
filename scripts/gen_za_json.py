@@ -35,6 +35,18 @@ def absolute(path):
     return path if path.startswith('http') else BASE + path
 
 
+def versioned(url):
+    """Append ?v=<file mtime>. The site keeps whatever image it fetched for a URL (2026-10-27:
+    it showed the old e.tv/kykNET/Studio Universal art on the swapped slots although we served
+    the new files), so a changed logo needs a changed URL. The mtime changes with the file."""
+    if not url.startswith(BASE + '/player/'):
+        return url
+    try:
+        return '%s?v=%d' % (url, os.path.getmtime(os.path.join(PROJECT, url[len(BASE) + 1:])))
+    except OSError:
+        return url
+
+
 def main():
     states = live_states()
     out = []
@@ -47,8 +59,8 @@ def main():
             'name': name,
             'title': ch.get('display_name', name),
             'country': 'South Africa',
-            'logo': logo,
-            'logo_light': logo[:-4] + '_light.png' if logo.endswith('.png') else logo,
+            'logo': versioned(logo),
+            'logo_light': versioned(logo[:-4] + '_light.png' if logo.endswith('.png') else logo),
             'hls': '%s/hls/%s/index.m3u8' % (BASE, name),
             # health unknown (live.json stale) -> say live rather than mark everything down
             'status': 'live' if states is None or states.get(name) == 'LIVE' else 'starting',

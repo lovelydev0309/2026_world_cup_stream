@@ -68,6 +68,19 @@ def country_of(name):
     return 'Mexico' if n <= 15 else 'Peru' if n <= 27 else 'US'
 
 
+def versioned(url):
+    """Append ?v=<file mtime> to one of our /player/ URLs. External sites keep whatever image
+    they fetched for a URL (2026-10-27: mzolotv.com showed the old e.tv/kykNET/Studio Universal
+    art on swapped slots while we served the new files), so a changed logo needs a changed URL.
+    The mtime only moves when the file is replaced, so unchanged logos keep a stable URL."""
+    if not url.startswith(BASE + '/player/'):
+        return url
+    try:
+        return '%s?v=%d' % (url, os.path.getmtime(os.path.join(PROJECT, url[len(BASE) + 1:])))
+    except OSError:
+        return url
+
+
 def load_live():
     """(state_by_channel, usable). usable is False whenever we cannot trust the data."""
     try:
@@ -147,6 +160,7 @@ for ch in candidates:
     logo = ch.get('logo', f'/player/logos/{name}.png')
     if logo.startswith('/'):          # emit an absolute URL so external sites can use it directly
         logo = BASE + logo
+    logo_light = logo[:-4] + '_light.png' if logo.endswith('.png') else logo
     # A channel running a stand-in is labelled, so the client and their viewers can see
     # what is actually on air. Silently passing a substitute off as the real channel would
     # mean nobody ever chases the provider for the real feed.
@@ -170,7 +184,8 @@ for ch in candidates:
         'name':    name,
         'title':   title,
         'country': ch.get('country') or country_of(name),
-        'logo':    logo,
+        'logo':    versioned(logo),
+        'logo_light': versioned(logo_light),
         'hls':     hls,
     }
     # Additive fields: existing consumers ignore them, new ones can grey out a bad channel
