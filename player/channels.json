@@ -203,8 +203,8 @@
     "country": "Mexico",
     "logo": "https://stream.tv247on.com/player/logos/channel44.png",
     "hls": "https://stream.tv247on.com/hls/channel44/index.m3u8",
-    "state": "LIVE",
-    "live": true
+    "state": "STALLED",
+    "live": false
   },
   {
     "name": "channel45",
@@ -329,8 +329,8 @@
     "country": "South Africa",
     "logo": "https://stream.tv247on.com/player/logos/channel98.png",
     "hls": "https://stream.tv247on.com/hls/channel98/index.m3u8",
-    "state": "SLATE",
-    "live": false
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel99",
@@ -365,8 +365,8 @@
     "country": "South Africa",
     "logo": "https://stream.tv247on.com/player/logos/channel102.png",
     "hls": "https://stream.tv247on.com/hls/channel102/index.m3u8",
-    "state": "SLOW",
-    "live": false
+    "state": "LIVE",
+    "live": true
   },
   {
     "name": "channel103",
@@ -392,6 +392,15 @@
     "country": "South Africa",
     "logo": "https://stream.tv247on.com/player/logos/channel105.png",
     "hls": "https://stream.tv247on.com/hls/channel105/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel106",
+    "title": "Cape Town TV",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel106.png",
+    "hls": "https://stream.tv247on.com/hls/channel106/index.m3u8",
     "state": "LIVE",
     "live": true
   },
@@ -459,6 +468,15 @@
     "live": true
   },
   {
+    "name": "channel114",
+    "title": "M-Net Movies HD",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel114.png",
+    "hls": "https://stream.tv247on.com/hls/channel114/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
     "name": "channel115",
     "title": "BBC Brit",
     "country": "South Africa",
@@ -468,11 +486,29 @@
     "live": false
   },
   {
+    "name": "channel116",
+    "title": "TNT Africa HD",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel116.png",
+    "hls": "https://stream.tv247on.com/hls/channel116/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
     "name": "channel117",
     "title": "SuperSport Cricket FHD",
     "country": "South Africa",
     "logo": "https://stream.tv247on.com/player/logos/channel117.png",
     "hls": "https://stream.tv247on.com/hls/channel117/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel118",
+    "title": "SuperSport Action HD",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel118.png",
+    "hls": "https://stream.tv247on.com/hls/channel118/index.m3u8",
     "state": "LIVE",
     "live": true
   },
@@ -491,6 +527,15 @@
     "country": "South Africa",
     "logo": "https://stream.tv247on.com/player/logos/channel120.png",
     "hls": "https://stream.tv247on.com/hls/channel120/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel121",
+    "title": "Star Life HD",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel121.png",
+    "hls": "https://stream.tv247on.com/hls/channel121/index.m3u8",
     "state": "LIVE",
     "live": true
   },

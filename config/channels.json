@@ -3200,13 +3200,13 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
+    "http://@@ACCT_LAT5@@/108859",
     "http://@@ACCT_LAT7@@/108859",
     "http://@@ACCT_LAT4@@/108859",
-    "http://@@ACCT_LAT6@@/108859",
-    "http://@@ACCT_LAT5@@/108859"
+    "http://@@ACCT_LAT6@@/108859"
    ],
    "hidden": false,
-   "source_url": "http://@@ACCT_LAT7@@/108859"
+   "source_url": "http://@@ACCT_LAT5@@/108859"
   },
   {
    "channel_name": "channel100",
@@ -3278,13 +3278,13 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
+    "http://@@ACCT_LAT1@@/108880",
     "http://@@ACCT_LAT2@@/108880",
     "http://@@ACCT_LAT4@@/108880",
-    "http://@@ACCT_LAT1@@/108880",
     "http://@@ACCT_LAT7@@/108880"
    ],
    "hidden": false,
-   "source_url": "http://@@ACCT_LAT2@@/108880"
+   "source_url": "http://@@ACCT_LAT1@@/108880"
   },
   {
    "channel_name": "channel103",
@@ -3364,8 +3364,8 @@
   },
   {
    "channel_name": "channel106",
-   "display_name": "Moja Love",
-   "enabled": false,
+   "display_name": "Cape Town TV",
+   "enabled": true,
    "hls_url": "https://stream.tv247on.com/hls/channel106/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -3380,10 +3380,10 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@ACCT_LAT7@@/1138306",
-    "http://@@ACCT_LAT5@@/1138306",
-    "http://@@ACCT_LAT2@@/1138306",
-    "http://@@ACCT_LAT1@@/1138306"
+    "http://@@ACCT_LAT7@@/324758",
+    "http://@@ACCT_LAT5@@/324758",
+    "http://@@ACCT_LAT1@@/324758",
+    "http://@@ACCT_LAT6@@/324758"
    ],
    "hidden": false
   },
@@ -3481,13 +3481,13 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@ACCT_LAT2@@/108858",
-    "http://@@ACCT_LAT4@@/108858",
     "http://@@ACCT_LAT5@@/108858",
-    "http://@@ACCT_LAT1@@/108858"
+    "http://@@ACCT_LAT1@@/108858",
+    "http://@@ACCT_LAT2@@/108858",
+    "http://@@ACCT_LAT4@@/108858"
    ],
    "hidden": false,
-   "source_url": "http://@@ACCT_LAT2@@/108858"
+   "source_url": "http://@@ACCT_LAT5@@/108858"
   },
   {
    "channel_name": "channel111",
@@ -3507,13 +3507,13 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@ACCT_LAT1@@/108907",
     "http://@@ACCT_LAT6@@/108907",
     "http://@@ACCT_LAT4@@/108907",
+    "http://@@ACCT_LAT1@@/108907",
     "http://@@ACCT_LAT2@@/108907"
    ],
    "hidden": false,
-   "source_url": "http://@@ACCT_LAT1@@/108907"
+   "source_url": "http://@@ACCT_LAT6@@/108907"
   },
   {
    "channel_name": "channel112",
@@ -3611,13 +3611,13 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@ACCT_LAT7@@/324755",
     "http://@@ACCT_LAT4@@/324755",
-    "http://@@ACCT_LAT1@@/324755",
-    "http://@@ACCT_LAT2@@/324755"
+    "http://@@ACCT_LAT2@@/324755",
+    "http://@@ACCT_LAT7@@/324755",
+    "http://@@ACCT_LAT1@@/324755"
    ],
    "hidden": false,
-   "source_url": "http://@@ACCT_LAT7@@/324755"
+   "source_url": "http://@@ACCT_LAT4@@/324755"
   },
   {
    "channel_name": "channel116",
@@ -3637,13 +3637,13 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@ACCT_LAT6@@/108881",
     "http://@@ACCT_LAT1@@/108881",
+    "http://@@ACCT_LAT6@@/108881",
     "http://@@ACCT_LAT4@@/108881",
     "http://@@ACCT_LAT2@@/108881"
    ],
    "hidden": false,
-   "source_url": "http://@@ACCT_LAT6@@/108881"
+   "source_url": "http://@@ACCT_LAT1@@/108881"
   },
   {
    "channel_name": "channel117",
@@ -3714,17 +3714,17 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
+    "http://@@ACCT_LAT1@@/1138274",
+    "http://@@ACCT_LAT1@@/1027870",
     "http://@@ACCT_LAT5@@/1138274",
     "http://@@ACCT_LAT5@@/1027870",
     "http://@@ACCT_LAT7@@/1138274",
     "http://@@ACCT_LAT7@@/1027870",
     "http://@@ACCT_LAT2@@/1138274",
-    "http://@@ACCT_LAT2@@/1027870",
-    "http://@@ACCT_LAT1@@/1138274",
-    "http://@@ACCT_LAT1@@/1027870"
+    "http://@@ACCT_LAT2@@/1027870"
    ],
    "hidden": false,
-   "source_url": "http://@@ACCT_LAT5@@/1138274"
+   "source_url": "http://@@ACCT_LAT1@@/1138274"
   },
   {
    "channel_name": "channel120",
@@ -3744,18 +3744,18 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
+    "http://@@ACCT_LAT2@@/326562",
     "http://@@ACCT_LAT1@@/326562",
     "http://@@ACCT_LAT6@@/326562",
-    "http://@@ACCT_LAT4@@/326562",
-    "http://@@ACCT_LAT2@@/326562"
+    "http://@@ACCT_LAT4@@/326562"
    ],
    "hidden": false,
-   "source_url": "http://@@ACCT_LAT1@@/326562"
+   "source_url": "http://@@ACCT_LAT2@@/326562"
   },
   {
    "channel_name": "channel121",
-   "display_name": "SuperSport Africa FHD",
-   "enabled": false,
+   "display_name": "Star Life HD",
+   "enabled": true,
    "hls_url": "https://stream.tv247on.com/hls/channel121/index.m3u8",
    "standby_file": "standby/standby.mp4",
    "bitrate": 2500,
@@ -3770,12 +3770,13 @@
    "use_standby": true,
    "encode_resolution": "960x540",
    "source_urls": [
-    "http://@@ACCT_LAT1@@/1092560",
-    "http://@@ACCT_LAT7@@/1092560",
-    "http://@@ACCT_LAT6@@/1092560",
-    "http://@@ACCT_LAT5@@/1092560"
+    "http://@@ACCT_LAT7@@/1138301",
+    "http://@@ACCT_LAT6@@/1138301",
+    "http://@@ACCT_LAT1@@/1138301",
+    "http://@@ACCT_LAT5@@/1138301"
    ],
-   "hidden": false
+   "hidden": false,
+   "source_url": "http://@@ACCT_LAT7@@/1138301"
   },
   {
    "channel_name": "channel122",
