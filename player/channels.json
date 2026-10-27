@@ -329,12 +329,12 @@
     "country": "South Africa",
     "logo": "https://stream.tv247on.com/player/logos/channel98.png",
     "hls": "https://stream.tv247on.com/hls/channel98/index.m3u8",
-    "state": "LIVE",
-    "live": true
+    "state": "SLATE",
+    "live": false
   },
   {
     "name": "channel99",
-    "title": "e.tv Extra HD",
+    "title": "Comedy Central HD",
     "country": "South Africa",
     "logo": "https://stream.tv247on.com/player/logos/channel99.png",
     "hls": "https://stream.tv247on.com/hls/channel99/index.m3u8",
@@ -343,7 +343,7 @@
   },
   {
     "name": "channel100",
-    "title": "kykNET FHD",
+    "title": "ESPN2 HD",
     "country": "South Africa",
     "logo": "https://stream.tv247on.com/player/logos/channel100.png",
     "hls": "https://stream.tv247on.com/hls/channel100/index.m3u8",
@@ -365,12 +365,12 @@
     "country": "South Africa",
     "logo": "https://stream.tv247on.com/player/logos/channel102.png",
     "hls": "https://stream.tv247on.com/hls/channel102/index.m3u8",
-    "state": "SLATE",
+    "state": "SLOW",
     "live": false
   },
   {
     "name": "channel103",
-    "title": "Studio Universal",
+    "title": "Investigation Discovery HD",
     "country": "South Africa",
     "logo": "https://stream.tv247on.com/player/logos/channel103.png",
     "hls": "https://stream.tv247on.com/hls/channel103/index.m3u8",
@@ -388,7 +388,7 @@
   },
   {
     "name": "channel105",
-    "title": "Channel O",
+    "title": "TLC Entertainment HD",
     "country": "South Africa",
     "logo": "https://stream.tv247on.com/player/logos/channel105.png",
     "hls": "https://stream.tv247on.com/hls/channel105/index.m3u8",
@@ -406,7 +406,7 @@
   },
   {
     "name": "channel108",
-    "title": "SABC 2 FHD",
+    "title": "SABC Sports HD",
     "country": "South Africa",
     "logo": "https://stream.tv247on.com/player/logos/channel108.png",
     "hls": "https://stream.tv247on.com/hls/channel108/index.m3u8",
@@ -415,7 +415,7 @@
   },
   {
     "name": "channel109",
-    "title": "Star Life FHD",
+    "title": "ESPN HD",
     "country": "South Africa",
     "logo": "https://stream.tv247on.com/player/logos/channel109.png",
     "hls": "https://stream.tv247on.com/hls/channel109/index.m3u8",
@@ -459,31 +459,13 @@
     "live": true
   },
   {
-    "name": "channel114",
-    "title": "eMovies Extra",
-    "country": "South Africa",
-    "logo": "https://stream.tv247on.com/player/logos/channel114.png",
-    "hls": "https://stream.tv247on.com/hls/channel114/index.m3u8",
-    "state": "LIVE",
-    "live": true
-  },
-  {
     "name": "channel115",
     "title": "BBC Brit",
     "country": "South Africa",
     "logo": "https://stream.tv247on.com/player/logos/channel115.png",
     "hls": "https://stream.tv247on.com/hls/channel115/index.m3u8",
-    "state": "LIVE",
-    "live": true
-  },
-  {
-    "name": "channel116",
-    "title": "SABC News",
-    "country": "South Africa",
-    "logo": "https://stream.tv247on.com/player/logos/channel116.png",
-    "hls": "https://stream.tv247on.com/hls/channel116/index.m3u8",
-    "state": "LIVE",
-    "live": true
+    "state": "SLATE",
+    "live": false
   },
   {
     "name": "channel117",
@@ -491,15 +473,6 @@
     "country": "South Africa",
     "logo": "https://stream.tv247on.com/player/logos/channel117.png",
     "hls": "https://stream.tv247on.com/hls/channel117/index.m3u8",
-    "state": "LIVE",
-    "live": true
-  },
-  {
-    "name": "channel118",
-    "title": "SuperSport Football HD",
-    "country": "South Africa",
-    "logo": "https://stream.tv247on.com/player/logos/channel118.png",
-    "hls": "https://stream.tv247on.com/hls/channel118/index.m3u8",
     "state": "LIVE",
     "live": true
   },
@@ -518,6 +491,15 @@
     "country": "South Africa",
     "logo": "https://stream.tv247on.com/player/logos/channel120.png",
     "hls": "https://stream.tv247on.com/hls/channel120/index.m3u8",
+    "state": "LIVE",
+    "live": true
+  },
+  {
+    "name": "channel122",
+    "title": "[TEST] SABC 1 – ZA line",
+    "country": "South Africa",
+    "logo": "https://stream.tv247on.com/player/logos/channel122.png",
+    "hls": "https://stream.tv247on.com/hls/channel122/index.m3u8",
     "state": "LIVE",
     "live": true
   }
