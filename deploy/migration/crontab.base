@@ -1,0 +1,19 @@
+* * * * * python3 /opt/streaming-stack/scripts/gen_landing_json.py >/dev/null 2>&1
+*/10 * * * * /opt/streaming-stack/scripts/quality_probe.sh
+*/5 * * * * flock -n /tmp/synmon.lock nice -n 15 /usr/bin/python3 /opt/streaming-stack/scripts/synthetic_monitor.py >/dev/null 2>&1
+*/15 * * * * /opt/streaming-stack/scripts/hls_cleanup.sh >/dev/null 2>&1
+*/4 * * * * /opt/streaming-stack/scripts/audio_guard.sh >/dev/null 2>&1
+0 9 * * * /bin/bash /opt/streaming-stack/scripts/vod_auto_update.sh
+*/5 * * * * /usr/bin/python3 /opt/streaming-stack/scripts/vc_aggregate.py >/dev/null 2>&1
+30 9 * * * cd /opt/streaming-stack && nice -n 15 flock -n /tmp/vodwatch.lock python3 scripts/vod_watch.py >> logs/vod_watch.log 2>&1
+*/3 * * * * cd /opt/streaming-stack && python3 telegram/tg_menu_sync.py >> logs/tg_menu_sync.log 2>&1
+*/3 * * * * cd /opt/streaming-stack && SHOP=majo python3 telegram/tg_menu_sync.py >> logs/tg_menu_sync.log 2>&1
+*/2 * * * * cp -f /opt/streaming-stack/config/tg_movies_majo.json /opt/streaming-stack/player/tg-mx/movies-tg.json 2>/dev/null
+* * * * * /usr/bin/python3 /opt/streaming-stack/scripts/vod_blocklist_enforce.py >/dev/null 2>&1
+* * * * * flock -n /tmp/hlsvid.lock /usr/bin/python3 /opt/streaming-stack/scripts/hls_video_guard.py >/dev/null 2>&1
+*/10 * * * * flock -n /tmp/substitute.lock /usr/bin/python3 /opt/streaming-stack/scripts/substitute_manager.py >> /opt/streaming-stack/logs/substitute_manager.log 2>&1
+*/30 * * * * flock -n /tmp/rebalance.lock /usr/bin/python3 /opt/streaming-stack/scripts/rebalance_accounts.py --apply >> /opt/streaming-stack/logs/rebalance.log 2>&1
+* * * * * flock -n /tmp/outage_alert.lock /usr/bin/python3 /opt/streaming-stack/scripts/outage_alert.py >> /opt/streaming-stack/logs/outage_alert.log 2>&1
+*/10 * * * * flock -n /tmp/acctcaps.lock /usr/bin/python3 /opt/streaming-stack/scripts/account_status.py --refresh-caps >/dev/null 2>&1
+*/5 * * * * flock -n /tmp/enforce_caps.lock /usr/bin/python3 /opt/streaming-stack/scripts/enforce_caps.py --apply >> /opt/streaming-stack/logs/enforce_caps.log 2>&1
+*/5 * * * * flock -n /tmp/app_monitor.lock nice -n 10 /usr/bin/python3 /opt/streaming-stack/scripts/app_monitor.py >/dev/null 2>&1

@@ -1,3 +1,5 @@
+# Copyright (c) 2026 lovelydev0309. All rights reserved.
+# Proprietary and confidential. See LICENSE. Unauthorized copying, modification or use is prohibited.
 <#
   channel-health-alert.ps1
   Desktop toast alerts on Windows when a re-stream channel goes unhealthy.

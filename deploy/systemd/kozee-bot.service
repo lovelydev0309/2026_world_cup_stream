@@ -1,0 +1,18 @@
+# Copyright (c) 2026 lovelydev0309. All rights reserved.
+# Proprietary and confidential. See LICENSE. Unauthorized copying, modification or use is prohibited.
+[Unit]
+Description=Kozee TV Telegram menu bot (@KozeeTVwatch_bot, long-polling)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/streaming-stack/src/telegram
+ExecStart=/usr/bin/python3 /opt/streaming-stack/src/telegram/kozee_bot.py
+Restart=always
+RestartSec=5
+StandardOutput=append:/opt/streaming-stack/logs/kozee_bot.log
+StandardError=append:/opt/streaming-stack/logs/kozee_bot.log
+
+[Install]
+WantedBy=multi-user.target

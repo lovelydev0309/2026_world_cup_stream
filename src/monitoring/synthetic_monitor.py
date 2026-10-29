@@ -1,0 +1,239 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026 lovelydev0309. All rights reserved.
+# Proprietary and confidential. See LICENSE. Unauthorized copying, modification or use is prohibited.
+"""
+synthetic_monitor.py — proactive "synthetic viewer" health monitor.
+
+For every channel it does what a real viewer's player does: fetches the live playlist
+THROUGH THE CDN (stream.tv247on.com), checks the live edge is advancing, then downloads
+the newest delivered segment and DECODES it to confirm real video frames + audio (correct
+sample rate, not silent). This catches dead channels, corrupt/degraded feeds, silent audio,
+frozen/stale streams, ENDLIST-stops and CDN delivery problems BEFORE a viewer or the client
+reports them.
+
+It fetches OUR CDN output (not the tvon247 source), so it consumes ZERO provider connection
+slots. Writes:
+  - /opt/streaming-stack/player/status.json   (machine + dashboard state)
+  - /opt/streaming-stack/logs/synthetic_monitor.log
+and sends ONE consolidated alert (via send_alert.sh, which is cooldown-throttled) listing any
+channel that has been unhealthy for >=2 consecutive runs (so a one-off blip never pages).
+
+Run from cron every 60s (flock-guarded so runs never overlap):
+  * * * * * flock -n /tmp/synmon.lock /opt/streaming-stack/src/monitoring/synthetic_monitor.py
+"""
+import json, subprocess, urllib.request, time, os, re
+import tempfile
+
+CDN        = os.environ.get("SYNMON_CDN", "https://stream.tv247on.com/hls")
+STATUS     = "/opt/streaming-stack/player/status.json"
+LOG        = "/opt/streaming-stack/logs/synthetic_monitor.log"
+STATE      = "/opt/streaming-stack/cache/synthetic_state.json"   # consecutive-bad counters
+ALERT_SH   = "/opt/streaming-stack/src/monitoring/send_alert.sh"
+UA         = "Mozilla/5.0 (SyntheticMonitor)"
+SILENCE_DB = -70          # a full segment below this = effectively silent
+CONFIRM_N  = 2            # unhealthy for this many consecutive runs before we alert
+
+# Channel list is loaded from the LIVE lineup (player/channels.json) so the
+# monitor auto-covers every channel and never goes stale when channels change.
+import json as _json
+def _load_channels():
+    try:
+        lineup = _json.load(open("/opt/streaming-stack/player/channels.json"))
+        out = {}
+        for c in lineup:
+            nm = c.get("name", "")
+            if nm.startswith("channel"):
+                try: out[int(nm[7:])] = (c.get("title") or nm)
+                except Exception: pass
+        return out or {n: "channel%d" % n for n in range(1, 16)}
+    except Exception:
+        return {n: "channel%d" % n for n in range(1, 16)}
+CHANNELS = _load_channels()
+
+def now():  return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+def log(m):
+    try: open(LOG, "a").write("[%s] %s\n" % (now(), m))
+    except Exception: pass
+
+def fetch(url, timeout=12, binary=False):
+    req = urllib.request.Request(url, headers={"User-Agent": UA, "Cache-Control": "no-cache"})
+    r = urllib.request.urlopen(req, timeout=timeout)
+    d = r.read()
+    return d if binary else d.decode("utf-8", "replace")
+
+def last_segment(manifest):
+    segs = [l.strip() for l in manifest.splitlines() if l.strip() and not l.startswith("#")]
+    return segs[-1] if segs else None
+
+def ffprobe(args, timeout=20):
+    return subprocess.run(["ffprobe", "-v", "error", "-user_agent", UA] + args,
+                          capture_output=True, text=True, timeout=timeout).stdout.strip()
+
+def probe_manifest(n):
+    """Pass 1: fetch playlist via CDN, return (status_or_None, last_seg, manifest)."""
+    url = "%s/channel%d/index.m3u8" % (CDN, n)
+    try:
+        m = fetch(url)
+    except Exception as e:
+        return ("DOWN", None, "playlist fetch failed: %s" % str(e)[:70])
+    if "#EXT-X-ENDLIST" in m:
+        return ("ENDED", None, "playlist has #EXT-X-ENDLIST (player would stop)")
+    seg = last_segment(m)
+    if not seg:
+        return ("DOWN", None, "playlist has no segments")
+    return (None, seg, m)
+
+def decode_segment(n, seg):
+    """Download the newest segment ONCE via CDN, then probe the local copy.
+
+    Previously this handed the CDN url to ffprobe twice and ffmpeg once, i.e. three
+    downloads of the same segment per channel. With 77 channels that was ~231 CDN
+    requests and a 239s run against a */2 cron, and the tail of the run returned empty
+    probes that classify() reported as NO_VIDEO on healthy channels.
+    """
+    url = "%s/channel%d/%s" % (CDN, n, seg)
+    out = {"video": "", "sr": "", "mean": None, "v_ok": False, "a_ok": False}
+    tmp = None
+    try:
+        data = fetch(url, timeout=20, binary=True)
+        if not data:
+            out["err"] = "empty segment body"
+            return out
+        fd, tmp = tempfile.mkstemp(prefix="synmon_%d_" % n, suffix=".ts")
+        with os.fdopen(fd, "wb") as f:
+            f.write(data)
+
+        v = ffprobe(["-select_streams", "v:0", "-show_entries",
+                     "stream=codec_name,width,height", "-of", "csv=p=0", tmp])
+        if v:
+            p_ = v.splitlines()[0].split(",")   # first stream only, no stray newlines
+            out["v_ok"] = True
+            if len(p_) >= 3: out["video"] = "%sx%s" % (p_[1].strip(), p_[2].strip())
+        a = ffprobe(["-select_streams", "a:0", "-show_entries",
+                     "stream=sample_rate,channels", "-of", "csv=p=0", tmp])
+        if a:
+            out["a_ok"] = True
+            out["sr"] = a.splitlines()[0].split(",")[0].strip()
+        if out["a_ok"]:
+            vd = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-nostdin",
+                                 "-i", tmp, "-map", "a:0", "-af", "volumedetect",
+                                 "-f", "null", "-"],
+                                capture_output=True, text=True, timeout=25).stderr
+            mm = re.search(r"mean_volume:\s*([-0-9.]+)", vd)
+            if mm: out["mean"] = float(mm.group(1))
+    except Exception as e:
+        out["err"] = str(e)[:60]
+    finally:
+        if tmp:
+            try: os.unlink(tmp)
+            except Exception: pass
+    return out
+
+def classify(advancing, dec):
+    if "err" in dec and not dec["v_ok"]:
+        return ("DEGRADED", "segment decode error: %s" % dec["err"])
+    if not advancing:
+        return ("STALE", "live edge frozen (playlist not advancing)")
+    if not dec["v_ok"]:
+        return ("NO_VIDEO", "no decodable video in delivered segment")
+    if not dec["a_ok"]:
+        return ("NO_AUDIO", "video ok (%s) but no audio stream" % dec["video"])
+    if dec["mean"] is not None and dec["mean"] < SILENCE_DB:
+        return ("SILENT", "video ok (%s) but audio silent (%.0f dB)" % (dec["video"], dec["mean"]))
+    return ("OK", "%s, audio %sHz @ %.0fdB" % (dec["video"], dec["sr"],
+            dec["mean"] if dec["mean"] is not None else 0))
+
+def load_state():
+    try: return json.load(open(STATE))
+    except Exception: return {}
+
+def main():
+    # Pass 1: grab every playlist + its current last segment (fast).
+    p1 = {}
+    for n in CHANNELS:
+        p1[n] = probe_manifest(n)
+
+    # Decode newest segment per channel — this loop's wall-clock IS the "advancing" window.
+    decoded = {}
+    for n in CHANNELS:
+        st, seg, _ = p1[n]
+        decoded[n] = decode_segment(n, seg) if st is None else None
+
+    # Pass 2: re-fetch playlists; the last segment must have advanced since pass 1.
+    results = []
+    for n in CHANNELS:
+        st, seg1, detail = p1[n]
+        if st is not None:                       # already failed at manifest stage
+            results.append({"ch": n, "name": CHANNELS[n], "status": st, "detail": detail,
+                            "video": "", "sr": "", "mean": None})
+            continue
+        try: seg2 = last_segment(fetch("%s/channel%d/index.m3u8" % (CDN, n)))
+        except Exception: seg2 = seg1
+        advancing = (seg2 is not None and seg2 != seg1)
+        dec = decoded[n] or {"v_ok": False, "a_ok": False, "video": "", "sr": "", "mean": None}
+        status, det = classify(advancing, dec)
+        results.append({"ch": n, "name": CHANNELS[n], "status": status, "detail": det,
+                        "video": dec.get("video", ""), "sr": dec.get("sr", ""),
+                        "mean": dec.get("mean")})
+
+    for r in results:
+        log("channel%-2d %-15s %-9s %s" % (r["ch"], r["name"], r["status"], r["detail"]))
+
+    # ── Consecutive-bad state — drives BOTH the alert emails AND the dashboard display ──
+    # A single bad check on a channel that flaps on an unstable provider feed almost always
+    # recovers by the next 60s check, and the viewer's deep buffer hides it. So show a channel
+    # as a PROBLEM only once it has been unhealthy for >=CONFIRM_N checks IN A ROW — that
+    # eliminates the transient "no audio / stale" errors that used to flash red then recover.
+    # Genuine, persistent outages still surface on the dashboard (and still email).
+    prev = load_state()
+    newstate, confirmed, recovered = {}, [], []
+    for r in results:
+        k = str(r["ch"])
+        was_confirmed = prev.get(k, 0) >= CONFIRM_N
+        if r["status"] == "OK":
+            newstate[k] = 0
+            if was_confirmed: recovered.append(r)
+        else:
+            newstate[k] = prev.get(k, 0) + 1
+            if newstate[k] >= CONFIRM_N: confirmed.append(r)
+    try: json.dump(newstate, open(STATE, "w"))
+    except Exception: pass
+
+    # Dashboard view: an UNCONFIRMED (transient) bad check is shown as OK so it never flashes red.
+    display = []
+    for r in results:
+        d = dict(r)
+        if r["status"] != "OK" and newstate[str(r["ch"])] < CONFIRM_N:
+            d["raw_status"] = r["status"]                 # keep the real reading for reference
+            d["status"] = "OK"
+            d["detail"] = "recovering (transient %s)" % r["status"]
+        display.append(d)
+    shown_ok = sum(1 for d in display if d["status"] == "OK")
+    payload = {"updated": now(), "ok": shown_ok, "total": len(display), "channels": display}
+    try:
+        tmp = STATUS + ".tmp"; open(tmp, "w").write(json.dumps(payload)); os.replace(tmp, STATUS)
+    except Exception as e:
+        log("status write failed: %s" % e)
+
+    # ── Per-channel email alerting: pages on confirmed unhealthy + on recovery. The "channelN"
+    # token in the subject keys send_alert.sh's cooldown per channel (new issue pages promptly,
+    # ongoing one re-pages <=1/hour); recovery uses a distinct prefix so it is never suppressed.
+    def email(subject, body):
+        try: subprocess.run([ALERT_SH, subject, body], timeout=30, capture_output=True)
+        except Exception as e: log("alert send failed: %s" % e)
+
+    for r in confirmed:
+        email("UNHEALTHY channel%d - %s (%s)" % (r["ch"], r["name"], r["status"]),
+              "Channel %d (%s) is %s.\n%s\n\nVerified through the CDN by the synthetic viewer "
+              "monitor (unhealthy for >=%d consecutive checks, as a real viewer sees it).\n"
+              "Live status: https://stream.tv247on.com/player/status.html"
+              % (r["ch"], r["name"], r["status"], r["detail"], CONFIRM_N))
+    for r in recovered:
+        email("RECOVERED channel%d - %s" % (r["ch"], r["name"]),
+              "Channel %d (%s) is back to normal (%s)." % (r["ch"], r["name"], r["detail"]))
+
+    log("RUN done: %d/%d shown-OK  confirmed_bad=%d recovered=%d" %
+        (shown_ok, len(results), len(confirmed), len(recovered)))
+
+if __name__ == "__main__":
+    main()

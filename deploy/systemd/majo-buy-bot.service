@@ -1,0 +1,15 @@
+# Copyright (c) 2026 lovelydev0309. All rights reserved.
+# Proprietary and confidential. See LICENSE. Unauthorized copying, modification or use is prohibited.
+[Unit]
+Description=majo buy bot (Telegram Stars payments)
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=simple
+WorkingDirectory=/opt/streaming-stack
+Environment=SHOP=majo
+ExecStart=/usr/bin/python3 /opt/streaming-stack/src/telegram/buy_bot.py
+Restart=always
+RestartSec=5
+[Install]
+WantedBy=multi-user.target

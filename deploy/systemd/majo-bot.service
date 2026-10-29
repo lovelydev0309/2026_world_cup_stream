@@ -1,0 +1,19 @@
+# Copyright (c) 2026 lovelydev0309. All rights reserved.
+# Proprietary and confidential. See LICENSE. Unauthorized copying, modification or use is prohibited.
+[Unit]
+Description=MojaTV Telegram menu bot (@MojaTVwatch_bot, long-polling, Spanish)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=SHOP=majo
+WorkingDirectory=/opt/streaming-stack/src/telegram
+ExecStart=/usr/bin/python3 /opt/streaming-stack/src/telegram/kozee_bot.py
+Restart=always
+RestartSec=5
+StandardOutput=append:/opt/streaming-stack/logs/majo_bot.log
+StandardError=append:/opt/streaming-stack/logs/majo_bot.log
+
+[Install]
+WantedBy=multi-user.target

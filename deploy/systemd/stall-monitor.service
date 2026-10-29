@@ -1,0 +1,14 @@
+# Copyright (c) 2026 lovelydev0309. All rights reserved.
+# Proprietary and confidential. See LICENSE. Unauthorized copying, modification or use is prohibited.
+[Unit]
+Description=HLS per-channel stall/freeze recorder
+After=streaming-rpa.service
+
+[Service]
+Type=simple
+ExecStart=/opt/streaming-stack/src/monitoring/stall_monitor.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

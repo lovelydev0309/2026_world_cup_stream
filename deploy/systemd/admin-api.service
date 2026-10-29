@@ -1,0 +1,15 @@
+# Copyright (c) 2026 lovelydev0309. All rights reserved.
+# Proprietary and confidential. See LICENSE. Unauthorized copying, modification or use is prohibited.
+[Unit]
+Description=Live channel admin API
+After=network-online.target docker.service
+[Service]
+Type=simple
+WorkingDirectory=/opt/streaming-stack
+# ADMIN_BIND / ADMIN_PORT / ADMIN_TOKEN live in this git-ignored file (see docs/CONFIGURATION.md)
+EnvironmentFile=/opt/streaming-stack/config/admin-api.env
+ExecStart=/usr/bin/python3 /opt/streaming-stack/src/gateway/admin_api.py
+Restart=always
+RestartSec=5
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+b347fced878b0766a4e16201779bb6ba admin-api.service
+104e8401896a59f6a745745136ebe247 kozee-bot.service
+bbb5ef2b8bbba103839f86f2405d5d1d kozee-buy-bot.service
+2fc2dd5525e3e609f233e02e2f37b09e live-status.service
+f98e12a5b4d1e643292b05e5c02595a7 majo-bot.service
+89d7b11ced8d8080fddaad799b61fb23 majo-buy-bot.service
+4c4b4f3c5661385eb3c92b607249b201 stall-monitor.service
+193bce24857dda64c560538a0f104d8f streaming-rpa.service
+a1afaf1a6aa56b52633690d7b57a629b xtream-gateway.service
+5fd069908d24de6683869936b58453dc streaming-rpa.service.d/killmode.conf

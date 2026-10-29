@@ -1,0 +1,23 @@
+# Copyright (c) 2026 lovelydev0309. All rights reserved.
+# Proprietary and confidential. See LICENSE. Unauthorized copying, modification or use is prohibited.
+# Production crontab (root) for /opt/streaming-stack -- install with: crontab deploy/cron/crontab
+# Jobs that must never overlap take a flock; lock files live in /tmp.
+* * * * * python3 /opt/streaming-stack/src/lineup/gen_landing_json.py >/dev/null 2>&1
+*/10 * * * * /opt/streaming-stack/src/monitoring/quality_probe.sh
+*/5 * * * * flock -n /tmp/synmon.lock nice -n 15 /usr/bin/python3 /opt/streaming-stack/src/monitoring/synthetic_monitor.py >/dev/null 2>&1
+*/15 * * * * /opt/streaming-stack/src/streaming/hls_cleanup.sh >/dev/null 2>&1
+*/4 * * * * /opt/streaming-stack/src/streaming/audio_guard.sh >/dev/null 2>&1
+0 9 * * * /bin/bash /opt/streaming-stack/src/vod/vod_auto_update.sh
+*/5 * * * * /usr/bin/python3 /opt/streaming-stack/src/vod/vc_aggregate.py >/dev/null 2>&1
+30 9 * * * cd /opt/streaming-stack && nice -n 15 flock -n /tmp/vodwatch.lock python3 src/vod/vod_watch.py >> logs/vod_watch.log 2>&1
+*/3 * * * * cd /opt/streaming-stack && python3 src/telegram/tg_menu_sync.py >> logs/tg_menu_sync.log 2>&1
+*/3 * * * * cd /opt/streaming-stack && SHOP=majo python3 src/telegram/tg_menu_sync.py >> logs/tg_menu_sync.log 2>&1
+*/2 * * * * cp -f /opt/streaming-stack/config/tg_movies_majo.json /opt/streaming-stack/player/tg-mx/movies-tg.json 2>/dev/null
+* * * * * /usr/bin/python3 /opt/streaming-stack/src/vod/vod_blocklist_enforce.py >/dev/null 2>&1
+* * * * * flock -n /tmp/hlsvid.lock /usr/bin/python3 /opt/streaming-stack/src/streaming/hls_video_guard.py >/dev/null 2>&1
+*/10 * * * * flock -n /tmp/substitute.lock /usr/bin/python3 /opt/streaming-stack/src/accounts/substitute_manager.py >> /opt/streaming-stack/logs/substitute_manager.log 2>&1
+*/30 * * * * flock -n /tmp/rebalance.lock /usr/bin/python3 /opt/streaming-stack/src/accounts/rebalance_accounts.py --apply >> /opt/streaming-stack/logs/rebalance.log 2>&1
+* * * * * flock -n /tmp/outage_alert.lock /usr/bin/python3 /opt/streaming-stack/src/monitoring/outage_alert.py >> /opt/streaming-stack/logs/outage_alert.log 2>&1
+*/10 * * * * flock -n /tmp/acctcaps.lock /usr/bin/python3 /opt/streaming-stack/src/accounts/account_status.py --refresh-caps >/dev/null 2>&1
+*/5 * * * * flock -n /tmp/enforce_caps.lock /usr/bin/python3 /opt/streaming-stack/src/accounts/enforce_caps.py --apply >> /opt/streaming-stack/logs/enforce_caps.log 2>&1
+*/5 * * * * flock -n /tmp/app_monitor.lock nice -n 10 /usr/bin/python3 /opt/streaming-stack/src/monitoring/app_monitor.py >/dev/null 2>&1

@@ -1,0 +1,19 @@
+# Copyright (c) 2026 lovelydev0309. All rights reserved.
+# Proprietary and confidential. See LICENSE. Unauthorized copying, modification or use is prohibited.
+[Unit]
+Description=Xtream-Codes gateway (TViNUS members log in to external IPTV apps)
+# Binds 172.17.0.1 (docker0) so the nginx-rtmp container can reach it; that address
+# only exists once docker is up.
+After=docker.service network-online.target
+Wants=docker.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/streaming-stack/src/gateway/xtream_gateway.py
+Restart=always
+RestartSec=3
+# Never let app logins compete with the encoders for CPU.
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,21 @@
+# Copyright (c) 2026 lovelydev0309. All rights reserved.
+# Proprietary and confidential. See LICENSE. Unauthorized copying, modification or use is prohibited.
+[Unit]
+Description=Streaming RPA Watchdog – auto-restart all channels
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+ExecStart=/opt/streaming-stack/src/streaming/rpa_watchdog.sh
+Restart=always
+RestartSec=5
+# process: restarting this unit must NOT SIGKILL every run_channel/ffmpeg child
+# (control-group did that and took the whole lineup down).
+KillMode=process
+User=root
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
