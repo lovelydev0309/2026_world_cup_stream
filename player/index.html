@@ -119,7 +119,7 @@
     var state = ch.state || 'LIVE';
     var down  = (ch.live === false);
     var label = down ? state : 'LIVE';
-    return '<a class="card' + (down ? ' down' : '') + '" href="/player/' + esc(ch.name) + '.html">'
+    return '<a class="card' + (down ? ' down' : '') + '" href="/player/watch.html?ch=' + encodeURIComponent(ch.name) + '">'
       + '<div class="thumb"><img src="' + esc(ch.logo) + '" alt="" loading="lazy"'
       + ' onerror="this.style.display=\'none\'"></div>'
       + '<div class="info"><h2>' + esc(ch.title) + '</h2>'

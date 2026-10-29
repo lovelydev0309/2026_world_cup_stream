@@ -46,7 +46,8 @@ TiviMate / IPTV Smarters. A movie (VOD) catalogue is served from the same origin
 │   ├── vod/                movie catalogue ingest, curation, subtitles, publishing
 │   └── telegram/           Telegram menu/shop bots and catalogue sync
 ├── tools/                  one-off maintenance utilities
-├── player/                 static web root served at /player/ (players, admin pages, logos)
+├── player/                 web root served at /player/: one player page for every channel
+│                           (watch.html?ch=<id>), lineup page, admin/status pages, logos
 └── standby/                standby slate video shown while a source is unavailable
 ```
 

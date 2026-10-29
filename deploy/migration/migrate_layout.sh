@@ -77,11 +77,14 @@ if [ ! -f "$P/config/admin-api.env" ]; then           # move the inline token ou
     say "config/admin-api.env created ($(wc -l < "$P/config/admin-api.env") keys)"
 fi
 
-say "player pages: install the copyright-header versions"
+say "player pages: install the new versions (per-channel pages are retired after step 6)"
 while read -r sum page; do
+    [ -f "$STAGE/$page" ] || continue
     cp "$STAGE/$page" "$P/$page.new" && chmod --reference="$P/$page" "$P/$page.new" \
         && chown --reference="$P/$page" "$P/$page.new" && mv "$P/$page.new" "$P/$page"
 done < <(grep -v '^#' "$M/pages.md5")
+cp "$STAGE/player/watch.html" "$P/player/watch.html.new" && chmod --reference="$P/player/index.html" "$P/player/watch.html.new" \
+    && chown --reference="$P/player/index.html" "$P/player/watch.html.new" && mv "$P/player/watch.html.new" "$P/player/watch.html"
 
 # ── 4. Old paths -> symlinks to the new files (running processes keep their open copy) ──────────
 say "old paths become links to the new files"
@@ -109,6 +112,14 @@ cp -a "$STAGE/docker-compose.yml" "$P/docker-compose.yml"
 (cd "$P" && docker compose up -d --no-build nginx-rtmp)
 sleep 5
 curl -fsS -o /dev/null "http://127.0.0.1:8080/player/channels.json" || die "origin not answering after recreate - restore from $BK"
+loc=$(curl -s -o /dev/null -w '%{redirect_url}' "http://127.0.0.1:8080/player/channel1.html")
+case "$loc" in */player/watch.html?ch=channel1) say "per-channel URLs redirect to watch.html";;
+    *) die "per-channel redirect not active (got '$loc') - restore from $BK";; esac
+retired=0
+while read -r sum page; do                     # pages the new tree no longer has (backed up in code.tgz)
+    [ -f "$STAGE/$page" ] || { rm -f "$P/$page"; retired=$((retired+1)); }
+done < <(grep -v '^#' "$M/pages.md5")
+say "retired $retired per-channel pages"
 
 # ── 7. Move producers to the new path, one at a time ────────────────────────────────────────────
 mapfile -t CHANNELS < <(python3 -c "

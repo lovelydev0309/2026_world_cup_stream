@@ -61,6 +61,15 @@ supervisors and jobs run on the host under systemd and cron.
 - **Line pools** (`line_pool`, `shift_secs`): one-connection lines take turns in shifts so no
   line is online 24/7; a dead on-shift line fails over to the next pool line.
 
+### 2.1a Web player (`player/`)
+
+One page plays every channel: `player/watch.html?ch=<channel id>` (hls.js). The id is validated
+(`channel<number>`) and is the only input; the stream URL is derived from it and the display name
+is read from the published lineup. The page carries the client-side recovery logic: a forward
+buffer cushion around 60 s behind live, waiting out short holes after a source reconnect instead
+of jumping to live, a playback watchdog, and audio/video re-lock after network hiccups. The old
+per-channel URLs `/player/channel<N>.html` redirect to it (nginx, relative `302`).
+
 ### 2.2 Provider accounts (`src/accounts/`)
 
 Provider accounts have hard connection limits; going over a limit makes the provider starve every

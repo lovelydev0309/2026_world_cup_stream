@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live – Canal N HD (Perú)</title>
+<title>Live TV</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -121,7 +121,7 @@
 <body>
 
 <header>
-  <h1>Canal N HD (Perú)</h1>
+  <h1 id="ch-name">Live TV</h1>
   <span id="badge"><span id="dot"></span><span id="badge-text">Connecting…</span></span>
 </header>
 
@@ -149,8 +149,26 @@
 <script>
 (function () {
   // ── Config ──────────────────────────────────────────────
-  const STREAM_URL  = "https://stream.tv247on.com/hls/channel16/index.m3u8";
-  const CHANNEL     = "Canal N HD (Perú)";
+  // One page for every channel: watch.html?ch=channel97. The id is the only input and is
+  // checked against the channel-id pattern before it is used in a URL.
+  const CH = new URLSearchParams(location.search).get("ch") || "";
+  if (!/^channel[0-9]{1,4}$/.test(CH)) {
+    document.getElementById("overlay-text").textContent = "Unknown channel";
+    document.getElementById("badge-text").textContent = "No channel";
+    return;
+  }
+  const STREAM_URL  = "https://stream.tv247on.com/hls/" + CH + "/index.m3u8";
+  // The display name comes from the published lineup; playback does not wait for it.
+  // channels.json leaves out channels that are briefly down, so channels_za.json is the fallback.
+  (function showName(lists) {
+    if (!lists.length) return;
+    fetch(lists[0], { cache: "no-store" }).then(r => r.json()).then(list => {
+      const c = (Array.isArray(list) ? list : list.channels || []).find(x => x.name === CH);
+      if (!c) return showName(lists.slice(1));
+      document.getElementById("ch-name").textContent = c.title;
+      document.title = "Live – " + c.title;
+    }).catch(() => showName(lists.slice(1)));
+  })(["/player/channels.json", "/player/channels_za.json"]);
   const RETRY_DELAY = 5000;   // ms between reconnect attempts
   const MAX_RETRIES = 999;    // effectively infinite
   const LIVE_SYNC   = 60;     // seconds behind live edge — the forward-cushion target
@@ -290,7 +308,7 @@
       backBufferLength: 30,
       // Glide over small discontinuities from FFmpeg reconnects instead of
       // stalling on them.
-      maxBufferHole: 0.5,
+      maxBufferHole: 8,
       nudgeOffset: 0.2,
       nudgeMaxRetry: 8,
       manifestLoadingMaxRetry: MAX_RETRIES,
@@ -299,9 +317,9 @@
       manifestLoadingRetryDelay: 1000,
       levelLoadingRetryDelay: 1000,
       fragLoadingRetryDelay: 1000,
-      manifestLoadingTimeOut: 20000,
-      levelLoadingTimeOut: 20000,
-      fragLoadingTimeOut: 20000,
+      manifestLoadingTimeOut: 45000,
+      levelLoadingTimeOut: 45000,
+      fragLoadingTimeOut: 45000,
       // Forward buffer: build a deep cushion (up to ~60s, capped in practice by
       // the 45s distance to the live edge) so a source restart gap doesn't drain
       // it to 0. backBufferLength above stays small for 24/7 memory hygiene.
@@ -558,14 +576,26 @@
             _desyncRiskAt = Date.now();
             video.play().catch(() => {});
             break;
-          case Hls.ErrorDetails.FRAG_LOAD_ERROR:
           case Hls.ErrorDetails.FRAG_LOAD_TIMEOUT:
+            // Token-refresh can leave a short hole at the live edge. hls.js already
+            // retries the fragment; snapping to live aborts those retries and loops
+            // fragLoadTimeOut. Stay on the cushion and wait for the next .ts.
+            log(`Frag timeout – waiting for next segment`, "warn");
+            showBufferingSoon();
+            break;
+          case Hls.ErrorDetails.FRAG_LOAD_ERROR:
             recoverToLiveEdge(1500, `Frag error (${data.details}) – reloading`);
             break;
-          case Hls.ErrorDetails.LEVEL_LOAD_ERROR:
           case Hls.ErrorDetails.LEVEL_LOAD_TIMEOUT:
-          case Hls.ErrorDetails.MANIFEST_LOAD_ERROR:
           case Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT:
+            // Same hole as fragLoadTimeOut: encoder restart leaves the playlist
+            // briefly unreadable. stopLoad/startLoad aborts in-flight fetches and
+            // loops. Wait; hls.js retries the level on its own.
+            log(`Manifest/level timeout – waiting for playlist`, "warn");
+            showBufferingSoon();
+            break;
+          case Hls.ErrorDetails.LEVEL_LOAD_ERROR:
+          case Hls.ErrorDetails.MANIFEST_LOAD_ERROR:
             recoverToLiveEdge(3000, `Manifest/level error (${data.details}) – retrying`);
             break;
           default:
@@ -627,16 +657,23 @@
         // A recent hiccup jumped the video? Re-lock audio/video now that playback
         // is steady again — fixes the desktop-MSE audio desync that fires no error
         // and would otherwise persist until a manual reload (rate-limited inside).
-        if (_desyncRiskAt && Date.now() - _desyncRiskAt > 3000) {
+        if (_desyncRiskAt && Date.now() - _desyncRiskAt > 3000 && fwdBuffer() > 3) {
           _desyncRiskAt = 0;
           resyncAudioVideo("post-hiccup");
         }
         _wdLast = video.currentTime; _wdStuck = 0; return;
       }
       _wdStuck++;                                       // not advancing
-      if (_wdStuck === 4) {                             // ~8s frozen → soft resync
-        recoverToLiveEdge(500, "Playback not advancing – auto-resync");
-      } else if (_wdStuck >= 9) {                       // ~18s wedged
+      // Wait through a token-reconnect hole (~8–15s). Seeking to live during
+      // that hole is the 0×0 / aborted loop QA marked as Other.
+      if (_wdStuck === 10) {                            // ~20s frozen
+        if (fwdBuffer() >= 1) {
+          log("Playback clock stuck – resume without live seek", "warn");
+          video.play().catch(() => {});
+        } else {
+          recoverToLiveEdge(500, "Playback not advancing – auto-resync");
+        }
+      } else if (_wdStuck >= 16) {                      // ~32s wedged
         // Soft recovery didn't take. If the BUFFER has drained to ~0, do a full
         // BROWSER REFRESH — it clears any wedged client state a soft re-init
         // can't. Guarded two ways so a dead source can't reload-loop: only when

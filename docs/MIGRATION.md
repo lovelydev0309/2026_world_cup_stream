@@ -26,6 +26,15 @@ Removed as dead code (still in git history): `scripts/watchdog.py`, `scripts/sta
 and the `streaming-stack`, `stream-fallback@`, `stream-watchdog@` units — the June
 proof-of-concept RTMP-fallback design, never installed on the current server.
 
+## Player pages
+
+The 121 per-channel pages `player/channel<N>.html` were copies of one page that had drifted into
+two versions (51 pages without the later playback fixes, 54 with them, plus title-only and
+comment-only variants; 14 pages also carried a wrong `CHANNEL` label). They are replaced by one page,
+`player/watch.html?ch=<id>`, built from the newest version, so every channel now gets the same
+playback fixes. `index.html` links to it, and nginx redirects the old URLs, so existing links keep
+working. The migration retires the old files only after the redirect is live.
+
 ## Code changes that came with the move
 
 - Every script finds the project root from its own **resolved** location
